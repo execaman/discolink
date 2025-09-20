@@ -17,6 +17,7 @@ on:
 jobs:
   deprecate:
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'execaman'
     steps:
       - name: Setup Node
         uses: actions/setup-node@v5
