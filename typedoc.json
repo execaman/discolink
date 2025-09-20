@@ -1,0 +1,27 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "plugin": ["typedoc-plugin-dt-links", "typedoc-plugin-mdn-links", "typedoc-material-theme"],
+  "basePath": "src",
+  "entryPoints": [
+    "src/Typings",
+    "src/Constants",
+    "src/Functions",
+    "src/Node",
+    "src/Voice",
+    "src/Queue",
+    "src/Plugins",
+    "src/Main"
+  ],
+  "sort": ["enum-member-source-order"],
+  "out": "docs",
+  "name": "Discolink",
+  "readme": "README.md",
+  "defaultCategory": "Miscellaneous",
+  "customCss": "assets/custom.css",
+  "favicon": "assets/music-album.png",
+  "navigationLinks": {
+    "GitHub": "https://github.com/execaman/discolink"
+  },
+  "useHostedBaseUrlForAbsoluteLinks": true,
+  "hostedBaseUrl": "https://execaman.github.io/discolink"
+}

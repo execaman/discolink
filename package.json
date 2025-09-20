@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "discolink",
+  "version": "1.0.0",
+  "description": "A javascript library for discord bots to interact with Lavalink",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      }
+    }
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "./lib/",
+    "NOTICE"
+  ],
+  "author": "Aman (https://github.com/execaman)",
+  "repository": "https://github.com/execaman/discolink",
+  "homepage": "https://execaman.github.io/discolink",
+  "bugs": "https://github.com/execaman/discolink/issues",
+  "keywords": [
+    "lavalink",
+    "discord",
+    "music"
+  ],
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "provenance": true
+  },
+  "scripts": {
+    "deps": "ncu -u && npm update",
+    "lint": "prettier --check . && tsc --noEmit",
+    "build": "npm run lint && tsup",
+    "docs": "npm run lint && typedoc",
+    "format": "prettier --log-level error --write .",
+    "prepare": "husky || true"
+  },
+  "engines": {
+    "node": ">=22.11.0"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "ws": "^8.18.3"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.9"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@types/ws": "^8.18.1",
+    "husky": "^9.1.7",
+    "npm-check-updates": "^18.1.1",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "typedoc": "^0.28.13",
+    "typedoc-material-theme": "^1.4.0",
+    "typedoc-plugin-dt-links": "^2.0.19",
+    "typedoc-plugin-mdn-links": "^5.0.9",
+    "typescript": "^5.9.2"
+  }
+}

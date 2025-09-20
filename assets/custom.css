@@ -1,0 +1,77 @@
+.tsd-accordion .tsd-accordion-summary > svg,
+.tsd-index-accordion .tsd-accordion-summary > svg {
+  position: static !important;
+}
+
+.tsd-accordion-summary a {
+  width: calc(100% - 2rem) !important;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: none !important;
+  }
+}
+
+footer {
+  border-top: none !important;
+  position: sticky !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  background: inherit !important;
+  padding: 0 !important;
+}
+
+.tsd-hierarchy {
+  overflow-x: scroll !important;
+}
+
+.tsd-page-navigation-section > div {
+  margin-left: 18px !important;
+}
+
+@media (min-width: 770px) {
+  .site-menu {
+    margin-right: 1rem !important;
+  }
+}
+
+@media (max-width: 769px) {
+  .page-menu {
+    margin-top: 0.75rem !important;
+  }
+  footer {
+    white-space: nowrap !important;
+    overflow-x: scroll !important;
+  }
+}
+
+.tsd-member-summaries {
+  margin-left: 1.5rem !important;
+}
+
+.tsd-signatures .tsd-signature {
+  border-width: thin !important;
+}
+
+#tsd-search {
+  border-radius: 12px !important;
+}
+
+#tsd-search-input {
+  border-radius: 4px !important;
+}
+
+#tsd-search-results > li[aria-selected="true"] {
+  background-color: var(--color-accent) !important;
+}
+
+@media (min-width: 770px) and (max-width: 1399px) {
+  .col-sidebar {
+    margin-right: 1rem !important;
+  }
+  .tsd-small-nested-navigation {
+    width: 100% !important;
+  }
+}
