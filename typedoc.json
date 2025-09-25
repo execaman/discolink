@@ -18,6 +18,7 @@
   "readme": "README.md",
   "defaultCategory": "Miscellaneous",
   "customCss": "assets/custom.css",
+  "customJs": "assets/custom.js",
   "favicon": "assets/music-album.png",
   "navigationLinks": {
     "GitHub": "https://github.com/execaman/discolink"
