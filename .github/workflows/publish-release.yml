@@ -25,7 +25,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Bump version
-        run: npm version ${{ github.event.release.tag_name }} --git-tag-version false
+        run: npm version ${{ github.event.release.tag_name }} --allow-same-version --git-tag-version false
 
       - name: Install dependencies
         run: npm install
@@ -40,8 +40,12 @@ jobs:
 
           git add package.json
 
-          git commit -m "chore(Release): v${{ github.event.release.tag_name }}"
-          git push
+          if git status --porcelain | grep -q .; then
+            git commit -m "chore(Release): v${{ github.event.release.tag_name }}"
+            git push
+          else
+            echo "Nothing to commit"
+          fi
 
       - name: Publish release
         run: npm publish
