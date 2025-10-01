@@ -1,5 +1,8 @@
 import type { NodeOptions, RESTOptions } from "../Typings";
 
+/**
+ * These options are writable but neither extendable, nor configurable
+ */
 export const DefaultNodeOptions = Object.seal({
   statsInterval: 60_000,
   highestLatency: 2_000,

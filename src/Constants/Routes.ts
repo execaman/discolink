@@ -1,3 +1,6 @@
+/**
+ * An object holding methods that construct api routes based on params
+ */
 export const Routes = {
   websocket() {
     return "/websocket" as const;
@@ -33,4 +36,4 @@ export const Routes = {
     if (free) return `/routeplanner/free/${free}` as const;
     return "/routeplanner/status" as const;
   },
-} as const;
+};
