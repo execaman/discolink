@@ -1,3 +1,8 @@
+/**
+ * Formats duration as a string
+ * @param ms Duration in milliseconds
+ * @returns formatted duration as `hh:mm:ss` or `mm:ss` if less than an hour
+ */
 export function formatDuration(ms: number) {
   ms = Math.floor(ms);
   if (ms <= 0 || !Number.isFinite(ms)) return "00:00";
