@@ -37,11 +37,11 @@
     "provenance": true
   },
   "scripts": {
-    "deps": "ncu -u && npm update",
     "lint": "prettier --check . && tsc --noEmit",
     "build": "npm run lint && tsup",
     "docs": "npm run lint && typedoc",
     "format": "prettier --log-level error --write .",
+    "upgrade": "ncu -u && npm update",
     "prepare": "husky || true"
   },
   "engines": {
@@ -55,17 +55,17 @@
     "bufferutil": "^4.0.9"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@types/ws": "^8.18.1",
     "husky": "^9.1.7",
-    "npm-check-updates": "^18.1.1",
+    "npm-check-updates": "^19.0.0",
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.13",
     "typedoc-material-theme": "^1.4.0",
-    "typedoc-plugin-dt-links": "^2.0.19",
+    "typedoc-plugin-dt-links": "^2.0.21",
     "typedoc-plugin-mdn-links": "^5.0.9",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   }
 }
