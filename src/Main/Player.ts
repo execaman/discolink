@@ -201,10 +201,10 @@ export class Player<
     return queue.setVolume(volume);
   }
 
-  shuffle(guildId: string) {
+  shuffle(guildId: string, includePrevious?: boolean) {
     const queue = this.queues.get(guildId);
     if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.shuffle();
+    return queue.shuffle(includePrevious);
   }
 
   async next(guildId: string) {
