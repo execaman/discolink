@@ -28,6 +28,9 @@ interface Task extends Pick<PromiseWithResolvers<AxiosResponse>, "reject" | "res
   controller?: AbortController;
 }
 
+/**
+ * A class representing lavalink's REST API
+ */
 export class REST {
   #axios = Axios.create({
     headers: {
@@ -46,7 +49,14 @@ export class REST {
   #sessionId: string | null = null;
   #retryLimit: number;
 
+  /**
+   * Origin of the REST API
+   */
   readonly origin: string;
+
+  /**
+   * Version of the REST API
+   */
   readonly version: number;
 
   constructor(options: RESTOptions) {
@@ -106,14 +116,24 @@ export class REST {
     } satisfies { [k in keyof REST]?: PropertyDescriptor });
   }
 
+  /**
+   * Timeout per request in milliseconds
+   */
   get timeout() {
     return this.#axios.defaults.timeout!;
   }
 
+  /**
+   * Id of a session if set.
+   * Setting this has no effect if this instance belongs to a Node
+   */
   get sessionId() {
     return this.#sessionId;
   }
 
+  /**
+   * Retry limit of timed-out requests
+   */
   get retryLimit() {
     return this.#retryLimit;
   }

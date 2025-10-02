@@ -12,6 +12,9 @@ import { REST } from "./index";
 import type { ClientOptions } from "ws";
 import type { ClientHeaders, MessagePayload, NodeEventMap, NodeOptions, NodeState, StatsPayload } from "../Typings";
 
+/**
+ * A class representing a lavalink server
+ */
 export class Node extends EventEmitter<NodeEventMap> {
   #socketConfig = {
     headers: {
@@ -120,22 +123,37 @@ export class Node extends EventEmitter<NodeEventMap> {
     } satisfies { [k in Exclude<keyof Node, "toString">]?: PropertyDescriptor });
   }
 
+  /**
+   * Id of the bot
+   */
   get clientId() {
     return this.#socketConfig.headers["User-Id"];
   }
 
+  /**
+   * Id of the session
+   */
   get sessionId() {
     return this.#sessionId;
   }
 
+  /**
+   * Round-trip time
+   */
   get ping() {
     return this.#ping;
   }
 
+  /**
+   * Stats from lavalink
+   */
   get stats() {
     return this.#stats;
   }
 
+  /**
+   * Current state of the node
+   */
   get state(): NodeState {
     if (this.connecting) return "connecting";
     if (this.connected) return this.ready ? "ready" : "connected";
@@ -143,30 +161,51 @@ export class Node extends EventEmitter<NodeEventMap> {
     return "disconnected";
   }
 
+  /**
+   * The node is connecting
+   */
   get connecting() {
     return this.#socket !== null && this.#socket.readyState === this.#socket.CONNECTING;
   }
 
+  /**
+   * The node is connected
+   */
   get connected() {
     return this.#socket !== null && this.#socket.readyState === this.#socket.OPEN;
   }
 
+  /**
+   * The node has connected and received the ready payload
+   */
   get ready() {
     return this.#sessionId !== null && this.connected;
   }
 
+  /**
+   * The node is reconnecting
+   */
   get reconnecting() {
     return this.#socket === null && this.#reconnectTimer !== null;
   }
 
+  /**
+   * The node is disconnected (no connection, no reconnects)
+   */
   get disconnected() {
     return this.#socket === null && !this.reconnecting;
   }
 
+  /**
+   * Number of reconnects attempted
+   */
   get reconnectAttempts() {
     return this.#reconnectAttempts;
   }
 
+  /**
+   * Initial handshake timeout in milliseconds
+   */
   get handshakeTimeout() {
     return this.#socketConfig.handshakeTimeout;
   }
@@ -226,6 +265,10 @@ export class Node extends EventEmitter<NodeEventMap> {
     }
   }
 
+  /**
+   * Connects for a session with lavalink
+   * @returns `true` if the initial handshake succeeded, `false` otherwise
+   */
   async connect() {
     if (this.#socket !== null) return this.#connectPromise ?? this.connected;
     if (this.reconnecting) {
@@ -268,6 +311,10 @@ export class Node extends EventEmitter<NodeEventMap> {
     }
   }
 
+  /**
+   * Closes connection to lavalink and stops reconnecting
+   * @param reason Reason for closing (only effective if a connection exists)
+   */
   async disconnect(reason = "disconnected") {
     if (this.#disconnectPromise !== null) return this.#disconnectPromise;
     this.#stopReconnecting();

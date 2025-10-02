@@ -5,12 +5,18 @@ import { Node } from "../index";
 import type { CreateNodeOptions, LavalinkInfo, NodeMetrics, NodeEventMap, NodeState, StatsPayload } from "../Typings";
 import type { Player } from "../Main";
 
+/**
+ * A manager class handling nodes with useful members
+ */
 export class NodeManager implements Partial<Map<string, Node>> {
   #player: Player;
 
   #nodes = new Map<string, Node>();
   #cache = new Map<string, NodeMetrics>();
 
+  /**
+   * Lavalink info of nodes mapped by their names
+   */
   readonly info = new Map<string, LavalinkInfo>();
 
   constructor(player: Player) {
@@ -26,10 +32,16 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return this.#nodes.size;
   }
 
+  /**
+   * A map holding this manager's intrinsic data
+   */
   get cache() {
     return this.#cache;
   }
 
+  /**
+   * Whether at least one node is ready
+   */
   get ready() {
     return this.#nodes.values().some((n) => n.ready);
   }
@@ -54,7 +66,16 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return this.#nodes.entries();
   }
 
+  /**
+   * Returns the state of a node
+   * @param name Name of the node
+   */
   state(name: string): NodeState;
+  /**
+   * Returns a boolean based on state comparison
+   * @param name Name of the node
+   * @param equals Expected state of the node
+   */
   state(name: string, equals: NodeState): boolean;
   state(name: string, equals?: NodeState) {
     const node = this.#nodes.get(name);
@@ -62,6 +83,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return equals === undefined ? node.state : node.state === equals;
   }
 
+  /**
+   * Creates a node
+   * @param options Options to create from
+   */
   create(options: CreateNodeOptions) {
     if (this.#player.clientId === null) throw new Error("Player has not been initialized");
     if (this.#nodes.has(options.name)) throw new Error(`Node '${options.name}' already exists`);
@@ -72,6 +97,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return node;
   }
 
+  /**
+   * Deletes a disconnected node
+   * @param name Name of the node
+   */
   delete(name: string) {
     const node = this.#nodes.get(name);
     if (!node) return false;
@@ -83,6 +112,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return true;
   }
 
+  /**
+   * Returns a sorted list of nodes based on weights
+   * @param weights Factors to prioritize based on weights (0-1 each)
+   */
   relevant(weights: Partial<NodeMetrics> = { memory: 0.3, workload: 0.2, streaming: 0.5 }) {
     weights.memory = Math.min(1, Math.max(0, weights.memory ?? 0));
     weights.workload = Math.min(1, Math.max(0, weights.workload ?? 0));
@@ -112,7 +145,14 @@ export class NodeManager implements Partial<Map<string, Node>> {
     });
   }
 
+  /**
+   * Connect to all nodes
+   */
   connect(): Promise<void>;
+  /**
+   * Connect to a specific node
+   * @param name Name of the node
+   */
   connect(name: string): Promise<boolean>;
   async connect(name?: string): Promise<void | boolean> {
     if (typeof name === "string") {
@@ -123,6 +163,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     for (const node of this.#nodes.values()) await node.connect();
   }
 
+  /**
+   * Disconnects all nodes or a specific node if a name is provided
+   * @param name Name of the node
+   */
   async disconnect(name?: string) {
     if (typeof name === "string") {
       const node = this.#nodes.get(name);
@@ -132,6 +176,11 @@ export class NodeManager implements Partial<Map<string, Node>> {
     for (const node of this.#nodes.values()) await node.disconnect();
   }
 
+  /**
+   * Retrieves lavalink info of a node
+   * @param name Name of the node
+   * @param force Whether to skip cache and make a request
+   */
   async fetchInfo(name: string, force?: boolean) {
     if (!this.#nodes.has(name)) throw new Error(`Node '${name}' not found`);
     if (force !== true && this.info.has(name)) return this.info.get(name)!;
