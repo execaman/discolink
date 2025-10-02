@@ -3,6 +3,9 @@ import type { VoiceState } from "../Voice";
 import type { QueueManager } from "./index";
 import type { Player } from "../Main";
 
+/**
+ * A helper class for Queue to simplify filter management
+ */
 export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
   #manager: QueueManager;
   #cache: APIPlayer;
@@ -28,14 +31,28 @@ export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
     this.#cache = data;
   }
 
+  /**
+   * Raw filters object
+   */
   get data() {
     return this.#data.filters as Filters<PluginFilters>;
   }
 
+  /**
+   * Gets the value of a filter
+   * @param name Name of the filter
+   * @returns Value of that filter if active, `null` otherwise
+   */
   get<Name extends FilterNames<PluginFilters>>(name: Name): FilterValue<Name, PluginFilters> | null {
     return (this.#data.filters as any)[name] ?? (this.#cache.filters.pluginFilters as any)?.[name] ?? null;
   }
 
+  /**
+   * Sets the value of a filter
+   * @param name Name of the filter
+   * @param value Value of the filter
+   * @param isPlugin Whether this filer belongs to a plugin
+   */
   async set<Name extends FilterNames<PluginFilters>, Value extends FilterValue<Name, PluginFilters>>(
     name: Name,
     value: Value,
@@ -51,6 +68,10 @@ export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
     return (isPlugin ? (this.#cache.filters.pluginFilters as any)?.[name] : (this.#cache.filters as any)[name]) ?? null;
   }
 
+  /**
+   * Returns a boolean saying whether a filter is active
+   * @param name Name of the filter
+   */
   has<Name extends FilterNames<PluginFilters>>(name: Name) {
     if (name === "pluginFilters") return false;
     return (
@@ -59,10 +80,18 @@ export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
     );
   }
 
+  /**
+   * Updates the filters by shallow merging current and provided filters object
+   * @param filters Raw filters object
+   */
   async merge(filters: Filters<PluginFilters>) {
     return this.override({ ...(this.#data.filters as Filters<PluginFilters>), ...filters });
   }
 
+  /**
+   * Removes filters by name
+   * @param names List of filter names
+   */
   async remove<Name extends FilterNames<PluginFilters>>(...names: Name[]) {
     if (names.length === 0) return this.#data.filters as Filters<PluginFilters>;
     for (const filter in this.#data.filters) {
@@ -74,10 +103,17 @@ export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
     return this.override(this.#cache.filters as Filters<PluginFilters>);
   }
 
+  /**
+   * Removes all filters
+   */
   async clear() {
     return this.override({});
   }
 
+  /**
+   * Updates the filters as provided
+   * @param filters Raw filters object
+   */
   async override(filters: Filters<PluginFilters>) {
     this.#data = await this.#voice.node.rest.updatePlayer(this.#voice.guildId, { filters });
     return this.#cache.filters as Filters<PluginFilters>;

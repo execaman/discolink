@@ -3,27 +3,79 @@ import { formatDuration, isNumber, isRecord, isString } from "../Functions";
 import type { APITrack, EmptyObject, JsonObject } from "../Typings";
 
 export class Track<UserData extends JsonObject = EmptyObject, PluginInfo extends JsonObject = EmptyObject> {
+  /**
+   * Id of the track
+   */
   id: string;
 
+  /**
+   * Title of the track
+   */
   title = "Unknown Track";
+
+  /**
+   * Author of the track
+   */
   author = "Unknown Author";
 
+  /**
+   * Whether the track is a stream
+   */
   isLive = false;
+
+  /**
+   * Whether the track is seekable
+   */
   isSeekable = false;
 
+  /**
+   * Duration of the track in milliseconds
+   */
   duration = 0;
+
+  /**
+   * Formatted duration of the track
+   */
   formattedDuration = "00:00";
 
+  /**
+   * [Uniform Resource Identifier](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the track
+   */
   uri: string | null = null;
+
+  /**
+   * [International Standard Recording Code](https://en.wikipedia.org/wiki/International_Standard_Recording_Code) of the track
+   */
   isrc: string | null = null;
 
+  /**
+   * URL of the track
+   */
   url: string | null = null;
+
+  /**
+   * Artwork URL of the track
+   */
   artworkUrl: string | null = null;
 
+  /**
+   * User data of the track
+   */
   userData = {} as UserData;
+
+  /**
+   * Additional info from plugins
+   */
   pluginInfo = {} as PluginInfo;
 
+  /**
+   * Encoded string representation of the track
+   */
   encoded: string;
+
+  /**
+   * Name of the source of this track
+   */
   sourceName = "unknown";
 
   constructor(data: APITrack<UserData, PluginInfo>) {

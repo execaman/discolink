@@ -13,6 +13,9 @@ import type {
 } from "../Typings";
 import type { Player } from "../Main";
 
+/**
+ * A manager class handling queues with useful members
+ */
 export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
   implements Partial<Map<string, Queue<Context>>>
 {
@@ -32,6 +35,9 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     return this.#queues.size;
   }
 
+  /**
+   * A map holding this manager's intrinsic data
+   */
   get cache() {
     return this.#cache;
   }
@@ -56,6 +62,10 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     return this.#queues.entries();
   }
 
+  /**
+   * Creates a queue from options
+   * @param options Options to create from
+   */
   async create(options: CreateQueueOptions<Context>) {
     if (!isRecord(options)) throw new Error("Queue create options must be an object");
     if (this.#queues.has(options.guildId)) return this.#queues.get(options.guildId)!;
@@ -69,6 +79,11 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     return queue;
   }
 
+  /**
+   * Destroys the queue of a guild
+   * @param guildId Id of the guild
+   * @param reason Reason for destroying
+   */
   async destroy(guildId: string, reason = "destroyed") {
     if (this.#destroys.has(guildId)) return this.#destroys.get(guildId)!;
     const queue = this.#queues.get(guildId);
@@ -84,6 +99,13 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     resolver.resolve();
   }
 
+  /**
+   * Relocates queues of a node to other nodes.
+   * If no other nodes are available, invalid`*` queues are destroyed
+   * @param node Name of the target node
+   * @description `*` Invalid queues are those with a different session id than what they were last updated with.
+   * e.g. reconnected, non-resumed node, stale queues with long absence of a voice connection, etc.
+   */
   async relocate(node: string) {
     if (this.#relocations.has(node)) return this.#relocations.get(node)!;
 
@@ -136,6 +158,10 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     resolver.resolve();
   }
 
+  /**
+   * A player state update listener. Not for general use
+   * @param payload Player update payload
+   */
   onStateUpdate(payload: PlayerUpdatePayload) {
     const state = payload.state;
     const cache = this.#cache.get(payload.guildId);
@@ -151,6 +177,10 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     this.#player.emit("queueUpdate", queue, state);
   }
 
+  /**
+   * A player event update listener. Not for general use
+   * @param payload Player event payload
+   */
   async onEventUpdate(payload: EventPayload) {
     const cache = this.#cache.get(payload.guildId);
     if (!cache) return;
