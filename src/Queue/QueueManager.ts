@@ -116,14 +116,14 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
 
     const chunkSize = Math.floor(queues.length / nodes.length);
     const remaining = queues.length % nodes.length;
-    const map = new Map<string, Queue[]>();
+    const chunks = new Map<string, Queue[]>();
 
-    if (remaining !== 0) map.set(nodes.shift()!, queues.splice(0, chunkSize + remaining));
-    while (nodes.length !== 0) map.set(nodes.shift()!, queues.splice(0, chunkSize));
+    if (remaining !== 0) chunks.set(nodes.shift()!, queues.splice(0, chunkSize + remaining));
+    while (nodes.length !== 0) chunks.set(nodes.shift()!, queues.splice(0, chunkSize));
 
-    for (const [name, queues] of map) {
+    for (const [name, queues] of chunks) {
       for (const queue of queues) {
-        if (name === queue.node.name) continue;
+        if (queue.voice.changingNode || name === queue.node.name) continue;
         try {
           await queue.voice.changeNode(name);
         } catch (err) {
