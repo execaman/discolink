@@ -5,6 +5,9 @@ interface RegionPingRecord {
   lastPingTime: number;
 }
 
+/**
+ * A class representing a common region of voice servers for measuring average latencies of nodes that perform in it
+ */
 export class VoiceRegion {
   #player: Player;
   #records = new Map<string, RegionPingRecord>();
@@ -21,14 +24,27 @@ export class VoiceRegion {
     });
   }
 
+  /**
+   * Names of nodes that have participated in this region
+   */
   get nodes() {
     return this.#records.keys().toArray();
   }
 
+  /**
+   * Deletes and stops tracking a node's ping
+   * @param name Name of the node
+   */
   forgetNode(name: string) {
     this.#records.delete(name);
   }
 
+  /**
+   * A player state update listener. Not for general use
+   * @param name Name of the node
+   * @param ping Ping from lavalink
+   * @param time Time from lavalink
+   */
   onPingUpdate(name: string, ping: number, time: number) {
     if (!this.#player.nodes.state(name, "ready")) return;
     if (ping <= 0 || time <= 0) return;
@@ -43,11 +59,19 @@ export class VoiceRegion {
     if (node.pings.length > 5) node.pings.shift();
   }
 
+  /**
+   * Returns the average ping of a node in this region
+   * @param name Name of the node
+   */
   getAveragePing(name: string) {
     const pings = this.#records.get(name)?.pings;
     return !pings?.length ? 0 : pings.reduce((t, c) => t + c, 0) / pings.length;
   }
 
+  /**
+   * @param exclusions List of names of nodes to exclude
+   * @returns Node with the least average ping, `undefined` if none available
+   */
   getRelevantNode(...exclusions: string[]) {
     return this.#player.nodes
       .relevant()

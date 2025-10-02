@@ -19,6 +19,9 @@ interface JoinRequest
   config?: Pick<CreateQueueOptions, "filters" | "volume">;
 }
 
+/**
+ * A manager class handling voice connections with useful members
+ */
 export class VoiceManager implements Partial<Map<string, VoiceState>> {
   #player: Player;
   #voices = new Map<string, VoiceState>();
@@ -28,6 +31,9 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
   #cache = new Map<string, VoiceStateInfo>();
 
+  /**
+   * Voice region classes mapped by their Id
+   */
   readonly regions = new Map<string, VoiceRegion>();
 
   constructor(player: Player) {
@@ -43,6 +49,9 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     return this.#voices.size;
   }
 
+  /**
+   * A map holding this manager's intrinsic data
+   */
   get cache() {
     return this.#cache;
   }
@@ -67,6 +76,11 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     return this.#voices.entries();
   }
 
+  /**
+   * Disconnects and destroys the state of a voice connection
+   * @param guildId Id of the guild
+   * @param reason Reason for destroying
+   */
   async destroy(guildId: string, reason = "destroyed") {
     if (this.#player.queues.has(guildId)) return this.#player.queues.destroy(guildId, reason);
     if (this.#destroys.has(guildId)) return this.#destroys.get(guildId)!;
@@ -81,6 +95,12 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     resolver.resolve();
   }
 
+  /**
+   * Connects to a voice channel and returns its state
+   * @param guildId Id of the guild
+   * @param voiceId Id of the voice channel
+   * @param options Options for customization
+   */
   async connect(guildId: string, voiceId: string, options?: ConnectOptions) {
     if (!isString(guildId, SnowflakeRegex)) throw new Error("Guild Id is not a valid Discord Id");
     if (!isString(voiceId, SnowflakeRegex)) throw new Error("Voice Id is not a valid Discord Id");
@@ -138,6 +158,10 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     }
   }
 
+  /**
+   * Disconnects the voice connection of a guild
+   * @param guildId Id of the guild
+   */
   async disconnect(guildId: string) {
     if (!this.#voices.has(guildId)) throw new Error(`No connection found for guild '${guildId}'`);
     this.#cache.delete(guildId);
@@ -163,6 +187,10 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     });
   }
 
+  /**
+   * Handles payloads dispatched by Discord to the bot
+   * @param payload 'Dispatch' payload received from Discord
+   */
   handleDispatch(payload: unknown): void;
   handleDispatch(payload: ClientReadyPayload | VoiceStateUpdatePayload | VoiceServerUpdatePayload) {
     if (payload.op !== 0) return;
