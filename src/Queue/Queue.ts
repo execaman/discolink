@@ -267,7 +267,7 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
       this.#tracks.push(this.#previousTracks.shift()!);
       return this.jump(this.hasNext ? 1 : 0);
     }
-    if (this.#autoplay) {
+    if (!this.isEmpty && this.#autoplay) {
       const related = await this.addRelated();
       if (related.length > 0) return this.jump(this.length - related.length);
     }
