@@ -2,6 +2,17 @@ import type { EmptyObject } from "../Utility";
 import type { PlayerUpdateRequestBody } from "../API";
 
 /**
+ * Options for creating a queue via manager
+ */
+export interface CreateQueueOptions<Context extends Record<string, unknown> = EmptyObject>
+  extends Pick<PlayerUpdateRequestBody, "filters" | "volume"> {
+  guildId: string;
+  voiceId: string;
+  node?: string;
+  context?: Context;
+}
+
+/**
  * https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes
  */
 export const enum VoiceCloseCodes {
@@ -79,12 +90,4 @@ export const enum VoiceCloseCodes {
    * Disconnect all clients due to call terminated (channel deleted, voice server changed, etc.). Should not reconnect.
    */
   DisconnectedCallTerminated,
-}
-
-export interface CreateQueueOptions<Context extends Record<string, unknown> = EmptyObject>
-  extends Pick<PlayerUpdateRequestBody, "filters" | "volume"> {
-  guildId: string;
-  voiceId: string;
-  node?: string;
-  context?: Context;
 }

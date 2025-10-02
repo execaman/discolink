@@ -36,16 +36,25 @@ export interface PlayerEventMap extends Record<string & {}, any> {
   trackFinish: [queue: Queue, track: Track, reason: TrackEndReason];
 }
 
+/**
+ * Represents the structure of a plugin
+ */
 export interface Plugin {
   readonly name: string;
   eventMap: Record<string & {}, any[]>;
   init(player: Player): void;
 }
 
+/**
+ * Constructs a record type mapping plugins by their names
+ */
 export type PluginRecord<Plugins extends Plugin[]> = {
   [Name in Plugins[number]["name"]]: Extract<Plugins[number], { name: Name }>;
 };
 
+/**
+ * Options for creating a Player
+ */
 export interface PlayerOptions<Plugins extends Plugin[] = Plugin[]> {
   /**
    * Options for creating node(s)
@@ -84,6 +93,9 @@ export interface PlayerOptions<Plugins extends Plugin[] = Plugin[]> {
   fetchRelatedTracks?: (queue: Queue, track: Track) => Promise<Track[]>;
 }
 
+/**
+ * Voice state update payload
+ */
 export interface VoiceUpdatePayload {
   op: 4;
   d: {
@@ -94,11 +106,17 @@ export interface VoiceUpdatePayload {
   };
 }
 
+/**
+ * Options for customizing a 'search' operation
+ */
 export interface SearchOptions {
   node?: string;
   prefix?: string;
 }
 
+/**
+ * Options for customizing a 'play' operation
+ */
 export interface PlayOptions<
   Context extends Record<string, unknown> = EmptyObject,
   UserData extends JsonObject = EmptyObject,
@@ -107,31 +125,49 @@ export interface PlayOptions<
   userData?: UserData;
 }
 
+/**
+ * Track search result
+ */
 export interface TrackSearchResult {
   type: "track";
   data: Track;
 }
 
+/**
+ * Playlist search result
+ */
 export interface PlaylistSearchResult {
   type: "playlist";
   data: Playlist;
 }
 
+/**
+ * Query search result
+ */
 export interface QuerySearchResult {
   type: "query";
   data: Track[];
 }
 
+/**
+ * Empty search result
+ */
 export interface EmptySearchResult {
   type: "empty";
   data: [];
 }
 
+/**
+ * Error search result
+ */
 export interface ErrorSearchResult {
   type: "error";
   data: Exception;
 }
 
+/**
+ * Search result
+ */
 export type SearchResult =
   | TrackSearchResult
   | PlaylistSearchResult

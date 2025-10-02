@@ -97,8 +97,14 @@ export interface NodeEventMap {
   disconnect: [code: number, reason: string, byLocal: boolean, name: string];
 }
 
+/**
+ * States of a node
+ */
 export type NodeState = "connecting" | "connected" | "ready" | "reconnecting" | "disconnected";
 
+/**
+ * Options for creating a node
+ */
 export interface NodeOptions extends RESTOptions {
   /**
    * A unique name for this node

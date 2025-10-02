@@ -1,5 +1,8 @@
 import type { EmptyObject, JsonLike } from "../Utility";
 
+/**
+ * Options to create a instance of REST
+ */
 export interface RESTOptions {
   /**
    * URL of your lavalink server
@@ -47,6 +50,9 @@ export interface RESTOptions {
   requestTimeout?: number;
 }
 
+/**
+ * Options for customizing REST requests
+ */
 export interface RequestOptions<Data extends JsonLike = EmptyObject, Params extends JsonLike = EmptyObject> {
   /**
    * The JSON data to attach in request body
