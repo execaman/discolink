@@ -64,7 +64,7 @@
     "tsup": "^8.5.0",
     "typedoc": "^0.28.13",
     "typedoc-material-theme": "^1.4.0",
-    "typedoc-plugin-dt-links": "^2.0.21",
+    "typedoc-plugin-dt-links": "^2.0.22",
     "typedoc-plugin-mdn-links": "^5.0.9",
     "typescript": "^5.9.3"
   }
