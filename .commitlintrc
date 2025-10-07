@@ -4,42 +4,36 @@
     "@commitlint/config-conventional"
   ],
   "rules": {
-    "type-enum": [
+    "type-case": [
       2,
       "always",
-      [
-        "chore",
-        "ci",
-        "docs",
-        "feat",
-        "fix",
-        "perf",
-        "refactor",
-        "revert",
-        "style",
-        "test"
-      ]
+      "lower-case"
+    ],
+    "type-empty": [
+      2,
+      "never"
     ],
     "scope-case": [
       2,
       "always",
       [
         "lower-case",
-        "upper-case",
-        "camel-case",
-        "pascal-case"
-      ]
-    ],
-    "subject-case": [
-      1,
-      "always",
-      [
-        "lower-case",
-        "upper-case",
         "camel-case",
         "pascal-case",
-        "sentence-case"
+        "upper-case"
       ]
+    ],
+    "subject-empty": [
+      2,
+      "never"
+    ],
+    "body-leading-blank": [
+      2,
+      "always"
+    ],
+    "footer-leading-blank": [
+      2,
+      "always"
     ]
   }
 }
