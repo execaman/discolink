@@ -38,8 +38,8 @@
   },
   "scripts": {
     "lint": "prettier --check . && tsc --noEmit",
-    "build": "npm run lint && tsup",
-    "docs": "npm run lint && typedoc",
+    "build": "tsup",
+    "docs": "typedoc",
     "format": "prettier --log-level error --write .",
     "upgrade": "ncu -u && npm update",
     "prepare": "husky || true"
