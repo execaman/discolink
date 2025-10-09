@@ -4,9 +4,13 @@ import { isString, noop } from "../Functions";
 import { VoiceRegion, VoiceState } from ".";
 
 import type {
+  ChannelDeletePayload,
   ClientReadyPayload,
   ConnectOptions,
   CreateQueueOptions,
+  DiscordDispatchPayload,
+  GuildDeletePayload,
+  VoiceDestroyReasons,
   VoiceServerUpdatePayload,
   VoiceStateInfo,
   VoiceStateUpdatePayload,
@@ -200,7 +204,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
    * @param payload 'Dispatch' payload received from Discord
    */
   handleDispatch(payload: unknown): void;
-  handleDispatch(payload: ClientReadyPayload | VoiceStateUpdatePayload | VoiceServerUpdatePayload) {
+  handleDispatch(payload: DiscordDispatchPayload) {
     if (payload.op !== 0) return;
     switch (payload.t) {
       case "VOICE_STATE_UPDATE":
@@ -208,6 +212,12 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
         return;
       case "VOICE_SERVER_UPDATE":
         this.#onServerUpdate(payload.d);
+        return;
+      case "GUILD_DELETE":
+        this.#onGuildDelete(payload.d);
+        return;
+      case "CHANNEL_DELETE":
+        this.#onChannelDelete(payload.d);
         return;
       case "READY":
         this.#onClientReady(payload.d);
@@ -218,6 +228,18 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   async #onClientReady(data: ClientReadyPayload["d"]) {
     if (this.#player.initialized) return;
     return this.#player.init(data.user.id);
+  }
+
+  async #onGuildDelete(data: GuildDeletePayload["d"]) {
+    if (data.unavailable) return;
+    return this.destroy(data.id, "guildDeleted" satisfies VoiceDestroyReasons);
+  }
+
+  async #onChannelDelete(data: ChannelDeletePayload["d"]) {
+    if (!data.guild_id) return;
+    const voice = this.#voices.get(data.guild_id);
+    if (voice?.channelId !== data.id) return;
+    return voice.destroy("channelDeleted" satisfies VoiceDestroyReasons);
   }
 
   #onStateUpdate(data: VoiceStateUpdatePayload["d"]) {
