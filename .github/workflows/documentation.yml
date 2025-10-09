@@ -20,6 +20,9 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  HUSKY: 0
+
 jobs:
   build:
     runs-on: ubuntu-latest
