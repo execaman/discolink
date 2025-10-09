@@ -135,13 +135,21 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
     this.#joins.set(guildId, request);
 
-    if (joined) {
-      voice.reconnecting = true;
-      await this.#sendVoiceUpdate(guildId, null);
+    try {
+      if (joined) {
+        voice.reconnecting = true;
+        await this.#sendVoiceUpdate(guildId, null);
+      }
+      await this.#sendVoiceUpdate(guildId, voiceId);
+    } catch (err) {
+      if (joined) voice.reconnecting = false;
+      request.reject(err);
+      this.#joins.delete(guildId);
+      throw err;
     }
-    await this.#sendVoiceUpdate(guildId, voiceId);
 
     const controller = new AbortController();
+
     try {
       const state = await Promise.race([request.promise, setTimeout(30_000, null, { signal: controller.signal })]);
       if (state === null) throw new Error(`Connection timed out - Guild[${guildId}] Voice[${voiceId}]`);
@@ -153,7 +161,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
       throw err;
     } finally {
       controller.abort();
-      if (voice?.reconnecting) voice.reconnecting = false;
+      if (joined) voice.reconnecting = false;
       this.#joins.delete(guildId);
     }
   }
