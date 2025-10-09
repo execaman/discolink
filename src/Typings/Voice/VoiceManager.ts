@@ -15,7 +15,11 @@ export interface CommonDispatchPayloadInfo {
  */
 export interface ClientReadyPayload extends CommonDispatchPayloadInfo {
   t: "READY";
-  d: { user: { id: string } };
+  d: {
+    user: {
+      id: string;
+    };
+  };
 }
 
 /**
@@ -47,6 +51,41 @@ export interface VoiceServerUpdatePayload extends CommonDispatchPayloadInfo {
     endpoint: string | null;
   };
 }
+
+/**
+ * Discord guild delete payload
+ */
+export interface GuildDeletePayload extends CommonDispatchPayloadInfo {
+  t: "GUILD_DELETE";
+  d: {
+    id: string;
+    unavailable?: true;
+  };
+}
+
+/**
+ * Discord channel delete payload (partial, essential only)
+ */
+export interface ChannelDeletePayload extends CommonDispatchPayloadInfo {
+  t: "CHANNEL_DELETE";
+  d: {
+    id: string;
+    guild_id?: string;
+  };
+}
+
+/**
+ * Discord dispatch payload
+ */
+export type DiscordDispatchPayload =
+  | ClientReadyPayload
+  | VoiceStateUpdatePayload
+  | VoiceServerUpdatePayload
+  | GuildDeletePayload
+  | ChannelDeletePayload;
+
+export type VoiceDestroyReasons = ("destroyed" | "guildDeleted" | "channelDeleted") | (string & {});
+export type QueueDestroyReasons = VoiceDestroyReasons;
 
 /**
  * VoiceManager intrinsic data
