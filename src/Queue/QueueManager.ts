@@ -101,10 +101,10 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
 
   /**
    * Relocates queues of a node to other nodes.
-   * If no other nodes are available, invalid`*` queues are destroyed
+   * If no other nodes are available, invalid queues are destroyed
    * @param node Name of the target node
-   * @description `*` Invalid queues are those with a different session id than what they were last updated with.
-   * e.g. reconnected, non-resumed node, stale queues with long absence of a voice connection, etc.
+   * @summary Invalid queues are those with a different session id than what they were last updated with.
+   * e.g. reconnected but non-resumed node, prolonged absence of a voice connection, etc.
    */
   async relocate(node: string) {
     if (this.#relocations.has(node)) return this.#relocations.get(node)!;

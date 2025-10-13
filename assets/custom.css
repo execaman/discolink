@@ -7,12 +7,6 @@
   width: calc(100% - 2rem) !important;
 }
 
-@supports selector(::-webkit-scrollbar) {
-  * {
-    scrollbar-width: none !important;
-  }
-}
-
 footer {
   border-top: none !important;
   position: sticky !important;
@@ -29,22 +23,6 @@ footer {
 
 .tsd-page-navigation-section > div {
   margin-left: 18px !important;
-}
-
-@media (min-width: 770px) {
-  .site-menu {
-    margin-right: 1rem !important;
-  }
-}
-
-@media (max-width: 769px) {
-  .page-menu {
-    margin-top: 0.75rem !important;
-  }
-  footer {
-    white-space: nowrap !important;
-    overflow-x: scroll !important;
-  }
 }
 
 .tsd-member-summaries {
@@ -67,11 +45,38 @@ footer {
   background-color: var(--color-accent) !important;
 }
 
+#tsd-nav-container > li:has(> a:only-child) {
+  position: relative !important;
+  left: -16px !important;
+}
+
+@media (min-width: 770px) {
+  .site-menu {
+    margin-right: 1rem !important;
+  }
+}
+
+@media (max-width: 769px) {
+  .page-menu {
+    margin-top: 0.75rem !important;
+  }
+  footer {
+    white-space: nowrap !important;
+    overflow-x: scroll !important;
+  }
+}
+
 @media (min-width: 770px) and (max-width: 1399px) {
   .col-sidebar {
     margin-right: 1rem !important;
   }
-  .tsd-small-nested-navigation {
+  #tsd-nav-container {
     width: 100% !important;
+  }
+}
+
+@supports selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: none !important;
   }
 }

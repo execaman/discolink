@@ -1,7 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "plugin": ["typedoc-plugin-dt-links", "typedoc-plugin-mdn-links", "typedoc-material-theme"],
-  "basePath": "src",
   "entryPoints": [
     "src/Typings",
     "src/Constants",
@@ -13,12 +12,12 @@
     "src/Main"
   ],
   "sort": ["enum-member-source-order"],
+  "projectDocuments": ["CHANGELOG.md"],
   "out": "docs",
   "name": "Discolink",
   "readme": "README.md",
   "defaultCategory": "Miscellaneous",
   "customCss": "assets/custom.css",
-  "customJs": "assets/custom.js",
   "favicon": "assets/music-album.png",
   "navigationLinks": {
     "GitHub": "https://github.com/execaman/discolink"
