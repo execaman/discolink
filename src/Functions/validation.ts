@@ -1,4 +1,5 @@
 import { URL } from "node:url";
+import { isRegExp } from "node:util/types";
 
 /**
  * Checks if input is a number
@@ -33,7 +34,7 @@ export function isString<T extends string>(input: unknown, check?: "url" | "non-
       return false;
     }
   }
-  if (check instanceof RegExp) return check.test(input);
+  if (isRegExp(check)) return check.test(input);
   return false;
 }
 
@@ -56,10 +57,8 @@ export function isRecord<T extends Record<any, any>>(input: unknown, check?: "no
  * @param check Additional check to perform
  * @returns `true` if the input passed, `false` otherwise
  */
-export function isArray<T extends any[]>(input: unknown, check?: "string" | "non-empty"): input is T {
+export function isArray<T extends any[]>(input: unknown, check?: "non-empty" | Parameters<T["every"]>[0]): input is T {
   if (check === undefined) return Array.isArray(input);
   if (!Array.isArray(input) || input.length === 0) return false;
-  if (check === "non-empty") return true;
-  if (check === "string") return input.every((i) => typeof i === "string" && i.length !== 0);
-  return false;
+  return check === "non-empty" || input.every(check);
 }

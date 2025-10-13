@@ -1,5 +1,5 @@
 import { Severity } from "../Typings";
-import { formatDuration, isNumber } from "../Functions";
+import { formatDuration, isArray, isNumber } from "../Functions";
 import { Playlist, Track } from "../index";
 import { VoiceState } from "../Voice";
 import { FilterManager } from "./index";
@@ -277,7 +277,7 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
         Object.assign(track.userData, userData);
         this.#tracks.push(track);
       }
-    } else if (Array.isArray(source) && source.every((t) => t instanceof Track)) {
+    } else if (isArray(source, (t) => t instanceof Track)) {
       for (const track of source) {
         Object.assign(track.userData, userData);
         this.#tracks.push(track);
@@ -314,7 +314,7 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
       if (input < 0) return this.#previousTracks.splice(input, 1)[0];
       return this.#tracks.splice(input, 1)[0];
     }
-    if (Array.isArray(input) && input.every((i) => isNumber(i, "integer"))) {
+    if (isArray(input, (i) => isNumber(i, "integer"))) {
       if (input.length === 0) return [];
       const tracks: Track[] = [];
       for (

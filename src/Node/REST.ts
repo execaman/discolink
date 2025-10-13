@@ -251,7 +251,7 @@ export class REST {
   }
 
   async decodeTracks(tracks: string[]) {
-    if (!isArray(tracks, "string")) throw new Error("Tracks must be an array of non-empty strings");
+    if (!isArray(tracks, (i) => isString(i, "non-empty"))) throw new Error("Tracks must be non-empty strings");
     const response = await this.request<APITrack[]>("POST", Routes.trackDecoding(true), { data: tracks });
     return response.data;
   }
