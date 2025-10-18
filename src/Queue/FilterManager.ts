@@ -44,6 +44,7 @@ export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
    * @returns Value of that filter if active, `null` otherwise
    */
   get<Name extends FilterNames<PluginFilters>>(name: Name): FilterValue<Name, PluginFilters> | null {
+    if (name === "pluginFilters") return null;
     return (this.#data.filters as any)[name] ?? (this.#cache.filters.pluginFilters as any)?.[name] ?? null;
   }
 
