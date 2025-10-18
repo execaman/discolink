@@ -240,39 +240,18 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
   }
 
   async #onVoiceClosed(payload: WebSocketClosedEventPayload, voice: Queue["voice"]) {
-    let shouldReconnect: boolean;
     switch (payload.code) {
-      case VoiceCloseCodes.AlreadyAuthenticated:
-      case VoiceCloseCodes.BadRequest:
-      case VoiceCloseCodes.FailedToDecodePayload:
-      case VoiceCloseCodes.NotAuthenticated:
-      case VoiceCloseCodes.UnknownEncryptionMode:
-      case VoiceCloseCodes.UnknownOpcode:
-      case VoiceCloseCodes.UnknownProtocol:
-        shouldReconnect = false;
-        break;
       case VoiceCloseCodes.AuthenticationFailed:
       case VoiceCloseCodes.ServerNotFound:
       case VoiceCloseCodes.SessionNoLongerValid:
-      case VoiceCloseCodes.SessionTimeout:
-      case VoiceCloseCodes.VoiceServerCrashed:
-        shouldReconnect = true;
-        break;
-      case VoiceCloseCodes.Disconnected:
-      case VoiceCloseCodes.DisconnectedCallTerminated:
-      case VoiceCloseCodes.DisconnectedRateLimited:
-      default:
-        this.#player.emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
-        return;
+        voice.reconnecting = true;
     }
-    voice.reconnecting = shouldReconnect;
     this.#player.emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
+    if (!voice.reconnecting) return;
     try {
-      if (shouldReconnect) {
-        await voice.reconnect();
-        if (voice.connected) return;
-      }
-      throw new Error(payload.reason);
+      await voice.reconnect();
+      if (voice.connected) return;
+      return this.destroy(voice.guildId, payload.reason);
     } catch (err) {
       return this.destroy(voice.guildId, err.message);
     } finally {
