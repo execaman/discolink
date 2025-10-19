@@ -10,7 +10,7 @@ import type {
   CreateQueueOptions,
   DiscordDispatchPayload,
   GuildDeletePayload,
-  VoiceDestroyReasons,
+  PlayerDestroyReasons,
   VoiceServerUpdatePayload,
   VoiceStateInfo,
   VoiceStateUpdatePayload,
@@ -232,14 +232,14 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
   async #onGuildDelete(data: GuildDeletePayload["d"]) {
     if (data.unavailable) return;
-    return this.destroy(data.id, "guildDeleted" satisfies VoiceDestroyReasons);
+    return this.destroy(data.id, "guildDeleted" satisfies PlayerDestroyReasons);
   }
 
   async #onChannelDelete(data: ChannelDeletePayload["d"]) {
     if (!data.guild_id) return;
     const voice = this.#voices.get(data.guild_id);
     if (voice?.channelId !== data.id) return;
-    return voice.destroy("channelDeleted" satisfies VoiceDestroyReasons);
+    return voice.destroy("channelDeleted" satisfies PlayerDestroyReasons);
   }
 
   #onStateUpdate(data: VoiceStateUpdatePayload["d"]) {
