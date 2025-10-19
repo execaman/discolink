@@ -84,8 +84,7 @@ export type DiscordDispatchPayload =
   | GuildDeletePayload
   | ChannelDeletePayload;
 
-export type VoiceDestroyReasons = ("destroyed" | "guildDeleted" | "channelDeleted") | (string & {});
-export type QueueDestroyReasons = VoiceDestroyReasons;
+export type PlayerDestroyReasons = ("destroyed" | "guildDeleted" | "channelDeleted") | (string & {});
 
 /**
  * VoiceManager intrinsic data

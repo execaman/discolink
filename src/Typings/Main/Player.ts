@@ -1,7 +1,7 @@
 import type { EmptyObject, JsonObject } from "../Utility";
 import type { Exception, PlayerState, TrackEndReason } from "../API";
 import type { CreateNodeOptions, NodeEventMap } from "../Node";
-import type { QueueDestroyReasons, VoiceDestroyReasons } from "../Voice";
+import type { PlayerDestroyReasons } from "../Voice";
 import type { CreateQueueOptions } from "../Queue";
 
 import type { Node } from "../../Node";
@@ -24,12 +24,12 @@ export interface PlayerEventMap extends Record<string & {}, any> {
   voiceConnect: [voice: VoiceState];
   voiceClose: [voice: VoiceState, code: number, reason: string, byRemote: boolean];
   voiceChange: [voice: VoiceState, previousNode: Node, wasPlaying: boolean];
-  voiceDestroy: [voice: VoiceState, reason: VoiceDestroyReasons];
+  voiceDestroy: [voice: VoiceState, reason: PlayerDestroyReasons];
 
   queueCreate: [queue: Queue];
   queueUpdate: [queue: Queue, state: PlayerState];
   queueFinish: [queue: Queue];
-  queueDestroy: [queue: Queue, reason: QueueDestroyReasons];
+  queueDestroy: [queue: Queue, reason: PlayerDestroyReasons];
 
   trackStart: [queue: Queue, track: Track];
   trackStuck: [queue: Queue, track: Track, thresholdMs: number];
