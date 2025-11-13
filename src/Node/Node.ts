@@ -2,7 +2,7 @@ declare const $clientName: string;
 declare const $clientVersion: string;
 
 import { EventEmitter, once } from "node:events";
-import { setTimeout, clearTimeout } from "node:timers";
+import { clearImmediate, clearTimeout, setImmediate, setTimeout } from "node:timers";
 import { WebSocket } from "ws";
 import { CloseCodes, OPType } from "../Typings";
 import { DefaultNodeOptions, DefaultRestOptions, Routes, SnowflakeRegex } from "../Constants";
@@ -349,16 +349,24 @@ export class Node extends EventEmitter<NodeEventMap> {
   #onClose(code: number, reason: string) {
     this.#cleanup();
     this.rest.dropSessionRequests(`Connection to node '${this.name}' closed`);
-    if (!this.#manualDisconnect && this.#reconnectAttempts < this.#reconnectLimit) {
+    if (this.#manualDisconnect || this.#reconnectAttempts === this.#reconnectLimit) {
+      this.#stopReconnecting();
+      delete this.#socketConfig.headers["Session-Id"];
+      const byLocal = this.#manualDisconnect;
+      this.#manualDisconnect = false;
+      this.emit("disconnect", code, reason, byLocal, this.name);
+      return;
+    }
+    if (this.#reconnectInit) {
       this.#reconnect();
       this.emit("close", code, reason, this.name);
       return;
     }
-    this.#stopReconnecting();
-    delete this.#socketConfig.headers["Session-Id"];
-    const byLocal = this.#manualDisconnect;
-    this.#manualDisconnect = false;
-    this.emit("disconnect", code, reason, byLocal, this.name);
+    const immediate = setImmediate(() => {
+      clearImmediate(immediate);
+      this.#reconnectInit = true;
+      this.connect();
+    });
   }
 
   override toString() {
