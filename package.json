@@ -27,9 +27,12 @@
   "homepage": "https://execaman.github.io/discolink",
   "bugs": "https://github.com/execaman/discolink/issues",
   "keywords": [
-    "lavalink",
+    "api",
+    "client",
+    "library",
+    "music",
     "discord",
-    "music"
+    "lavalink"
   ],
   "license": "Apache-2.0",
   "publishConfig": {
