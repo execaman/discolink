@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/execaman/discolink/compare/v1.2.1...v1.3.0) (2025-11-14)
+
+
+### Features
+
+* **Node:** immediate connect attempt before reconnect cycle ([#8](https://github.com/execaman/discolink/issues/8)) ([d5ee6b5](https://github.com/execaman/discolink/commit/d5ee6b5677d69f1e52368c6c1e158a521b694a0a))
+
+
+### Bug Fixes
+
+* **VoiceRegionIdRegex:** redos vulnerability ([#10](https://github.com/execaman/discolink/issues/10)) ([4188355](https://github.com/execaman/discolink/commit/418835559863d588414ae82ce3cd29a73e347e9f))
+
 ## [1.2.1](https://github.com/execaman/discolink/compare/v1.2.0...v1.2.1) (2025-10-19)
 
 
