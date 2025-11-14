@@ -8,6 +8,7 @@ on:
       - src/**
       - assets/**
       - README.md
+      - CHANGELOG.md
       - typedoc.json
   workflow_dispatch:
 
