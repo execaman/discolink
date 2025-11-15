@@ -3,5 +3,4 @@ export * from "./API";
 export * from "./Node";
 export * from "./Voice";
 export * from "./Queue";
-export * from "./Plugins";
 export * from "./Main";
