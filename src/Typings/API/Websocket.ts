@@ -126,7 +126,7 @@ export interface BaseMessagePayload {
   /**
    * The op type
    */
-  op: OPType;
+  op: OPType | string;
 }
 
 export interface ReadyPayload extends BaseMessagePayload {
@@ -279,7 +279,7 @@ export interface BaseEventPayload extends BaseMessagePayload {
   /**
    * The type of event
    */
-  type: EventType;
+  type: EventType | string;
 
   /**
    * The guild id

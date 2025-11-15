@@ -40,7 +40,7 @@ export interface PlayerEventMap extends Record<string & {}, any> {
 /**
  * Represents the structure of a plugin
  */
-export interface Plugin {
+export interface PlayerPlugin {
   readonly name: string;
   eventMap: Record<string & {}, any[]>;
   init(player: Player): void;
@@ -49,14 +49,14 @@ export interface Plugin {
 /**
  * Constructs a record type mapping plugins by their names
  */
-export type PluginRecord<Plugins extends Plugin[]> = {
+export type PluginRecord<Plugins extends PlayerPlugin[]> = {
   [Name in Plugins[number]["name"]]: Extract<Plugins[number], { name: Name }>;
 };
 
 /**
  * Options for creating a Player
  */
-export interface PlayerOptions<Plugins extends Plugin[] = Plugin[]> {
+export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> {
   /**
    * Options for creating node(s)
    */

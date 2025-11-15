@@ -11,7 +11,7 @@ import type {
   PlayerEventMap,
   PlayerOptions,
   PlayOptions,
-  Plugin,
+  PlayerPlugin,
   PluginRecord,
   RepeatMode,
   RequiredProp,
@@ -25,7 +25,7 @@ import { DefaultPlayerOptions } from "../Constants";
  */
 export class Player<
   Context extends Record<string, unknown> = EmptyObject,
-  Plugins extends Plugin[] = Plugin[],
+  Plugins extends PlayerPlugin[] = PlayerPlugin[],
 > extends EventEmitter<Plugins[number]["eventMap"] & PlayerEventMap> {
   #initialized = false;
   #clientId: string | null = null;
