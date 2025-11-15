@@ -29,7 +29,8 @@ export function isString<T extends string>(input: unknown, check?: "url" | "non-
   if (check === "non-empty") return input.trim().length > 0;
   if (check === "url") {
     try {
-      return new URL(input).origin !== "null";
+      const url = new URL(input);
+      return url.origin !== "null" && url.protocol.startsWith("http");
     } catch {
       return false;
     }
