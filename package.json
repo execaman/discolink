@@ -51,7 +51,7 @@
     "node": ">=22.11.0"
   },
   "dependencies": {
-    "axios": "^1.12.2",
+    "axios": "^1.13.2",
     "ws": "^8.18.3"
   },
   "optionalDependencies": {
@@ -62,13 +62,13 @@
     "@commitlint/config-conventional": "^20.0.0",
     "@types/ws": "^8.18.1",
     "husky": "^9.1.7",
-    "npm-check-updates": "^19.0.0",
+    "npm-check-updates": "^19.1.2",
     "prettier": "^3.6.2",
-    "tsup": "^8.5.0",
-    "typedoc": "^0.28.13",
-    "typedoc-material-theme": "^1.4.0",
-    "typedoc-plugin-dt-links": "^2.0.22",
-    "typedoc-plugin-mdn-links": "^5.0.9",
+    "tsup": "^8.5.1",
+    "typedoc": "^0.28.14",
+    "typedoc-material-theme": "^1.4.1",
+    "typedoc-plugin-dt-links": "^2.0.29",
+    "typedoc-plugin-mdn-links": "^5.0.10",
     "typescript": "^5.9.3"
   }
 }
