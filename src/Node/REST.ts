@@ -242,6 +242,22 @@ export class REST {
     });
   }
 
+  async get<T, P extends JsonLike>(endpoint: string, options?: Omit<RequestOptions<never, P>, "data">) {
+    return this.request<T, never, P>("GET", endpoint, options);
+  }
+
+  async post<T, D extends JsonLike, P extends JsonLike>(endpoint: string, options?: RequestOptions<D, P>) {
+    return this.request<T, D, P>("POST", endpoint, options);
+  }
+
+  async patch<T, D extends JsonLike, P extends JsonLike>(endpoint: string, options?: RequestOptions<D, P>) {
+    return this.request<T, D, P>("PATCH", endpoint, options);
+  }
+
+  async delete<T, P extends JsonLike>(endpoint: string, options?: Omit<RequestOptions<never, P>, "data">) {
+    return this.request<T, never, P>("DELETE", endpoint, options);
+  }
+
   async loadTracks(identifier: string) {
     if (!isString(identifier, "non-empty")) throw new Error("Identifier must be a non-empty string");
     const response = await this.request<LoadResult>("GET", Routes.trackLoading(), { params: { identifier } });
