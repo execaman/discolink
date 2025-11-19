@@ -253,8 +253,8 @@ export class Node extends EventEmitter<NodeEventMap> {
       this.rest.dropSessionRequests(`Connection to node '${this.name}' was zombie`);
       this.#reconnect();
     }, this.#statsInterval + this.#highestLatency).unref();
-    this.#socket?.ping();
     this.#lastPingTime = Date.now();
+    this.#socket?.ping();
   }
 
   #parseMessageData(data: string) {
