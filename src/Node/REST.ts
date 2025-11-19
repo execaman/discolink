@@ -165,11 +165,11 @@ export class REST {
 
   async #makeRequest<T, D>(config: Task["config"], retries = this.#retryLimit): Promise<AxiosResponse<T, D>> {
     try {
-      const response = await this.#axios.request<T>(config);
+      const response = await this.#axios.request(config);
       return response;
     } catch (err) {
       if (config.signal?.aborted) err.message = "reason" in config.signal ? config.signal.reason : err.message;
-      else if (err.code === "ETIMEDOUT" && retries !== 0) return this.#makeRequest<T, D>(config, retries - 1);
+      else if (err.code === "ETIMEDOUT" && retries !== 0) return this.#makeRequest(config, retries - 1);
       throw this.#error(err, config.url!);
     }
   }
@@ -203,7 +203,11 @@ export class REST {
     for (const task of tasks) task.reject(this.#error(err, task.config.url!));
   }
 
-  async request<T, D extends JsonLike = EmptyObject>(method: Method, endpoint: string, options?: RequestOptions<D>) {
+  async request<T, Data extends JsonLike = EmptyObject, Params extends JsonLike = EmptyObject>(
+    method: Method,
+    endpoint: string,
+    options?: RequestOptions<Data, Params>
+  ) {
     if (!isString(method, "non-empty")) throw new Error("Method must be a non-empty string");
     if (!isString(endpoint, "non-empty")) throw new Error("Endpoint must be a non-empty string");
 
@@ -229,10 +233,10 @@ export class REST {
     }
 
     if (this.#sessionId === null || !endpoint.includes(this.#sessionId)) {
-      return this.#makeRequest<T, D>(config);
+      return this.#makeRequest<T, Data>(config);
     }
 
-    return new Promise<AxiosResponse<T, D>>((resolve, reject) => {
+    return new Promise<AxiosResponse<T, Data>>((resolve, reject) => {
       this.#queue.push({ config, reject, resolve });
       if (this.#queueIdling) this.#resumeQueue();
     });
