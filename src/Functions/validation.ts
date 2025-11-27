@@ -30,7 +30,7 @@ export function isString<T extends string>(input: unknown, check?: "url" | "non-
   if (check === "url") {
     try {
       const url = new URL(input);
-      return url.origin !== "null" && url.protocol.startsWith("http");
+      return url.origin !== "null" && (url.protocol === "http:" || url.protocol === "https:");
     } catch {
       return false;
     }
