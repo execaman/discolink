@@ -7,7 +7,7 @@ import { isRegExp } from "node:util/types";
  * @param check Additional check to perform
  * @returns `true` if the input passed, `false` otherwise
  */
-export function isNumber<T extends number>(input: unknown, check?: "integer" | "natural" | "whole"): input is T {
+export const isNumber = <T extends number>(input: unknown, check?: "integer" | "natural" | "whole"): input is T => {
   if (check === undefined) return Number.isFinite(input);
   if (!Number.isSafeInteger(input)) return false;
   if (check === "natural") return (input as number) > 0;
@@ -15,7 +15,7 @@ export function isNumber<T extends number>(input: unknown, check?: "integer" | "
   if (check === "integer") return true;
   if (check === "whole") return (input as number) >= 0;
   return false;
-}
+};
 
 /**
  * Checks if input is a string
@@ -23,7 +23,7 @@ export function isNumber<T extends number>(input: unknown, check?: "integer" | "
  * @param check Additional check to perform
  * @returns `true` if the input passed, `false` otherwise
  */
-export function isString<T extends string>(input: unknown, check?: "url" | "non-empty" | RegExp): input is T {
+export const isString = <T extends string>(input: unknown, check?: "url" | "non-empty" | RegExp): input is T => {
   if (check === undefined) return typeof input === "string";
   if (typeof input !== "string") return false;
   if (check === "non-empty") return input.trim().length > 0;
@@ -37,7 +37,7 @@ export function isString<T extends string>(input: unknown, check?: "url" | "non-
   }
   if (isRegExp(check)) return check.test(input);
   return false;
-}
+};
 
 /**
  * Checks if input is a record
@@ -45,12 +45,12 @@ export function isString<T extends string>(input: unknown, check?: "url" | "non-
  * @param check Additional check to perform
  * @returns `true` if the input passed, `false` otherwise
  */
-export function isRecord<T extends Record<any, any>>(input: unknown, check?: "non-empty"): input is T {
+export const isRecord = <T extends Record<any, any>>(input: unknown, check?: "non-empty"): input is T => {
   if (check === undefined) return input !== null && typeof input === "object" && !Array.isArray(input);
   if (input === null || typeof input !== "object" || Array.isArray(input)) return false;
   if (check === "non-empty") return Object.keys(input).length > 0;
   return false;
-}
+};
 
 /**
  * Checks if input is an array
@@ -58,8 +58,11 @@ export function isRecord<T extends Record<any, any>>(input: unknown, check?: "no
  * @param check Additional check to perform
  * @returns `true` if the input passed, `false` otherwise
  */
-export function isArray<T extends any[]>(input: unknown, check?: "non-empty" | Parameters<T["every"]>[0]): input is T {
+export const isArray = <T extends any[]>(
+  input: unknown,
+  check?: "non-empty" | Parameters<T["every"]>[0]
+): input is T => {
   if (check === undefined) return Array.isArray(input);
   if (!Array.isArray(input) || input.length === 0) return false;
   return check === "non-empty" || input.every(check);
-}
+};
