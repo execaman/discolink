@@ -8,7 +8,6 @@ import { CloseCodes, OPType } from "../Typings";
 import { DefaultNodeOptions, DefaultRestOptions, Routes, SnowflakeRegex } from "../Constants";
 import { isNumber, isString, noop } from "../Functions";
 import { REST } from "./index";
-
 import type { ClientOptions } from "ws";
 import type { ClientHeaders, MessagePayload, NodeEventMap, NodeOptions, NodeState, StatsPayload } from "../Typings";
 

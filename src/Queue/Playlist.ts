@@ -1,6 +1,5 @@
 import { formatDuration, isNumber, isRecord, isString } from "../Functions";
 import { Track } from "./index";
-
 import type { APIPlaylist, EmptyObject, JsonObject } from "../Typings";
 
 /**

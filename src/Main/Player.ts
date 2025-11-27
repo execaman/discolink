@@ -1,10 +1,10 @@
 import { EventEmitter } from "node:events";
 import { LoadType } from "../Typings";
+import { DefaultPlayerOptions } from "../Constants";
 import { isRecord, isString } from "../Functions";
 import { NodeManager } from "../Node";
 import { VoiceManager } from "../Voice";
 import { Playlist, Queue, QueueManager, Track } from "../Queue";
-
 import type {
   CreateQueueOptions,
   EmptyObject,
@@ -18,7 +18,6 @@ import type {
   SearchOptions,
   SearchResult,
 } from "../Typings";
-import { DefaultPlayerOptions } from "../Constants";
 
 /**
  * The main class, entrypoint of the library
