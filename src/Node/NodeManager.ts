@@ -1,7 +1,6 @@
 import { OPType } from "../Typings";
 import { noop } from "../Functions";
 import { Node } from "../index";
-
 import type { CreateNodeOptions, LavalinkInfo, NodeMetrics, NodeEventMap, NodeState, StatsPayload } from "../Typings";
 import type { Player } from "../Main";
 

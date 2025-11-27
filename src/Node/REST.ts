@@ -3,7 +3,6 @@ import { validateHeaderValue } from "node:http";
 import Axios from "axios";
 import { DefaultRestOptions, Routes } from "../Constants";
 import { isArray, isNumber, isRecord, isString } from "../Functions";
-
 import type { AxiosError, AxiosRequestConfig, AxiosResponse, Method } from "axios";
 import type {
   APIPlayer,

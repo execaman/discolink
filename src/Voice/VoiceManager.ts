@@ -1,8 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 import { SnowflakeRegex, VoiceRegionIdRegex } from "../Constants";
 import { isString, noop } from "../Functions";
-import { VoiceRegion, VoiceState } from ".";
-
+import { VoiceRegion, VoiceState } from "./index";
 import type {
   ChannelDeletePayload,
   ClientReadyPayload,

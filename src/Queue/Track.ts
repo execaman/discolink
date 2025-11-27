@@ -1,5 +1,4 @@
 import { formatDuration, isNumber, isRecord, isString } from "../Functions";
-
 import type { APITrack, EmptyObject, JsonObject } from "../Typings";
 
 export class Track<UserData extends JsonObject = EmptyObject, PluginInfo extends JsonObject = EmptyObject> {

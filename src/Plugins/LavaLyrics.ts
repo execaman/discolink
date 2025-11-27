@@ -2,7 +2,6 @@ import { HttpStatusCode } from "axios";
 import { OPType } from "../Typings";
 import { Routes } from "../Constants";
 import { isString } from "../Functions";
-
 import type { BaseEventPayload, EmptyObject, JsonObject, PlayerPlugin } from "../Typings";
 import type { Node } from "../Node";
 import type { Queue } from "../Queue";

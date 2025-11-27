@@ -1,5 +1,5 @@
-import type { RESTOptions } from "./REST";
 import type { MessagePayload } from "../API";
+import type { RESTOptions } from "./REST";
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code

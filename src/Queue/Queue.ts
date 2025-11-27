@@ -3,7 +3,6 @@ import { formatDuration, isArray, isNumber } from "../Functions";
 import { Playlist, Track } from "../index";
 import { VoiceState } from "../Voice";
 import { FilterManager } from "./index";
-
 import type { APIPlayer, EmptyObject, Exception, JsonObject, PlayerUpdateRequestBody, RepeatMode } from "../Typings";
 import type { Player } from "../Main";
 

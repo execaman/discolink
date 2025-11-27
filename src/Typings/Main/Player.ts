@@ -3,7 +3,6 @@ import type { Exception, PlayerState, TrackEndReason } from "../API";
 import type { CreateNodeOptions, NodeEventMap } from "../Node";
 import type { PlayerDestroyReasons } from "../Voice";
 import type { CreateQueueOptions } from "../Queue";
-
 import type { Node } from "../../Node";
 import type { VoiceState } from "../../Voice";
 import type { Playlist, Queue, Track } from "../../Queue";

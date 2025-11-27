@@ -1,7 +1,6 @@
 import { VoiceCloseCodes, EventType, TrackEndReason } from "../Typings";
 import { isRecord, noop } from "../Functions";
 import { Queue, Track } from "./index";
-
 import type {
   APIPlayer,
   PlayerUpdatePayload,

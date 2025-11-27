@@ -1,5 +1,4 @@
 import { noop } from "../Functions";
-
 import type { PlayerUpdateRequestBody, VoiceStateInfo } from "../Typings";
 import type { Node } from "../Node";
 import type { Player } from "../Main";
