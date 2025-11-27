@@ -1,4 +1,5 @@
 import { OPType } from "../Typings";
+import { PlayerSymbol } from "../Constants/Symbols";
 import { noop } from "../Functions";
 import { Node } from "../index";
 import type { CreateNodeOptions, LavalinkInfo, NodeMetrics, NodeEventMap, NodeState, StatsPayload } from "../Typings";
@@ -8,7 +9,7 @@ import type { Player } from "../Main";
  * A manager class handling nodes with useful members
  */
 export class NodeManager implements Partial<Map<string, Node>> {
-  #player: Player;
+  [PlayerSymbol]: Player;
 
   #nodes = new Map<string, Node>();
   #cache = new Map<string, NodeMetrics>();
@@ -19,7 +20,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
   readonly info = new Map<string, LavalinkInfo>();
 
   constructor(player: Player) {
-    this.#player = player;
+    this[PlayerSymbol] = player;
 
     Object.defineProperty(this, "info" satisfies keyof NodeManager, {
       writable: false,
@@ -87,9 +88,9 @@ export class NodeManager implements Partial<Map<string, Node>> {
    * @param options Options to create from
    */
   create(options: CreateNodeOptions) {
-    if (this.#player.clientId === null) throw new Error("Player has not been initialized");
+    if (this[PlayerSymbol].clientId === null) throw new Error("Player has not been initialized");
     if (this.#nodes.has(options.name)) throw new Error(`Node '${options.name}' already exists`);
-    const node = new Node({ ...options, clientId: this.#player.clientId });
+    const node = new Node({ ...options, clientId: this[PlayerSymbol].clientId });
     node.setMaxListeners(1);
     this.#attachEvents(node);
     this.#nodes.set(node.name, node);
@@ -224,18 +225,18 @@ export class NodeManager implements Partial<Map<string, Node>> {
   }
 
   #onConnect: (...args: NodeEventMap["connect"]) => void = (reconnects, nodeName) => {
-    this.#player.emit("nodeConnect", this.#nodes.get(nodeName)!, reconnects);
+    this[PlayerSymbol].emit("nodeConnect", this.#nodes.get(nodeName)!, reconnects);
   };
 
   #onReady: (...args: NodeEventMap["ready"]) => void = (resumed, sessionId, nodeName) => {
-    this.#player.emit("nodeReady", this.#nodes.get(nodeName)!, resumed, sessionId);
+    this[PlayerSymbol].emit("nodeReady", this.#nodes.get(nodeName)!, resumed, sessionId);
     this.fetchInfo(nodeName).catch(noop);
   };
 
   #onDispatch: (...args: NodeEventMap["dispatch"]) => void = (payload, nodeName) => {
     switch (payload.op) {
       case OPType.PlayerUpdate: {
-        this.#player.queues.onStateUpdate(payload);
+        this[PlayerSymbol].queues.onStateUpdate(payload);
         break;
       }
       case OPType.Stats: {
@@ -243,28 +244,28 @@ export class NodeManager implements Partial<Map<string, Node>> {
         break;
       }
       case OPType.Event: {
-        this.#player.queues.onEventUpdate(payload);
+        this[PlayerSymbol].queues.onEventUpdate(payload);
         break;
       }
     }
-    this.#player.emit("nodeDispatch", this.#nodes.get(nodeName)!, payload);
+    this[PlayerSymbol].emit("nodeDispatch", this.#nodes.get(nodeName)!, payload);
   };
 
   #onError: (...args: NodeEventMap["error"]) => void = (err, nodeName) => {
-    this.#player.emit("nodeError", this.#nodes.get(nodeName)!, err);
+    this[PlayerSymbol].emit("nodeError", this.#nodes.get(nodeName)!, err);
   };
 
   #onClose: (...args: NodeEventMap["close"]) => void = (code, reason, nodeName) => {
     this.#cache.delete(nodeName);
-    this.#player.emit("nodeClose", this.#nodes.get(nodeName)!, code, reason);
-    if (this.#player.options.relocateQueues) this.#player.queues.relocate(nodeName).catch(noop);
+    this[PlayerSymbol].emit("nodeClose", this.#nodes.get(nodeName)!, code, reason);
+    if (this[PlayerSymbol].options.relocateQueues) this[PlayerSymbol].queues.relocate(nodeName).catch(noop);
   };
 
   #onDisconnect: (...args: NodeEventMap["disconnect"]) => void = (code, reason, byLocal, nodeName) => {
     this.#cache.delete(nodeName);
-    this.#player.voices.regions.forEach((r) => r.forgetNode(nodeName));
-    this.#player.emit("nodeDisconnect", this.#nodes.get(nodeName)!, code, reason, byLocal);
-    if (this.#player.options.relocateQueues) this.#player.queues.relocate(nodeName).catch(noop);
+    this[PlayerSymbol].voices.regions.forEach((r) => r.forgetNode(nodeName));
+    this[PlayerSymbol].emit("nodeDisconnect", this.#nodes.get(nodeName)!, code, reason, byLocal);
+    if (this[PlayerSymbol].options.relocateQueues) this[PlayerSymbol].queues.relocate(nodeName).catch(noop);
   };
 
   #attachEvents(node: Node) {

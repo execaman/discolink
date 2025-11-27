@@ -1,3 +1,4 @@
+import { PlayerSymbol } from "../Constants/Symbols";
 import { noop } from "../Functions";
 import type { PlayerUpdateRequestBody, VoiceStateInfo } from "../Typings";
 import type { Node } from "../Node";
@@ -8,7 +9,7 @@ import type { Player } from "../Main";
  */
 export class VoiceState {
   #cache: VoiceStateInfo;
-  #player: Player;
+  [PlayerSymbol]: Player;
 
   #node: Node;
 
@@ -26,11 +27,11 @@ export class VoiceState {
 
     this.#node = _node;
     this.#cache = info;
-    this.#player = player;
+    this[PlayerSymbol] = player;
   }
 
   get #info() {
-    this.#cache = this.#player.voices.cache.get(this.guildId) ?? this.#cache;
+    this.#cache = this[PlayerSymbol].voices.cache.get(this.guildId) ?? this.#cache;
     return this.#cache;
   }
 
@@ -108,7 +109,7 @@ export class VoiceState {
    * Whether this instance of VoiceState is destroyed
    */
   get destroyed() {
-    return this.#player.voices.get(this.guildId) !== this;
+    return this[PlayerSymbol].voices.get(this.guildId) !== this;
   }
 
   /**
@@ -183,7 +184,7 @@ export class VoiceState {
    * @param reason Reason for destroying
    */
   async destroy(reason?: string) {
-    return this.#player.voices.destroy(this.guildId, reason);
+    return this[PlayerSymbol].voices.destroy(this.guildId, reason);
   }
 
   /**
@@ -191,7 +192,7 @@ export class VoiceState {
    * @param channelId Id of a voice channel
    */
   async connect(channelId = this.#info.channel_id) {
-    return this.#player.voices.connect(this.guildId, channelId);
+    return this[PlayerSymbol].voices.connect(this.guildId, channelId);
   }
 
   /**
@@ -206,7 +207,7 @@ export class VoiceState {
    * Disconnects the voice connection
    */
   async disconnect() {
-    return this.#player.voices.disconnect(this.guildId);
+    return this[PlayerSymbol].voices.disconnect(this.guildId);
   }
 
   /**
@@ -214,7 +215,7 @@ export class VoiceState {
    * @param name Name of the target node
    */
   async changeNode(name: string) {
-    const node = this.#player.nodes.get(name);
+    const node = this[PlayerSymbol].nodes.get(name);
 
     if (!node) throw new Error(`Node '${name}' not found`);
     if (!node.ready) throw new Error(`Node '${name}' not ready`);
@@ -222,7 +223,7 @@ export class VoiceState {
     if (this.#changePromise !== null) return this.#changePromise;
     if (name === this.#node.name) throw new Error(`Already on node '${name}'`);
 
-    const queue = this.#player.queues.get(this.guildId);
+    const queue = this[PlayerSymbol].queues.get(this.guildId);
     if (!queue) throw new Error(`No queue found for guild '${this.guildId}'`);
 
     const resolver = Promise.withResolvers<void>();
@@ -236,7 +237,7 @@ export class VoiceState {
     };
     const wasPlaying = queue.isPlaying && queue.track !== null;
 
-    if (wasPlaying && this.#player.nodes.info.get(node.name)?.sourceManagers.includes(queue.track.sourceName)) {
+    if (wasPlaying && this[PlayerSymbol].nodes.info.get(node.name)?.sourceManagers.includes(queue.track.sourceName)) {
       request.track = { encoded: queue.track.encoded, userData: queue.track.userData };
       request.position = queue.currentTime;
     }
@@ -246,9 +247,9 @@ export class VoiceState {
     this.#node = node;
     try {
       const player = await node.rest.updatePlayer(this.guildId, request);
-      this.#player.queues.cache.set(this.guildId, player);
+      this[PlayerSymbol].queues.cache.set(this.guildId, player);
       this.#info.node_session_id = node.sessionId!;
-      this.#player.emit("voiceChange", this, previousNode, wasPlaying);
+      this[PlayerSymbol].emit("voiceChange", this, previousNode, wasPlaying);
       resolver.resolve();
     } catch (err) {
       resolver.reject(err);

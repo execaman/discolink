@@ -15,6 +15,7 @@ import type {
   VoiceStateUpdatePayload,
 } from "../Typings";
 import type { Player } from "../Main";
+import { PlayerSymbol } from "../Constants/Symbols";
 
 interface JoinRequest
   extends PromiseWithResolvers<VoiceState>,
@@ -26,7 +27,7 @@ interface JoinRequest
  * A manager class handling voice connections with useful members
  */
 export class VoiceManager implements Partial<Map<string, VoiceState>> {
-  #player: Player;
+  [PlayerSymbol]: Player;
   #voices = new Map<string, VoiceState>();
 
   #joins = new Map<string, JoinRequest>();
@@ -40,7 +41,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   readonly regions = new Map<string, VoiceRegion>();
 
   constructor(player: Player) {
-    this.#player = player;
+    this[PlayerSymbol] = player;
 
     Object.defineProperty(this, "regions" satisfies keyof VoiceManager, {
       writable: false,
@@ -85,7 +86,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
    * @param reason Reason for destroying
    */
   async destroy(guildId: string, reason = "destroyed") {
-    if (this.#player.queues.has(guildId)) return this.#player.queues.destroy(guildId, reason);
+    if (this[PlayerSymbol].queues.has(guildId)) return this[PlayerSymbol].queues.destroy(guildId, reason);
     if (this.#destroys.has(guildId)) return this.#destroys.get(guildId)!;
     const voice = this.#voices.get(guildId);
     if (!voice) return;
@@ -93,7 +94,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     this.#destroys.set(guildId, resolver.promise);
     await voice.disconnect().catch(noop);
     this.#voices.delete(guildId);
-    this.#player.emit("voiceDestroy", voice, reason);
+    this[PlayerSymbol].emit("voiceDestroy", voice, reason);
     this.#destroys.delete(guildId);
     resolver.resolve();
   }
@@ -119,7 +120,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
     if (joined && voice.connected && this.#cache.has(guildId)) return voice;
 
-    if (options?.node !== undefined && !this.#player.nodes.state(options.node, "ready")) {
+    if (options?.node !== undefined && !this[PlayerSymbol].nodes.state(options.node, "ready")) {
       throw new Error(`Node '${options.node}' not ready`);
     }
 
@@ -181,13 +182,13 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
   #getVoiceRegion(id: string) {
     if (this.regions.has(id)) return this.regions.get(id)!;
-    const region = new VoiceRegion(this.#player, id);
+    const region = new VoiceRegion(this[PlayerSymbol], id);
     this.regions.set(id, region);
     return region;
   }
 
   async #sendVoiceUpdate(guildId: string, channelId: string | null) {
-    return this.#player.options.forwardVoiceUpdate(guildId, {
+    return this[PlayerSymbol].options.forwardVoiceUpdate(guildId, {
       op: 4,
       d: {
         guild_id: guildId,
@@ -225,8 +226,8 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   }
 
   async #onClientReady(data: ClientReadyPayload["d"]) {
-    if (this.#player.initialized) return;
-    return this.#player.init(data.user.id);
+    if (this[PlayerSymbol].initialized) return;
+    return this[PlayerSymbol].init(data.user.id);
   }
 
   async #onGuildDelete(data: GuildDeletePayload["d"]) {
@@ -242,7 +243,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   }
 
   #onStateUpdate(data: VoiceStateUpdatePayload["d"]) {
-    if (!data.guild_id || data.user_id !== this.#player.clientId) return;
+    if (!data.guild_id || data.user_id !== this[PlayerSymbol].clientId) return;
     if (data.channel_id === null) {
       this.#cache.delete(data.guild_id);
       return;
@@ -292,7 +293,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     const reqNode = request?.node !== undefined;
     let voice = this.#voices.get(data.guild_id);
 
-    const node = voice?.node ?? (reqNode ? this.#player.nodes.get(request.node!) : region.getRelevantNode());
+    const node = voice?.node ?? (reqNode ? this[PlayerSymbol].nodes.get(request.node!) : region.getRelevantNode());
     if (!node?.ready)
       return request?.reject(new Error(reqNode ? `Node '${request.node}' unavailable` : "No nodes available"));
 
@@ -305,22 +306,22 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
           token: data.token,
         },
       });
-      this.#player.queues.cache.set(data.guild_id, player);
+      this[PlayerSymbol].queues.cache.set(data.guild_id, player);
 
       state.node_session_id = node.sessionId!;
       state.connected = player.state.connected;
       state.ping = player.state.ping;
 
       if (!voice) {
-        voice = new VoiceState(this.#player, node.name, data.guild_id);
+        voice = new VoiceState(this[PlayerSymbol], node.name, data.guild_id);
         this.#voices.set(data.guild_id, voice);
       }
-      this.#player.emit("voiceConnect", voice);
+      this[PlayerSymbol].emit("voiceConnect", voice);
 
-      if (!this.#player.queues.has(data.guild_id)) {
+      if (!this[PlayerSymbol].queues.has(data.guild_id)) {
         const options: CreateQueueOptions = { guildId: data.guild_id, voiceId: state.channel_id };
         if (request?.context !== undefined) options.context = request.context;
-        await this.#player.queues.create(options);
+        await this[PlayerSymbol].queues.create(options);
       }
       request?.resolve(voice);
     } catch (err) {

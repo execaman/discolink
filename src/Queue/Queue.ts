@@ -1,4 +1,5 @@
 import { Severity } from "../Typings";
+import { PlayerSymbol } from "../Constants/Symbols";
 import { formatDuration, isArray, isNumber } from "../Functions";
 import { Playlist, Track } from "../index";
 import { VoiceState } from "../Voice";
@@ -11,7 +12,7 @@ import type { Player } from "../Main";
  */
 export class Queue<Context extends Record<string, unknown> = EmptyObject> {
   #cache: APIPlayer;
-  #player: Player;
+  [PlayerSymbol]: Player;
 
   #autoplay = false;
   #repeatMode: RepeatMode = "none";
@@ -47,7 +48,7 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
       throw new Error(`No player found for guild '${guildId}'`);
     }
 
-    this.#player = player;
+    this[PlayerSymbol] = player;
     this.filters = new FilterManager(player, guildId);
     if (context !== undefined) this.context = context;
 
@@ -63,12 +64,12 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
   }
 
   get #data() {
-    this.#cache = this.#player.queues.cache.get(this.guildId) ?? this.#cache;
+    this.#cache = this[PlayerSymbol].queues.cache.get(this.guildId) ?? this.#cache;
     return this.#cache;
   }
 
   set #data(data) {
-    this.#player.queues.cache.set(this.guildId, data);
+    this[PlayerSymbol].queues.cache.set(this.guildId, data);
     this.#cache = data;
   }
 
@@ -133,7 +134,7 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
    * Whether this instance of Queue is destroyed
    */
   get destroyed() {
-    return this.#player.queues.get(this.guildId) !== this;
+    return this[PlayerSymbol].queues.get(this.guildId) !== this;
   }
 
   /**
@@ -258,8 +259,8 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
    * @param query Query or URL
    * @param prefix Term to prefix query with
    */
-  async search(query: string, prefix = this.#player.options.queryPrefix) {
-    return this.#player.search(query, { prefix, node: this.node.name });
+  async search(query: string, prefix = this[PlayerSymbol].options.queryPrefix) {
+    return this[PlayerSymbol].search(query, { prefix, node: this.node.name });
   }
 
   /**
@@ -292,7 +293,7 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
   async addRelated(refTrack?: Track) {
     refTrack ??= this.track ?? this.previousTrack!;
     if (!refTrack) throw new Error("The queue is empty and there is no track to refer");
-    const relatedTracks = await this.#player.options.fetchRelatedTracks(this, refTrack);
+    const relatedTracks = await this[PlayerSymbol].options.fetchRelatedTracks(this, refTrack);
     this.add(relatedTracks);
     return relatedTracks;
   }
@@ -470,6 +471,6 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
    * @param reason Reason for destroying
    */
   async destroy(reason?: string) {
-    return this.#player.queues.destroy(this.guildId, reason);
+    return this[PlayerSymbol].queues.destroy(this.guildId, reason);
   }
 }

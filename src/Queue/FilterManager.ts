@@ -1,13 +1,13 @@
+import { PlayerSymbol } from "../Constants/Symbols";
 import type { APIPlayer, EmptyObject, FilterNames, FilterValue, JsonObject, Filters } from "../Typings";
 import type { VoiceState } from "../Voice";
-import type { QueueManager } from "./index";
 import type { Player } from "../Main";
 
 /**
  * A helper class for Queue to simplify filter management
  */
 export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
-  #manager: QueueManager;
+  [PlayerSymbol]: Player;
   #cache: APIPlayer;
   #voice: VoiceState;
 
@@ -16,18 +16,18 @@ export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
     if (!cache) throw new Error(`No player found for guild '${guildId}'`);
     const voice = player.voices.get(guildId);
     if (!voice) throw new Error(`No connection found for guild '${guildId}'`);
-    this.#manager = player.queues;
+    this[PlayerSymbol] = player;
     this.#cache = cache;
     this.#voice = voice;
   }
 
   get #data() {
-    this.#cache = this.#manager.cache.get(this.#voice.guildId) ?? this.#cache;
+    this.#cache = this[PlayerSymbol].queues.cache.get(this.#voice.guildId) ?? this.#cache;
     return this.#cache;
   }
 
   set #data(data) {
-    this.#manager.cache.set(this.#voice.guildId, data);
+    this[PlayerSymbol].queues.cache.set(this.#voice.guildId, data);
     this.#cache = data;
   }
 

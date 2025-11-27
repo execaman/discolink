@@ -11,6 +11,7 @@ import type {
   EmptyObject,
 } from "../Typings";
 import type { Player } from "../Main";
+import { PlayerSymbol } from "../Constants/Symbols";
 
 /**
  * A manager class handling queues with useful members
@@ -18,7 +19,7 @@ import type { Player } from "../Main";
 export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
   implements Partial<Map<string, Queue<Context>>>
 {
-  #player: Player;
+  [PlayerSymbol]: Player;
   #queues = new Map<string, Queue<Context>>();
 
   #cache = new Map<string, APIPlayer>();
@@ -27,7 +28,7 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
   #relocations = new Map<string, Promise<void>>();
 
   constructor(player: Player) {
-    this.#player = player;
+    this[PlayerSymbol] = player;
   }
 
   get size() {
@@ -68,13 +69,13 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
   async create(options: CreateQueueOptions<Context>) {
     if (!isRecord(options)) throw new Error("Queue create options must be an object");
     if (this.#queues.has(options.guildId)) return this.#queues.get(options.guildId)!;
-    if (!this.#player.voices.has(options.guildId)) {
-      await this.#player.voices.connect(options.guildId, options.voiceId, options);
+    if (!this[PlayerSymbol].voices.has(options.guildId)) {
+      await this[PlayerSymbol].voices.connect(options.guildId, options.voiceId, options);
       return this.#queues.get(options.guildId)!;
     }
-    const queue = new Queue<Context>(this.#player, options.guildId, options.context);
+    const queue = new Queue<Context>(this[PlayerSymbol], options.guildId, options.context);
     this.#queues.set(options.guildId, queue);
-    this.#player.emit("queueCreate", queue);
+    this[PlayerSymbol].emit("queueCreate", queue);
     return queue;
   }
 
@@ -92,8 +93,8 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     if (queue.voice.valid) await queue.rest.destroyPlayer(guildId).catch(noop);
     this.#cache.delete(guildId);
     this.#queues.delete(guildId);
-    this.#player.emit("queueDestroy", queue, reason);
-    await this.#player.voices.destroy(guildId, reason);
+    this[PlayerSymbol].emit("queueDestroy", queue, reason);
+    await this[PlayerSymbol].voices.destroy(guildId, reason);
     this.#destroys.delete(guildId);
     resolver.resolve();
   }
@@ -119,7 +120,7 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
       });
     if (queues.length === 0) return;
 
-    const nodes = this.#player.nodes.relevant({ memory: 0.6, workload: 0.4 }).reduce<string[]>((t, n) => {
+    const nodes = this[PlayerSymbol].nodes.relevant({ memory: 0.6, workload: 0.4 }).reduce<string[]>((t, n) => {
       if (n.name !== node) t.push(n.name);
       return t;
     }, []);
@@ -165,15 +166,15 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     const state = payload.state;
     const cache = this.#cache.get(payload.guildId);
     if (cache !== undefined) cache.state = state;
-    const voice = this.#player.voices.cache.get(payload.guildId);
+    const voice = this[PlayerSymbol].voices.cache.get(payload.guildId);
     if (voice !== undefined) {
       voice.connected = state.connected;
       voice.ping = state.ping;
     }
     const queue = this.#queues.get(payload.guildId);
     if (!queue) return;
-    this.#player.voices.regions.get(queue.voice.regionId)?.onPingUpdate(queue.node.name, state.ping, state.time);
-    this.#player.emit("queueUpdate", queue, state);
+    this[PlayerSymbol].voices.regions.get(queue.voice.regionId)?.onPingUpdate(queue.node.name, state.ping, state.time);
+    this[PlayerSymbol].emit("queueUpdate", queue, state);
   }
 
   /**
@@ -188,7 +189,7 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
     switch (payload.type) {
       case EventType.TrackStart: {
         cache.track ??= payload.track;
-        this.#player.emit("trackStart", queue, new Track(payload.track));
+        this[PlayerSymbol].emit("trackStart", queue, new Track(payload.track));
         return;
       }
       case EventType.TrackEnd: {
@@ -197,12 +198,12 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
       }
       case EventType.TrackException: {
         cache.track = null;
-        this.#player.emit("trackError", queue, new Track(payload.track), payload.exception);
+        this[PlayerSymbol].emit("trackError", queue, new Track(payload.track), payload.exception);
         return;
       }
       case EventType.TrackStuck: {
         cache.track ??= payload.track;
-        this.#player.emit("trackStuck", queue, new Track(payload.track), payload.thresholdMs);
+        this[PlayerSymbol].emit("trackStuck", queue, new Track(payload.track), payload.thresholdMs);
         return;
       }
       case EventType.WebSocketClosed:
@@ -222,16 +223,16 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
         if (queue.repeatMode !== "track") queue.previousTracks.push(queue.tracks.shift()!);
         break;
       default:
-        this.#player.emit("trackFinish", queue, track, payload.reason);
+        this[PlayerSymbol].emit("trackFinish", queue, track, payload.reason);
         return;
     }
-    this.#player.emit("trackFinish", queue, track, payload.reason);
+    this[PlayerSymbol].emit("trackFinish", queue, track, payload.reason);
     try {
       if (queue.finished) {
         if (queue.hasPrevious && queue.repeatMode === "queue") queue.tracks.push(queue.previousTracks.shift()!);
         else if (queue.autoplay) await queue.addRelated(track);
       }
-      if (queue.finished) this.#player.emit("queueFinish", queue);
+      if (queue.finished) this[PlayerSymbol].emit("queueFinish", queue);
       else await queue.resume();
     } catch (err) {
       return this.destroy(queue.guildId, `${err.message ?? err}`);
@@ -245,7 +246,7 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
       case VoiceCloseCodes.SessionNoLongerValid:
         voice.reconnecting = true;
     }
-    this.#player.emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
+    this[PlayerSymbol].emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
     if (!voice.reconnecting) return;
     try {
       await voice.reconnect();

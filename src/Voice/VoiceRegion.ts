@@ -1,3 +1,4 @@
+import { PlayerSymbol } from "../Constants/Symbols";
 import type { Player } from "../Main";
 
 interface RegionPingRecord {
@@ -9,13 +10,13 @@ interface RegionPingRecord {
  * A class representing a common region of voice servers for measuring average latencies of nodes that perform in it
  */
 export class VoiceRegion {
-  #player: Player;
+  [PlayerSymbol]: Player;
   #records = new Map<string, RegionPingRecord>();
 
   readonly id: string;
 
   constructor(player: Player, regionId: string) {
-    this.#player = player;
+    this[PlayerSymbol] = player;
     this.id = regionId;
 
     Object.defineProperty(this, "id" satisfies keyof VoiceRegion, {
@@ -46,7 +47,7 @@ export class VoiceRegion {
    * @param time Time from lavalink
    */
   onPingUpdate(name: string, ping: number, time: number) {
-    if (!this.#player.nodes.state(name, "ready")) return;
+    if (!this[PlayerSymbol].nodes.state(name, "ready")) return;
     if (ping <= 0 || time <= 0) return;
     const node = this.#records.get(name);
     if (!node) {
@@ -73,7 +74,7 @@ export class VoiceRegion {
    * @returns Node with the least average ping, `undefined` if none available
    */
   getRelevantNode(...exclusions: string[]) {
-    return this.#player.nodes
+    return this[PlayerSymbol].nodes
       .relevant()
       .filter((n) => !exclusions.includes(n.name))
       .sort((a, b) => {
