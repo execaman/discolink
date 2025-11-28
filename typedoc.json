@@ -13,6 +13,8 @@
   ],
   "sort": ["enum-member-source-order"],
   "projectDocuments": ["CHANGELOG.md"],
+  "excludeExternals": true,
+  "themeColor": "#9e6a03",
   "out": "docs",
   "name": "Discolink",
   "readme": "README.md",
