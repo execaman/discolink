@@ -107,12 +107,12 @@ export type NodeState = "connecting" | "connected" | "ready" | "reconnecting" | 
  */
 export interface NodeOptions extends RESTOptions {
   /**
-   * A unique name for this node
+   * Name of the node
    */
   name: string;
 
   /**
-   * The User Id of your Discord Bot
+   * User Id of the bot
    */
   clientId: string;
 
@@ -135,7 +135,8 @@ export interface NodeOptions extends RESTOptions {
   reconnectDelay?: number;
 
   /**
-   * Number of reconnects to attempt on unusual disconnect.
+   * Number of reconnects to attempt for unexpected disconnects.
+   * Negative for no limit, zero for no attempts.
    * Default: `3`
    */
   reconnectLimit?: number;

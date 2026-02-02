@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { LoadType } from "../Typings";
 import { DefaultPlayerOptions } from "../Constants";
-import { isRecord, isString } from "../Functions";
+import { isString } from "../Functions";
 import { NodeManager } from "../Node";
 import { VoiceManager } from "../Voice";
 import { Playlist, Queue, QueueManager, Track } from "../Queue";
@@ -14,67 +14,51 @@ import type {
   PlayerPlugin,
   PluginRecord,
   RepeatMode,
-  RequiredProp,
   SearchOptions,
   SearchResult,
+  CreateNodeOptions,
+  PlayerInstanceOptions,
 } from "../Typings";
 
-/**
- * The main class, entrypoint of the library
- */
 export class Player<
   Context extends Record<string, unknown> = EmptyObject,
   Plugins extends PlayerPlugin[] = PlayerPlugin[],
 > extends EventEmitter<Plugins[number]["eventMap"] & PlayerEventMap> {
   #initialized = false;
-  #clientId: string | null = null;
   #initPromise: Promise<void> | null = null;
 
-  /**
-   * Manager responsible for handling nodes
-   */
-  readonly nodes: NodeManager;
+  #clientId: string | null = null;
+  #nodes: CreateNodeOptions[] | null = null;
 
-  /**
-   * Manager responsible for handling voice connections
-   */
-  readonly voices: VoiceManager;
-
-  /**
-   * Manager responsible for handling queues
-   */
-  readonly queues: QueueManager<Context>;
-
-  /**
-   * Resolved options this player was constructed with
-   */
-  readonly options: RequiredProp<Omit<PlayerOptions<Plugins>, "plugins">, keyof typeof DefaultPlayerOptions>;
-
-  /**
-   * Plugins extracted from options, mapped by their names (if any)
-   */
+  readonly options: PlayerInstanceOptions;
   readonly plugins: PluginRecord<Plugins>;
+
+  readonly nodes: NodeManager;
+  readonly voices: VoiceManager;
+  readonly queues: QueueManager<Context>;
 
   constructor(options: PlayerOptions<Plugins>) {
     super({ captureRejections: false });
 
     const _options = { ...DefaultPlayerOptions, ...options };
 
-    if (isRecord(_options, "non-empty")) this.options = _options;
-    else throw new Error("Player options must be a non-empty object");
+    if (_options.nodes.length === 0) throw new Error("Missing node create options");
+    if (typeof _options.forwardVoiceUpdate !== "function") throw new Error("Missing voice update function");
 
-    if (_options.nodes.length === 0) throw new Error("Missing node options");
+    this.#nodes = _options.nodes;
+    delete (_options as Partial<typeof _options>).nodes;
+
+    this.options = _options;
+    this.plugins = {} as PluginRecord<Plugins>;
+
+    if (_options.plugins !== undefined) {
+      for (const plugin of _options.plugins) (this.plugins as { [x: string]: PlayerPlugin })[plugin.name] = plugin;
+      delete _options.plugins;
+    }
 
     this.nodes = new NodeManager(this);
     this.voices = new VoiceManager(this);
     this.queues = new QueueManager(this);
-
-    this.plugins = {} as any;
-
-    if (_options.plugins !== undefined) {
-      for (const plugin of _options.plugins) (this.plugins as any)[plugin.name] = plugin;
-      delete _options.plugins;
-    }
 
     const immutable: PropertyDescriptor = {
       writable: false,
@@ -82,32 +66,22 @@ export class Player<
     };
 
     Object.defineProperties(this, {
+      options: immutable,
+      plugins: immutable,
       nodes: immutable,
       voices: immutable,
       queues: immutable,
-      options: immutable,
-      plugins: immutable,
     } satisfies { [k in keyof Player]?: PropertyDescriptor });
   }
 
-  /**
-   * Id of the bot this player has been initialized for
-   */
+  get ready() {
+    return this.#initialized;
+  }
+
   get clientId() {
     return this.#clientId;
   }
 
-  /**
-   * Whether this player is initialized
-   */
-  get initialized() {
-    return this.#initialized;
-  }
-
-  /**
-   * Creates nodes, initializes plugins, connects to all nodes sequentially
-   * @param clientId Id of your bot
-   */
   async init(clientId: string) {
     if (this.#initPromise !== null) return this.#initPromise;
     if (this.#initialized) return;
@@ -115,10 +89,11 @@ export class Player<
     this.#initPromise = resolver.promise;
     this.#clientId = clientId;
     try {
-      for (const node of this.options.nodes) this.nodes.create(node);
-      for (const name in this.plugins) (this.plugins as any)[name].init(this);
+      for (const node of this.#nodes!) this.nodes.create(node);
+      for (const name in this.plugins) (this.plugins as { [x: string]: PlayerPlugin })[name]!.init(this);
       await this.nodes.connect();
       this.#initialized = true;
+      this.#nodes = null;
       (this as Player).emit("init");
       resolver.resolve();
     } catch (err) {

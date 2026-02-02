@@ -102,22 +102,22 @@ export const enum TrackEndReason {
 
 export interface ClientHeaders {
   /**
-   * The password you set in your Lavalink config
+   * Password of your Lavalink server
    */
   Authorization: string;
 
   /**
-   * The user id of the bot
+   * User Id of the bot
    */
   "User-Id": string;
 
   /**
-   * The name of the client in `NAME/VERSION` format
+   * Name of the client in `NAME/VERSION` format
    */
   "Client-Name": string;
 
   /**
-   * The id of the previous session to resume
+   * Id of the previous session to resume (if any)
    */
   "Session-Id"?: string;
 }

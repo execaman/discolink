@@ -9,6 +9,7 @@ import type {
   APITrack,
   EmptyObject,
   JsonLike,
+  JsonObject,
   LavalinkInfo,
   LoadResult,
   NodeStats,
@@ -22,40 +23,16 @@ import type {
   SessionUpdateResponseBody,
 } from "../Typings";
 
-interface Task extends Pick<PromiseWithResolvers<AxiosResponse>, "reject" | "resolve"> {
-  config: AxiosRequestConfig;
-  controller?: AbortController;
-}
-
-/**
- * A class representing lavalink's REST API
- */
 export class REST {
   #axios = Axios.create({
-    headers: {
-      Accept: "application/json",
-    },
     transitional: {
       silentJSONParsing: false,
-      clarifyTimeoutError: true,
     },
-    responseType: "json",
   });
 
-  #queue: Task[] = [];
-  #queueIdling = true;
-
   #sessionId: string | null = null;
-  #retryLimit: number;
 
-  /**
-   * Origin of the REST API
-   */
   readonly origin: string;
-
-  /**
-   * Version of the REST API
-   */
   readonly version: number;
 
   constructor(options: RESTOptions) {
@@ -70,24 +47,20 @@ export class REST {
       throw new Error("Protocol must be 'http' or 'https'");
     }
 
-    if (typeof _options.stackTrace !== "boolean") {
-      throw new Error("Stack trace option must be a boolean");
-    }
-
     if (!isNumber(_options.version, "natural")) {
       throw new Error("Version must be a natural number");
-    }
-
-    if (!isNumber(_options.retryLimit, "whole")) {
-      throw new Error("Retry limit must be a whole number");
     }
 
     if (!isNumber(_options.requestTimeout, "natural")) {
       throw new Error("Request timeout must be a natural number");
     }
 
-    if (_options.sessionId !== undefined && !isString(_options.sessionId, "non-empty")) {
-      throw new Error("Session Id must be a non-empty string");
+    if (_options.sessionId !== undefined) {
+      this.sessionId = _options.sessionId;
+    }
+
+    if (_options.stackTrace === true) {
+      this.#axios.defaults.params = { trace: true };
     }
 
     this.#axios.defaults.timeout = _options.requestTimeout;
@@ -96,13 +69,8 @@ export class REST {
     this.#axios.defaults.headers.common["User-Agent"] = _options.userAgent;
     this.#axios.defaults.headers.common["Authorization"] = _options.password;
 
-    if (_options.stackTrace === true) this.#axios.defaults.params = { trace: true };
-
     this.origin = url.origin;
     this.version = _options.version;
-    this.#retryLimit = _options.retryLimit;
-
-    if (_options.sessionId !== undefined) this.#sessionId = _options.sessionId;
 
     const immutable: PropertyDescriptor = {
       writable: false,
@@ -112,149 +80,102 @@ export class REST {
     Object.defineProperties(this, {
       origin: immutable,
       version: immutable,
-    } satisfies { [k in keyof REST]?: PropertyDescriptor });
+    } satisfies { [K in keyof REST]?: PropertyDescriptor });
   }
 
-  /**
-   * Timeout per request in milliseconds
-   */
+  get baseUrl() {
+    return this.#axios.defaults.baseURL!;
+  }
+
   get timeout() {
     return this.#axios.defaults.timeout!;
   }
 
-  /**
-   * Id of a session if set.
-   * Setting this has no effect if this instance belongs to a Node
-   */
   get sessionId() {
     return this.#sessionId;
   }
 
-  /**
-   * Retry limit of timed-out requests
-   */
-  get retryLimit() {
-    return this.#retryLimit;
-  }
-
-  set timeout(ms) {
-    if (isNumber(ms, "natural")) this.#axios.defaults.timeout = ms;
+  get userAgent() {
+    return this.#axios.defaults.headers.common["User-Agent"] as string;
   }
 
   set sessionId(id) {
     if (id === null || isString(id, "non-empty")) this.#sessionId = id;
   }
 
-  set retryLimit(count) {
-    if (isNumber(count, "whole")) this.#retryLimit = count;
-  }
-
-  #error(err: AxiosError<RestError> | AggregateError | { message: string }, path: string) {
+  #error(err: AxiosError<RestError> | AggregateError, path: string) {
     const res = (err as AxiosError<RestError>).response;
     const data = "errors" in err ? err.errors[err.errors.length - 1] : err;
     const error = new Error(res?.data.message ?? data.message) as Error & RestError;
+
     error.name = `Error [${this.constructor.name}]`;
     error.error = res?.data.error ?? res?.statusText ?? "Processing";
     error.path = res?.data.path ?? path;
     error.status = res?.data.status ?? res?.status ?? Axios.HttpStatusCode.Processing;
     error.timestamp = res?.data.timestamp ?? Date.now();
-    if (res?.data.trace !== undefined) error.trace = res.data.trace;
+
+    if (res?.data.trace !== undefined) {
+      error.trace = res.data.trace;
+    }
     return error;
   }
 
-  async #makeRequest<T, D>(config: Task["config"], retries = this.#retryLimit): Promise<AxiosResponse<T, D>> {
-    try {
-      const response = await this.#axios.request(config);
-      return response;
-    } catch (err) {
-      if (config.signal?.aborted) err.message = "reason" in config.signal ? config.signal.reason : err.message;
-      else if (err.code === "ETIMEDOUT" && retries !== 0) return this.#makeRequest(config, retries - 1);
-      throw this.#error(err, config.url!);
-    }
-  }
-
-  async #resumeQueue() {
-    this.#queueIdling = false;
-    while (this.#queue.length !== 0) {
-      const task = this.#queue[0]!;
-      if (!task.config.signal) {
-        task.controller = new AbortController();
-        task.config.signal = task.controller.signal;
-      }
-      try {
-        const response = await this.#makeRequest(task.config);
-        task.resolve(response);
-      } catch (err) {
-        task.reject(err);
-      }
-      task.controller?.abort();
-      this.#queue.shift();
-    }
-    this.#queueIdling = true;
-  }
-
-  dropSessionRequests(reason: string) {
-    if (this.#queue.length === 0) return;
-    const tasks = this.#queue.splice(0);
-    tasks.shift()!.controller?.abort(reason);
-    if (tasks.length === 0) return;
-    const err = { message: reason };
-    for (const task of tasks) task.reject(this.#error(err, task.config.url!));
-  }
-
-  async request<T, Data extends JsonLike = EmptyObject, Params extends JsonLike = EmptyObject>(
+  async request<T, Data extends JsonLike = EmptyObject, Params extends JsonObject = EmptyObject>(
     method: Method,
     endpoint: string,
     options?: RequestOptions<Data, Params>
   ) {
     if (!isString(method, "non-empty")) throw new Error("Method must be a non-empty string");
     if (!isString(endpoint, "non-empty")) throw new Error("Endpoint must be a non-empty string");
+    if (!endpoint.startsWith("/")) throw new Error("Endpoint must start with '/'");
 
-    const config: Task["config"] = { method, url: endpoint };
+    const config: AxiosRequestConfig = {
+      method,
+      url: options?.versioned === false ? this.origin + endpoint : endpoint,
+    };
 
-    if (isRecord(options, "non-empty")) {
-      if ("data" in options) {
-        config.data = options.data;
-        config.headers = { "Content-Type": "application/json" };
-      }
-      if ("params" in options) {
-        if (isRecord(options.params, "non-empty")) config.params = options.params;
-        else throw new Error("Options.params must be a non-empty object");
-      }
-      if ("signal" in options) {
-        if (options.signal instanceof AbortSignal && !options.signal.aborted) config.signal = options.signal;
-        else throw new Error("Options.signal is either not a instance of AbortSignal or is already aborted");
-      }
-      if ("timeout" in options) {
-        if (isNumber(options.timeout, "natural")) config.timeout = options.timeout;
-        else throw new Error("Options.timeout must be a natural number");
-      }
+    if (options?.data !== undefined) {
+      config.data = options.data;
+      config.headers = { "Content-Type": "application/json" };
     }
 
-    if (this.#sessionId === null || !endpoint.includes(this.#sessionId)) {
-      return this.#makeRequest<T, Data>(config);
+    if (options?.params !== undefined) config.params = options.params;
+    if (options?.signal !== undefined) config.signal = options.signal;
+    if (options?.timeout !== undefined) config.timeout = options.timeout;
+
+    try {
+      return await this.#axios.request<T, AxiosResponse<T, Data>>(config);
+    } catch (err) {
+      throw this.#error(err, endpoint);
     }
-
-    return new Promise<AxiosResponse<T, Data>>((resolve, reject) => {
-      this.#queue.push({ config, reject, resolve });
-      if (this.#queueIdling) this.#resumeQueue();
-    });
   }
 
-  async get<T, P extends JsonLike>(endpoint: string, options?: Omit<RequestOptions<never, P>, "data">) {
-    return this.request<T, never, P>("GET", endpoint, options);
+  async get<T, Params extends JsonObject = EmptyObject>(
+    endpoint: string,
+    options?: Omit<RequestOptions<never, Params>, "data">
+  ) {
+    return this.request<T, never, Params>("GET", endpoint, options);
   }
 
-  async post<T, D extends JsonLike, P extends JsonLike>(endpoint: string, options?: RequestOptions<D, P>) {
-    return this.request<T, D, P>("POST", endpoint, options);
+  async post<T, Data extends JsonLike, Params extends JsonObject = EmptyObject>(
+    endpoint: string,
+    options?: RequestOptions<Data, Params>
+  ) {
+    return this.request<T, Data, Params>("POST", endpoint, options);
   }
 
-  async patch<T, D extends JsonLike, P extends JsonLike>(endpoint: string, options?: RequestOptions<D, P>) {
-    return this.request<T, D, P>("PATCH", endpoint, options);
+  async patch<T, Data extends JsonLike, Params extends JsonObject = EmptyObject>(
+    endpoint: string,
+    options?: RequestOptions<Data, Params>
+  ) {
+    return this.request<T, Data, Params>("PATCH", endpoint, options);
   }
 
-  async delete<T, P extends JsonLike>(endpoint: string, options?: Omit<RequestOptions<never, P>, "data">) {
-    return this.request<T, never, P>("DELETE", endpoint, options);
+  async delete<T, Params extends JsonObject = EmptyObject>(
+    endpoint: string,
+    options?: Omit<RequestOptions<never, Params>, "data">
+  ) {
+    return this.request<T, never, Params>("DELETE", endpoint, options);
   }
 
   async loadTracks(identifier: string) {
@@ -299,7 +220,7 @@ export class REST {
     if (!isRecord(options, "non-empty")) throw new Error("Player update options cannot be empty");
     const response = await this.request<APIPlayer>("PATCH", Routes.player(sessionId, guildId), {
       data: options,
-      params: { noReplace: params?.noReplace === true },
+      params: { ...params },
     });
     return response.data;
   }

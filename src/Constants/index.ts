@@ -1,5 +1,3 @@
-export * from "./NodeOptions";
-export * from "./PlayerOptions";
+export * from "./Defaults";
 export * from "./Regex";
-export * from "./RESTOptions";
 export * from "./Routes";

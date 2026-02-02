@@ -13,13 +13,6 @@
 
 The goal of this library is to abstract away obvious steps involved in the process of acting as an intermediary between [Lavalink](https://lavalink.dev/api) and [Discord](https://discord.com/developers/docs/events/gateway) to give developers a cleaner yet intuitive interface to work with.
 
-## ✨ Features
-
-- Built-in queue system
-- Automatic player relocation
-- Built-in custom plugin support
-- Automatic relevant-node selection
-
 ## ⚙️ Requirements
 
 - **Runtime** - one of the following:
@@ -59,7 +52,8 @@ client.on("raw", (payload) => {
 client.login();
 ```
 
-## 📝 Additional Notes
+## 📝 Implementation
 
-- Handle track end reasons other than `cleanup` and `finished` manually
-- Always check for `reconnecting` or `changingNode` when handling voice states
+- Handle track end reasons other than `cleanup` and `finished`
+- Handle voice states with care, e.g. `reconnecting`, `changingNode`, etc.
+- Handle queue destruction/relocation, e.g. guild/channel delete, node close/disconnect, etc.
