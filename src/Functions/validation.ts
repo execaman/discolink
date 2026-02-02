@@ -8,10 +8,9 @@ import { URL } from "node:url";
  */
 export const isNumber = <T extends number>(input: unknown, check?: "integer" | "natural" | "whole"): input is T => {
   if (check === undefined) return Number.isFinite(input);
-  if (!Number.isSafeInteger(input)) return false;
-  if (check === "integer") return true;
-  if (check === "natural") return (input as number) > 0;
-  if (check === "whole") return (input as number) >= 0;
+  if (check === "integer") return Number.isSafeInteger(input);
+  if (check === "natural") return Number.isSafeInteger(input) && (input as number) > 0;
+  if (check === "whole") return Number.isSafeInteger(input) && (input as number) >= 0;
   return false;
 };
 
@@ -55,8 +54,7 @@ export const isArray = <T extends any[]>(
 ): input is T => {
   if (!Array.isArray(input)) return false;
   if (check === undefined) return true;
-  if (input.length === 0) return false;
-  if (check === "non-empty") return true;
-  if (typeof check === "function") return input.every(check);
+  if (check === "non-empty") return input.length !== 0;
+  if (typeof check === "function") return input.length !== 0 && input.every(check);
   return false;
 };
