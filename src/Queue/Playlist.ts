@@ -1,4 +1,4 @@
-import { formatDuration, isNumber, isRecord, isString } from "../Functions";
+import { formatDuration, isArray, isNumber, isRecord, isString } from "../Functions";
 import { Track } from "./index";
 import type { APIPlaylist, EmptyObject, JsonObject } from "../Typings";
 
@@ -39,15 +39,16 @@ export class Playlist<PluginInfo extends JsonObject = EmptyObject> {
   constructor(data: APIPlaylist<PluginInfo>) {
     if (!isRecord(data)) throw new Error("Playlist data must be an object");
     if (!isRecord(data.info)) throw new Error("Playlist info is not an object");
-
-    if (isString(data.info.name, "non-empty")) this.name = data.info.name;
-    if (isNumber(data.info.selectedTrack, "whole")) this.selectedTrack = data.info.selectedTrack;
+    if (!isArray(data.tracks, "non-empty")) throw new Error("Playlist has no track(s)");
 
     for (let i = 0, track: Track; i < data.tracks.length; i++) {
       track = new Track(data.tracks[i]!);
       if (!track.isLive) this.duration += track.duration;
       this.tracks.push(track);
     }
+
+    if (isString(data.info.name, "non-empty")) this.name = data.info.name;
+    if (isNumber(data.info.selectedTrack, "whole")) this.selectedTrack = data.info.selectedTrack;
 
     if (isRecord(data.pluginInfo, "non-empty")) this.pluginInfo = data.pluginInfo;
     if (this.duration > 0) this.formattedDuration = formatDuration(this.duration);
