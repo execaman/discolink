@@ -1,4 +1,4 @@
-import type { EmptyObject, JsonLike } from "../Utility";
+import type { EmptyObject, JsonLike, JsonObject } from "../Utility";
 
 /**
  * Options to create a instance of REST
@@ -38,12 +38,6 @@ export interface RESTOptions {
   stackTrace?: boolean;
 
   /**
-   * Number of retries to allow for timed out requests.
-   * Default: `0`
-   */
-  retryLimit?: number;
-
-  /**
    * Number of milliseconds to allow per request.
    * Default: `10_000`
    */
@@ -51,11 +45,11 @@ export interface RESTOptions {
 }
 
 /**
- * Options for customizing REST requests
+ * Options for customizing a request
  */
-export interface RequestOptions<Data extends JsonLike = EmptyObject, Params extends JsonLike = EmptyObject> {
+export interface RequestOptions<Data extends JsonLike = EmptyObject, Params extends JsonObject = EmptyObject> {
   /**
-   * The JSON data to attach in request body
+   * The data to attach in request body
    */
   data?: Data;
 
@@ -73,4 +67,10 @@ export interface RequestOptions<Data extends JsonLike = EmptyObject, Params exte
    * The timeout for this request
    */
   timeout?: number;
+
+  /**
+   * Whether this request should be versioned.
+   * Default: `true`
+   */
+  versioned?: boolean;
 }

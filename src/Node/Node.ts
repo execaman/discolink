@@ -5,14 +5,14 @@ import { EventEmitter, once } from "node:events";
 import { clearImmediate, clearTimeout, setImmediate, setTimeout } from "node:timers";
 import { WebSocket } from "ws";
 import { CloseCodes, OPType } from "../Typings";
-import { DefaultNodeOptions, DefaultRestOptions, Routes, SnowflakeRegex } from "../Constants";
+import { DefaultNodeOptions, Routes, SnowflakeRegex } from "../Constants";
 import { isNumber, isString, noop } from "../Functions";
 import { REST } from "./index";
 import type { ClientOptions } from "ws";
 import type { ClientHeaders, MessagePayload, NodeEventMap, NodeOptions, NodeState, StatsPayload } from "../Typings";
 
 /**
- * A class representing a lavalink server
+ * A class representing a lavalink node
  */
 export class Node extends EventEmitter<NodeEventMap> {
   #socketConfig = {
@@ -20,11 +20,7 @@ export class Node extends EventEmitter<NodeEventMap> {
       "Client-Name": $clientName + "/" + $clientVersion,
     },
     perMessageDeflate: false,
-  } as unknown as {
-    handshakeTimeout: number;
-    headers: ClientOptions["headers"] & ClientHeaders;
-    perMessageDeflate: boolean;
-  };
+  } as ClientOptions & { headers: ClientHeaders };
 
   #connectPromise: Promise<boolean> | null = null;
   #disconnectPromise: Promise<void> | null = null;
@@ -32,22 +28,19 @@ export class Node extends EventEmitter<NodeEventMap> {
   #pingTimer: NodeJS.Timeout | null = null;
   #reconnectTimer: NodeJS.Timeout | null = null;
 
-  #stats: StatsPayload | null = null;
-  #socket: WebSocket | null = null;
-
   #ping: number | null = null;
   #lastPingTime: number | null = null;
-
-  #manualDisconnect = false;
 
   #reconnectInit = false;
   #reconnectAttempts = 0;
 
-  #sessionId: string | null = null;
-  #socketURL: string;
+  #manualDisconnect = false;
 
-  #statsInterval: number;
-  #highestLatency: number;
+  #socket: WebSocket | null = null;
+  #stats: StatsPayload | null = null;
+
+  #socketUrl: string;
+  #pingTimeout: number;
 
   #reconnectDelay: number;
   #reconnectLimit: number;
@@ -57,7 +50,8 @@ export class Node extends EventEmitter<NodeEventMap> {
 
   constructor(options: NodeOptions) {
     super({ captureRejections: false });
-    const _options = { ...DefaultNodeOptions, ...DefaultRestOptions, ...options };
+
+    const _options = { ...DefaultNodeOptions, ...options };
 
     if (!isString(_options.name, "non-empty")) {
       throw new Error("Name must be a non-empty string");
@@ -79,35 +73,39 @@ export class Node extends EventEmitter<NodeEventMap> {
       throw new Error("Reconnect delay must be a natural number");
     }
 
-    if (!isNumber(_options.reconnectLimit, "natural")) {
-      throw new Error("Reconnect limit must be a natural number");
+    if (!isNumber(_options.reconnectLimit, "integer")) {
+      throw new Error("Reconnect limit must be an integer");
     }
 
     if (!isNumber(_options.handshakeTimeout, "natural")) {
       throw new Error("Handshake timeout must be a natural number");
     }
 
-    this.#statsInterval = _options.statsInterval;
-    this.#highestLatency = _options.highestLatency;
+    const rest = new REST(options);
+
+    if (rest.sessionId !== null) {
+      this.#socketConfig.headers["Session-Id"] = rest.sessionId;
+      rest.sessionId = null;
+    }
+
+    this.#socketConfig.headers["User-Id"] = _options.clientId;
+    this.#socketConfig.headers["User-Agent"] = rest.userAgent;
+    this.#socketConfig.headers["Authorization"] = _options.password;
+
+    this.#socketConfig.handshakeTimeout = _options.handshakeTimeout;
+
+    this.#socketUrl = rest.baseUrl.replace("http", "ws") + Routes.websocket();
+    this.#pingTimeout = _options.statsInterval + _options.highestLatency;
 
     this.#reconnectDelay = _options.reconnectDelay;
     this.#reconnectLimit = _options.reconnectLimit;
 
-    this.#socketConfig.handshakeTimeout = _options.handshakeTimeout;
-
     this.name = _options.name;
-    this.rest = new REST(_options);
+    this.rest = rest;
 
-    this.#socketURL = `${this.rest.origin.replace("http", "ws")}/v${this.rest.version}${Routes.websocket()}`;
-
-    this.#socketConfig.headers["User-Id"] = _options.clientId;
-    this.#socketConfig.headers["User-Agent"] = _options.userAgent;
-    this.#socketConfig.headers["Authorization"] = _options.password;
-
-    if (this.rest.sessionId !== null) this.#socketConfig.headers["Session-Id"] = this.rest.sessionId;
-
-    Object.defineProperty(this.rest, "sessionId" satisfies keyof REST, {
-      get: (): REST["sessionId"] => this.#sessionId,
+    Object.defineProperty(rest, "sessionId" satisfies keyof REST, {
+      configurable: false,
+      get: (): REST["sessionId"] => this.sessionId,
       set: noop,
     });
 
@@ -119,98 +117,57 @@ export class Node extends EventEmitter<NodeEventMap> {
     Object.defineProperties(this, {
       name: immutable,
       rest: immutable,
-    } satisfies { [k in Exclude<keyof Node, "toString">]?: PropertyDescriptor });
+    } satisfies { [K in Exclude<keyof Node, "toString">]?: PropertyDescriptor });
   }
 
-  /**
-   * Id of the bot
-   */
   get clientId() {
     return this.#socketConfig.headers["User-Id"];
   }
 
-  /**
-   * Id of the session
-   */
   get sessionId() {
-    return this.#sessionId;
+    return this.#socketConfig.headers["Session-Id"] ?? null;
   }
 
-  /**
-   * Round-trip time
-   */
   get ping() {
     return this.#ping;
   }
 
-  /**
-   * Stats from lavalink
-   */
   get stats() {
     return this.#stats;
   }
 
-  /**
-   * Current state of the node
-   */
   get state(): NodeState {
     if (this.connecting) return "connecting";
     if (this.connected) return this.ready ? "ready" : "connected";
-    if (this.reconnecting) return "reconnecting";
-    return "disconnected";
+    return this.reconnecting ? "reconnecting" : "disconnected";
   }
 
-  /**
-   * The node is connecting
-   */
   get connecting() {
-    return this.#socket !== null && this.#socket.readyState === this.#socket.CONNECTING;
+    return this.#socket?.readyState === WebSocket.CONNECTING;
   }
 
-  /**
-   * The node is connected
-   */
   get connected() {
-    return this.#socket !== null && this.#socket.readyState === this.#socket.OPEN;
+    return this.#socket?.readyState === WebSocket.OPEN;
   }
 
-  /**
-   * The node has connected and received the ready payload
-   */
   get ready() {
-    return this.#sessionId !== null && this.connected;
+    return this.connected && this.sessionId !== null;
   }
 
-  /**
-   * The node is reconnecting
-   */
   get reconnecting() {
     return this.#socket === null && this.#reconnectTimer !== null;
   }
 
-  /**
-   * The node is disconnected (no connection, no reconnects)
-   */
   get disconnected() {
     return this.#socket === null && !this.reconnecting;
   }
 
-  /**
-   * Number of reconnects attempted
-   */
+  get reconnectLimit() {
+    return this.#reconnectLimit;
+  }
+
   get reconnectAttempts() {
     return this.#reconnectAttempts;
-  }
-
-  /**
-   * Initial handshake timeout in milliseconds
-   */
-  get handshakeTimeout() {
-    return this.#socketConfig.handshakeTimeout;
-  }
-
-  set handshakeTimeout(ms) {
-    if (isNumber(ms, "natural")) this.#socketConfig.handshakeTimeout = ms;
   }
 
   #error(err: Error | AggregateError) {
@@ -224,7 +181,7 @@ export class Node extends EventEmitter<NodeEventMap> {
     this.#socket?.removeAllListeners();
     if (this.#pingTimer !== null) clearTimeout(this.#pingTimer);
     this.#socket = this.#pingTimer = this.#stats = null;
-    this.#sessionId = this.#lastPingTime = this.#ping = null;
+    this.#lastPingTime = this.#ping = null;
   }
 
   #reconnect() {
@@ -233,15 +190,14 @@ export class Node extends EventEmitter<NodeEventMap> {
     this.#reconnectTimer ??= setTimeout(() => {
       this.#reconnectInit = true;
       this.connect();
-    }, this.#reconnectDelay);
+    }, this.#reconnectDelay).unref();
   }
 
-  #stopReconnecting(keepCount = false) {
-    if (this.#reconnectTimer === null) return;
-    clearTimeout(this.#reconnectTimer);
+  #stopReconnecting(resetCount = true, reconnectInit = false) {
+    this.#reconnectInit = reconnectInit;
+    if (resetCount) this.#reconnectAttempts = 0;
+    if (this.#reconnectTimer !== null) clearTimeout(this.#reconnectTimer);
     this.#reconnectTimer = null;
-    this.#reconnectInit = false;
-    if (!keepCount) this.#reconnectAttempts = 0;
   }
 
   #keepAliveAndPing() {
@@ -249,9 +205,8 @@ export class Node extends EventEmitter<NodeEventMap> {
     this.#pingTimer ??= setTimeout(() => {
       this.#socket?.terminate();
       this.#cleanup();
-      this.rest.dropSessionRequests(`Connection to node '${this.name}' was zombie`);
       this.#reconnect();
-    }, this.#statsInterval + this.#highestLatency).unref();
+    }, this.#pingTimeout).unref();
     this.#lastPingTime = Date.now();
     this.#socket?.ping();
   }
@@ -264,17 +219,13 @@ export class Node extends EventEmitter<NodeEventMap> {
     }
   }
 
-  /**
-   * Connects for a session with lavalink
-   * @returns `true` if the initial handshake succeeded, `false` otherwise
-   */
   async connect() {
     if (this.#socket !== null) return this.#connectPromise ?? this.connected;
     if (this.reconnecting) {
       this.#reconnectAttempts++;
-      if (!this.#reconnectInit) this.#stopReconnecting(true);
+      if (!this.#reconnectInit) this.#stopReconnecting(false, true);
     }
-    this.#socket = new WebSocket(this.#socketURL, this.#socketConfig);
+    this.#socket = new WebSocket(this.#socketUrl, this.#socketConfig);
     this.#socket.once("open", () => {
       this.emit("connect", this.#reconnectAttempts, this.name);
     });
@@ -299,22 +250,18 @@ export class Node extends EventEmitter<NodeEventMap> {
         once(this.#socket, "open", { signal: controller.signal }),
         once(this.#socket, "close", { signal: controller.signal }),
       ]);
-      return this.connected;
     } catch {
       this.#cleanup();
-      return false;
     } finally {
       controller.abort();
+      const connected = this.connected;
+      resolver.resolve(connected);
       this.#connectPromise = null;
-      resolver.resolve(this.connected);
+      return connected;
     }
   }
 
-  /**
-   * Closes connection to lavalink and stops reconnecting
-   * @param reason Reason for closing (only effective if a connection exists)
-   */
-  async disconnect(reason = "disconnected") {
+  async disconnect(code: number = CloseCodes.Normal, reason = "disconnected") {
     if (this.#disconnectPromise !== null) return this.#disconnectPromise;
     this.#stopReconnecting();
     if (this.#socket === null) return;
@@ -326,20 +273,20 @@ export class Node extends EventEmitter<NodeEventMap> {
     if (!this.connected) return;
     this.#manualDisconnect = true;
     this.#disconnectPromise = once(this.#socket, "close").then(noop, noop);
-    this.#socket.close(CloseCodes.Normal, reason);
+    this.#socket.close(code, reason);
     await this.#disconnectPromise;
     this.#disconnectPromise = null;
   }
 
   async #onMessage(data: string) {
     const payload = this.#parseMessageData(data);
-    if (payload === null) return;
+    if (payload === null) return this.disconnect(CloseCodes.UnsupportedData, "expected json payload");
     if (payload.op === OPType.Stats) {
       this.#stats = payload;
       this.#keepAliveAndPing();
     } else if (payload.op === OPType.Ready) {
       this.#stopReconnecting();
-      this.#socketConfig.headers["Session-Id"] = this.#sessionId = payload.sessionId;
+      this.#socketConfig.headers["Session-Id"] = payload.sessionId;
       this.emit("ready", payload.resumed, payload.sessionId, this.name);
     }
     this.emit("dispatch", payload, this.name);
@@ -347,7 +294,6 @@ export class Node extends EventEmitter<NodeEventMap> {
 
   #onClose(code: number, reason: string) {
     this.#cleanup();
-    this.rest.dropSessionRequests(`Connection to node '${this.name}' closed`);
     if (this.#manualDisconnect || this.#reconnectAttempts === this.#reconnectLimit) {
       this.#stopReconnecting();
       delete this.#socketConfig.headers["Session-Id"];

@@ -1,11 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "compilerOptions": {
-    "allowArbitraryExtensions": false,
-    "allowImportingTsExtensions": false,
-    "allowJs": false,
     "allowSyntheticDefaultImports": false,
-    "allowUmdGlobalAccess": false,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": false,
@@ -16,7 +12,6 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmitOnError": true,
-    "noErrorTruncation": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -26,15 +21,10 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "lib",
-    "removeComments": false,
-    "resolveJsonModule": false,
-    "resolvePackageJsonExports": true,
-    "resolvePackageJsonImports": true,
-    "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
     "useDefineForClassFields": true,
     "useUnknownInCatchVariables": false
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "test/**/*.test.ts"]
 }

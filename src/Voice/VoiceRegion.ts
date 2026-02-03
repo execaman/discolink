@@ -1,85 +1,69 @@
+import { OnPingUpdateSymbol } from "../Constants/Symbols";
+import type { PlayerState } from "../Typings";
 import type { Player } from "../Main";
 
-interface RegionPingRecord {
-  pings: number[];
+interface VoiceNodePingStats {
+  history: number[];
   lastPingTime: number;
 }
 
-/**
- * A class representing a common region of voice servers for measuring average latencies of nodes that perform in it
- */
 export class VoiceRegion {
-  #player: Player;
-  #records = new Map<string, RegionPingRecord>();
+  #pings = new Map<string, VoiceNodePingStats>();
 
   readonly id: string;
+  readonly player: Player;
 
   constructor(player: Player, regionId: string) {
-    this.#player = player;
-    this.id = regionId;
+    if (player.voices.regions.has(regionId)) {
+      throw new Error(`An identical voice region already exists`);
+    }
 
-    Object.defineProperty(this, "id" satisfies keyof VoiceRegion, {
+    this.id = regionId;
+    this.player = player;
+
+    const immutable: PropertyDescriptor = {
       writable: false,
       configurable: false,
-    });
+    };
+
+    Object.defineProperties(this, {
+      id: immutable,
+      player: { ...immutable, enumerable: false },
+    } satisfies { [K in keyof VoiceRegion]?: PropertyDescriptor });
   }
 
-  /**
-   * Names of nodes that have participated in this region
-   */
-  get nodes() {
-    return this.#records.keys().toArray();
+  inSync() {
+    return !this.player.nodes.values().some((n) => n.ready && !this.#pings.has(n.name));
   }
 
-  /**
-   * Deletes and stops tracking a node's ping
-   * @param name Name of the node
-   */
   forgetNode(name: string) {
-    this.#records.delete(name);
+    return this.#pings.delete(name);
   }
 
-  /**
-   * A player state update listener. Not for general use
-   * @param name Name of the node
-   * @param ping Ping from lavalink
-   * @param time Time from lavalink
-   */
-  onPingUpdate(name: string, ping: number, time: number) {
-    if (!this.#player.nodes.state(name, "ready")) return;
-    if (ping <= 0 || time <= 0) return;
-    const node = this.#records.get(name);
-    if (!node) {
-      this.#records.set(name, { pings: [ping], lastPingTime: time });
+  getAveragePing(name: string) {
+    const pings = this.#pings.get(name)?.history;
+    return !pings?.length ? null : Math.round(pings.reduce((t, c) => t + c, 0) / pings.length);
+  }
+
+  getRelevantNode() {
+    return this.player.nodes.relevant().sort((a, b) => {
+      if (!this.#pings.has(a.name)) return -1;
+      if (!this.#pings.has(b.name)) return 1;
+      return (this.getAveragePing(a.name) ?? 0) - (this.getAveragePing(b.name) ?? 0);
+    })[0];
+  }
+
+  [OnPingUpdateSymbol](name: string, state: PlayerState) {
+    if (!state.connected) return;
+    if (state.ping <= 0 || state.time <= 0) return;
+    const pings = this.#pings.get(name);
+    if (!pings) {
+      this.#pings.set(name, { history: [state.ping], lastPingTime: state.time });
       return;
     }
-    if (time - node.lastPingTime < 12_000) return;
-    node.lastPingTime = time;
-    node.pings.push(ping);
-    if (node.pings.length > 5) node.pings.shift();
-  }
-
-  /**
-   * Returns the average ping of a node in this region
-   * @param name Name of the node
-   */
-  getAveragePing(name: string) {
-    const pings = this.#records.get(name)?.pings;
-    return !pings?.length ? 0 : pings.reduce((t, c) => t + c, 0) / pings.length;
-  }
-
-  /**
-   * @param exclusions List of names of nodes to exclude
-   * @returns Node with the least average ping, `undefined` if none available
-   */
-  getRelevantNode(...exclusions: string[]) {
-    return this.#player.nodes
-      .relevant()
-      .filter((n) => !exclusions.includes(n.name))
-      .sort((a, b) => {
-        if (!this.#records.has(a.name)) return -1;
-        if (!this.#records.has(b.name)) return 1;
-        return this.getAveragePing(a.name) - this.getAveragePing(b.name);
-      })[0];
+    if (state.time - pings.lastPingTime < 12_000) return;
+    pings.lastPingTime = state.time;
+    pings.history.push(state.ping);
+    if (pings.history.length > 5) pings.history.shift();
   }
 }

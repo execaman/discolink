@@ -1,24 +1,18 @@
 <div align="center">
   <img alt="Discolink" src="assets/music-album.png" width="120" />
   
-  [Icon designed by juicy_fish](https://www.flaticon.com/authors/juicy-fish)
+  [Icon by juicy_fish](https://www.flaticon.com/authors/juicy-fish)
   <br/>
-  [Documentation](https://github.com/execaman/discolink/wiki) | [API Reference](https://execaman.github.io/discolink)
-  
+  [API Reference](https://execaman.github.io/discolink) | [Coverage](http://app.codecov.io/gh/execaman/discolink)
+
 ![NPM Version](https://img.shields.io/npm/v/discolink?style=flat&logo=npm)
-![NPM Downloads](https://img.shields.io/npm/dm/discolink)
+![Codecov Coverage](https://img.shields.io/codecov/c/github/execaman/discolink?logo=codecov)
+
 </div>
 
 ## 🎯 Purpose
 
 The goal of this library is to abstract away obvious steps involved in the process of acting as an intermediary between [Lavalink](https://lavalink.dev/api) and [Discord](https://discord.com/developers/docs/events/gateway) to give developers a cleaner yet intuitive interface to work with.
-
-## ✨ Features
-
-- Built-in queue system
-- Automatic player relocation
-- Built-in custom plugin support
-- Automatic relevant-node selection
 
 ## ⚙️ Requirements
 
@@ -59,7 +53,8 @@ client.on("raw", (payload) => {
 client.login();
 ```
 
-## 📝 Additional Notes
+## 📝 Implementation
 
-- Handle track end reasons other than `cleanup` and `finished` manually
-- Always check for `reconnecting` or `changingNode` when handling voice states
+- Handle track end reasons other than `cleanup` and `finished`
+- Handle voice states with care, e.g. `reconnecting`, `changingNode`, etc.
+- Handle queue destruction/relocation, e.g. guild/channel delete, node close/disconnect, etc.

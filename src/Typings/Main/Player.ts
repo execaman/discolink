@@ -1,8 +1,8 @@
-import type { EmptyObject, JsonObject } from "../Utility";
+import type { EmptyObject, JsonObject, RequiredProp } from "../Utility";
 import type { Exception, PlayerState, TrackEndReason } from "../API";
 import type { CreateNodeOptions, NodeEventMap } from "../Node";
-import type { PlayerDestroyReasons } from "../Voice";
 import type { CreateQueueOptions } from "../Queue";
+import type { DefaultPlayerOptions } from "../../Constants";
 import type { Node } from "../../Node";
 import type { VoiceState } from "../../Voice";
 import type { Playlist, Queue, Track } from "../../Queue";
@@ -23,12 +23,12 @@ export interface PlayerEventMap extends Record<string & {}, any> {
   voiceConnect: [voice: VoiceState];
   voiceClose: [voice: VoiceState, code: number, reason: string, byRemote: boolean];
   voiceChange: [voice: VoiceState, previousNode: Node, wasPlaying: boolean];
-  voiceDestroy: [voice: VoiceState, reason: PlayerDestroyReasons];
+  voiceDestroy: [voice: VoiceState, reason: string];
 
   queueCreate: [queue: Queue];
   queueUpdate: [queue: Queue, state: PlayerState];
   queueFinish: [queue: Queue];
-  queueDestroy: [queue: Queue, reason: PlayerDestroyReasons];
+  queueDestroy: [queue: Queue, reason: string];
 
   trackStart: [queue: Queue, track: Track];
   trackStuck: [queue: Queue, track: Track, thresholdMs: number];
@@ -67,16 +67,16 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
   plugins?: Plugins;
 
   /**
-   * Default prefix to use for search queries (not URLs).
-   * Default: `ytsearch`
+   * Whether to initialize automatically upon receiving the bot's ready event.
+   * @default true
    */
-  queryPrefix?: string;
+  autoInit?: boolean;
 
   /**
-   * Whether to relocate queues across nodes on disruption.
-   * Default: `true`
+   * The prefix to use for search queries (not URLs) by default.
+   * @default "ytsearch"
    */
-  relocateQueues?: boolean;
+  queryPrefix?: string;
 
   /**
    * Forward voice state updates to your bot's gateway connection
@@ -92,6 +92,11 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
    */
   fetchRelatedTracks?: (queue: Queue, track: Track) => Promise<Track[]>;
 }
+
+export type PlayerInstanceOptions = Omit<
+  RequiredProp<PlayerOptions, keyof typeof DefaultPlayerOptions>,
+  "nodes" | "plugins"
+>;
 
 /**
  * Voice state update payload

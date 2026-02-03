@@ -1,122 +1,81 @@
+import { LookupSymbol } from "../Constants/Symbols";
 import type { APIPlayer, EmptyObject, FilterNames, FilterValue, JsonObject, Filters } from "../Typings";
 import type { VoiceState } from "../Voice";
-import type { QueueManager } from "./index";
 import type { Player } from "../Main";
 
-/**
- * A helper class for Queue to simplify filter management
- */
 export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
-  #manager: QueueManager;
-  #cache: APIPlayer;
+  #player: APIPlayer;
   #voice: VoiceState;
 
   constructor(player: Player, guildId: string) {
-    const cache = player.queues.cache.get(guildId);
-    if (!cache) throw new Error(`No player found for guild '${guildId}'`);
+    if (player.queues.has(guildId)) {
+      throw new Error(`A Queue already exists with its own FilterManager`);
+    }
+    const _player = player.queues[LookupSymbol](guildId);
     const voice = player.voices.get(guildId);
+
+    if (!_player) throw new Error(`No player found for guild '${guildId}'`);
     if (!voice) throw new Error(`No connection found for guild '${guildId}'`);
-    this.#manager = player.queues;
-    this.#cache = cache;
+
+    this.#player = _player;
     this.#voice = voice;
   }
 
-  get #data() {
-    this.#cache = this.#manager.cache.get(this.#voice.guildId) ?? this.#cache;
-    return this.#cache;
+  get<Name extends FilterNames<PluginFilters>>(name: Name) {
+    return (this.#player.filters[name as keyof Filters]
+      ?? (this.#player.filters as Filters<PluginFilters>).pluginFilters?.[name as keyof PluginFilters]
+      ?? null) as FilterValue<Name, PluginFilters> | null;
   }
 
-  set #data(data) {
-    this.#manager.cache.set(this.#voice.guildId, data);
-    this.#cache = data;
-  }
-
-  /**
-   * Raw filters object
-   */
-  get data() {
-    return this.#data.filters as Filters<PluginFilters>;
-  }
-
-  /**
-   * Gets the value of a filter
-   * @param name Name of the filter
-   * @returns Value of that filter if active, `null` otherwise
-   */
-  get<Name extends FilterNames<PluginFilters>>(name: Name): FilterValue<Name, PluginFilters> | null {
-    if (name === "pluginFilters") return null;
-    return (this.#data.filters as any)[name] ?? (this.#cache.filters.pluginFilters as any)?.[name] ?? null;
-  }
-
-  /**
-   * Sets the value of a filter
-   * @param name Name of the filter
-   * @param value Value of the filter
-   * @param isPlugin Whether this filer belongs to a plugin
-   */
   async set<Name extends FilterNames<PluginFilters>, Value extends FilterValue<Name, PluginFilters>>(
     name: Name,
     value: Value,
     isPlugin = false
-  ): Promise<Value | null> {
-    if (name === "pluginFilters") return null;
-    if (!isPlugin) (this.#data.filters as any)[name] = value;
-    else {
-      this.#cache.filters.pluginFilters ??= {};
-      (this.#cache.filters.pluginFilters as any)[name] = value;
+  ) {
+    if (isPlugin) {
+      (this.#player.filters as Filters<PluginFilters>).pluginFilters ??= {} as PluginFilters;
+      (this.#player.filters as Filters<PluginFilters>).pluginFilters![name] = value as PluginFilters[Name];
+    } else {
+      this.#player.filters[name as keyof Filters] = value as any;
     }
-    await this.override(this.#cache.filters as Filters<PluginFilters>);
-    return (isPlugin ? (this.#cache.filters.pluginFilters as any)?.[name] : (this.#cache.filters as any)[name]) ?? null;
+    await this.override(this.#player.filters as Filters<PluginFilters>);
+    return this.get(name);
   }
 
-  /**
-   * Returns a boolean saying whether a filter is active
-   * @param name Name of the filter
-   */
   has<Name extends FilterNames<PluginFilters>>(name: Name) {
-    if (name === "pluginFilters") return false;
     return (
-      name in this.#data.filters
-      || (this.#cache.filters.pluginFilters !== undefined && name in this.#cache.filters.pluginFilters)
+      name in this.#player.filters
+      || (this.#player.filters.pluginFilters !== undefined && name in this.#player.filters.pluginFilters)
     );
   }
 
-  /**
-   * Updates the filters by shallow merging current and provided filters object
-   * @param filters Raw filters object
-   */
-  async merge(filters: Filters<PluginFilters>) {
-    return this.override({ ...(this.#data.filters as Filters<PluginFilters>), ...filters });
-  }
-
-  /**
-   * Removes filters by name
-   * @param names List of filter names
-   */
   async remove<Name extends FilterNames<PluginFilters>>(...names: Name[]) {
-    if (names.length === 0) return this.#data.filters as Filters<PluginFilters>;
-    for (const filter in this.#data.filters) {
-      if (names.includes(filter as any)) delete (this.#cache.filters as any)[filter];
+    if (names.length === 0) return this.#player.filters as Filters<PluginFilters>;
+    for (const filter in this.#player.filters) {
+      if (names.includes(filter as Name)) delete this.#player.filters[filter as keyof Filters];
     }
-    for (const filter in this.#cache.filters.pluginFilters) {
-      if (names.includes(filter as any)) delete (this.#cache.filters.pluginFilters as any)?.[filter];
+    for (const filter in this.#player.filters.pluginFilters) {
+      if (!names.includes(filter as Name)) continue;
+      delete (this.#player.filters as Filters<PluginFilters>).pluginFilters![filter as keyof PluginFilters];
     }
-    return this.override(this.#cache.filters as Filters<PluginFilters>);
+    return this.override(this.#player.filters as Filters<PluginFilters>);
   }
 
-  /**
-   * Removes all filters
-   */
-  async clear() {
+  async clear(type?: "native" | "plugin") {
+    if (type === "plugin") return this.remove("pluginFilters");
+    if (type === "native" && this.#player.filters.pluginFilters !== undefined) {
+      return this.override({ pluginFilters: this.#player.filters.pluginFilters as PluginFilters });
+    }
     return this.override({});
   }
 
-  /**
-   * Updates the filters as provided
-   * @param filters Raw filters object
-   */
+  async merge(filters: Filters<PluginFilters>) {
+    return this.override({ ...(this.#player.filters as Filters<PluginFilters>), ...filters });
+  }
+
   async override(filters: Filters<PluginFilters>) {
-    this.#data = await this.#voice.node.rest.updatePlayer(this.#voice.guildId, { filters });
-    return this.#cache.filters as Filters<PluginFilters>;
+    const player = await this.#voice.node.rest.updatePlayer(this.#voice.guildId, { filters });
+    Object.assign(this.#player, player);
+    return player.filters as Filters<PluginFilters>;
   }
 }

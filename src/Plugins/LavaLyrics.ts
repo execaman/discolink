@@ -85,7 +85,7 @@ export namespace LavaLyrics {
     async fetchCurrent(guildId: string, skipTrackSource?: boolean) {
       const queue = this.#player.getQueue(guildId);
       if (!queue) throw new Error(`Queue not found for guild '${guildId}'`);
-      if (!queue.isPlaying) throw new Error(`Queue is not playing anything`);
+      if (!queue.playing) throw new Error(`Queue is not playing anything`);
       if (!queue.node.ready) throw new Error(`Queue node '${queue.node.name}' not ready`);
       skipTrackSource ??= this.skipTrackSource;
       const res = await queue.rest.request<Lyrics>(

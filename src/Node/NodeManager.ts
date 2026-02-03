@@ -1,48 +1,44 @@
 import { OPType } from "../Typings";
+import { OnEventUpdateSymbol, OnStateUpdateSymbol } from "../Constants/Symbols";
 import { noop } from "../Functions";
 import { Node } from "../index";
-import type { CreateNodeOptions, LavalinkInfo, NodeMetrics, NodeEventMap, NodeState, StatsPayload } from "../Typings";
+import type {
+  CreateNodeOptions,
+  FeatureTypes,
+  LavalinkInfo,
+  NodeMetrics,
+  NodeEventMap,
+  NodeState,
+  StatsPayload,
+} from "../Typings";
 import type { Player } from "../Main";
 
-/**
- * A manager class handling nodes with useful members
- */
 export class NodeManager implements Partial<Map<string, Node>> {
-  #player: Player;
-
   #nodes = new Map<string, Node>();
-  #cache = new Map<string, NodeMetrics>();
 
-  /**
-   * Lavalink info of nodes mapped by their names
-   */
   readonly info = new Map<string, LavalinkInfo>();
+  readonly metrics = new Map<string, NodeMetrics>();
+
+  readonly player: Player;
 
   constructor(player: Player) {
-    this.#player = player;
+    if (player.nodes === undefined) this.player = player;
+    else throw new Error("Manager already exists for this Player");
 
-    Object.defineProperty(this, "info" satisfies keyof NodeManager, {
+    const immutable: PropertyDescriptor = {
       writable: false,
       configurable: false,
-    });
+    };
+
+    Object.defineProperties(this, {
+      info: immutable,
+      metrics: immutable,
+      player: { ...immutable, enumerable: false },
+    } satisfies { [K in keyof NodeManager]?: PropertyDescriptor });
   }
 
   get size() {
     return this.#nodes.size;
-  }
-
-  /**
-   * A map holding this manager's intrinsic data
-   */
-  get cache() {
-    return this.#cache;
-  }
-
-  /**
-   * Whether at least one node is ready
-   */
-  get ready() {
-    return this.#nodes.values().some((n) => n.ready);
   }
 
   get(name: string) {
@@ -65,16 +61,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return this.#nodes.entries();
   }
 
-  /**
-   * Returns the state of a node
-   * @param name Name of the node
-   */
   state(name: string): NodeState;
-  /**
-   * Returns a boolean based on state comparison
-   * @param name Name of the node
-   * @param equals Expected state of the node
-   */
   state(name: string, equals: NodeState): boolean;
   state(name: string, equals?: NodeState) {
     const node = this.#nodes.get(name);
@@ -82,39 +69,38 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return equals === undefined ? node.state : node.state === equals;
   }
 
-  /**
-   * Creates a node
-   * @param options Options to create from
-   */
   create(options: CreateNodeOptions) {
-    if (this.#player.clientId === null) throw new Error("Player has not been initialized");
+    if (this.player.clientId === null) throw new Error("Player has not been initialized");
     if (this.#nodes.has(options.name)) throw new Error(`Node '${options.name}' already exists`);
-    const node = new Node({ ...options, clientId: this.#player.clientId });
+    const node = new Node({ ...options, clientId: this.player.clientId });
     node.setMaxListeners(1);
-    this.#attachEvents(node);
+    this.#attachListeners(node);
     this.#nodes.set(node.name, node);
     return node;
   }
 
-  /**
-   * Deletes a disconnected node
-   * @param name Name of the node
-   */
   delete(name: string) {
     const node = this.#nodes.get(name);
     if (!node) return false;
     if (!node.disconnected) throw new Error(`Node '${name}' not disconnected`);
-    this.#detachEvents(node);
+    this.#detachListeners(node);
+    this.player.voices.regions.forEach((r) => r.forgetNode(name));
     this.info.delete(name);
-    this.#cache.delete(name);
+    this.metrics.delete(name);
     this.#nodes.delete(name);
     return true;
   }
 
-  /**
-   * Returns a sorted list of nodes based on weights
-   * @param weights Factors to prioritize based on weights (0-1 each)
-   */
+  supports(feat: FeatureTypes, name: string): Node[];
+  supports(feat: FeatureTypes, name: string, node: string): boolean;
+  supports(feat: FeatureTypes, name: string, node?: string) {
+    if (node !== undefined) return this.#hasSupportFor(feat, name, node);
+    return this.#nodes.values().reduce<Node[]>((nodes, node) => {
+      if (this.#hasSupportFor(feat, name, node.name)) nodes.push(node);
+      return nodes;
+    }, []);
+  }
+
   relevant(weights: Partial<NodeMetrics> = { memory: 0.3, workload: 0.2, streaming: 0.5 }) {
     weights.memory = Math.min(1, Math.max(0, weights.memory ?? 0));
     weights.workload = Math.min(1, Math.max(0, weights.workload ?? 0));
@@ -126,8 +112,8 @@ export class NodeManager implements Partial<Map<string, Node>> {
     }, []);
 
     return nodes.sort((a, b) => {
-      const metricA = this.#cache.get(a.name);
-      const metricB = this.#cache.get(b.name);
+      const metricA = this.metrics.get(a.name);
+      const metricB = this.metrics.get(b.name);
 
       if (metricA && !metricB) return 1;
       if (metricB && !metricA) return -1;
@@ -144,17 +130,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     });
   }
 
-  /**
-   * Connect to all nodes
-   */
   connect(): Promise<void>;
-  /**
-   * Connect to a specific node
-   * @param name Name of the node
-   */
   connect(name: string): Promise<boolean>;
   async connect(name?: string): Promise<void | boolean> {
-    if (typeof name === "string") {
+    if (name !== undefined) {
       const node = this.#nodes.get(name);
       if (!node) throw new Error(`Node '${name}' not found`);
       return node.connect();
@@ -162,12 +141,8 @@ export class NodeManager implements Partial<Map<string, Node>> {
     for (const node of this.#nodes.values()) await node.connect();
   }
 
-  /**
-   * Disconnects all nodes or a specific node if a name is provided
-   * @param name Name of the node
-   */
   async disconnect(name?: string) {
-    if (typeof name === "string") {
+    if (name !== undefined) {
       const node = this.#nodes.get(name);
       if (!node) throw new Error(`Node '${name}' not found`);
       return node.disconnect();
@@ -175,17 +150,28 @@ export class NodeManager implements Partial<Map<string, Node>> {
     for (const node of this.#nodes.values()) await node.disconnect();
   }
 
-  /**
-   * Retrieves lavalink info of a node
-   * @param name Name of the node
-   * @param force Whether to skip cache and make a request
-   */
-  async fetchInfo(name: string, force?: boolean) {
-    if (!this.#nodes.has(name)) throw new Error(`Node '${name}' not found`);
-    if (force !== true && this.info.has(name)) return this.info.get(name)!;
-    const info = await this.#nodes.get(name)!.rest.fetchInfo();
+  async fetchInfo(name: string) {
+    if (this.info.has(name)) return this.info.get(name)!;
+    const node = this.#nodes.get(name);
+    if (!node) throw new Error(`Node '${name}' not found`);
+    const info = await node.rest.fetchInfo();
     this.info.set(name, info);
     return info;
+  }
+
+  #hasSupportFor(feat: FeatureTypes, name: string, node: string) {
+    const info = this.info.get(node);
+    if (!info) return false;
+    switch (feat) {
+      case "filter":
+        return info.filters.includes(name);
+      case "source":
+        return info.sourceManagers.includes(name);
+      case "plugin":
+        return info.plugins.some((p) => p.name === name);
+      default:
+        return false;
+    }
   }
 
   #memory(mem: StatsPayload["memory"]) {
@@ -205,13 +191,13 @@ export class NodeManager implements Partial<Map<string, Node>> {
     const passRate = frames.sent / expected;
     const lossRate = frames.nulled / expected;
     const failRate = Math.max(0, frames.deficit) / expected;
-    return Math.min(1, passRate - (failRate * 0.7 + lossRate * 0.3));
+    return Math.min(1, Math.max(0, passRate - (failRate * 0.7 + lossRate * 0.3)));
   }
 
   #updateMetrics(name: string, stats: StatsPayload) {
-    const metrics = this.#cache.get(name);
+    const metrics = this.metrics.get(name);
     if (!metrics) {
-      this.#cache.set(name, {
+      this.metrics.set(name, {
         memory: this.#memory(stats.memory),
         workload: this.#workload(stats.cpu),
         streaming: this.#streaming(stats.frameStats),
@@ -223,51 +209,57 @@ export class NodeManager implements Partial<Map<string, Node>> {
     metrics.streaming = this.#streaming(stats.frameStats);
   }
 
-  #onConnect: (...args: NodeEventMap["connect"]) => void = (reconnects, nodeName) => {
-    this.#player.emit("nodeConnect", this.#nodes.get(nodeName)!, reconnects);
+  #onConnect: (...args: NodeEventMap["connect"]) => void = (reconnects, name) => {
+    const node = this.#nodes.get(name);
+    if (!node) return;
+    this.player.emit("nodeConnect", node, reconnects);
   };
 
-  #onReady: (...args: NodeEventMap["ready"]) => void = (resumed, sessionId, nodeName) => {
-    this.#player.emit("nodeReady", this.#nodes.get(nodeName)!, resumed, sessionId);
-    this.fetchInfo(nodeName).catch(noop);
+  #onReady: (...args: NodeEventMap["ready"]) => void = (resumed, sessionId, name) => {
+    const node = this.#nodes.get(name);
+    if (!node) return;
+    this.player.emit("nodeReady", node, resumed, sessionId);
+    if (!this.info.has(name)) this.fetchInfo(name).catch(noop);
   };
 
-  #onDispatch: (...args: NodeEventMap["dispatch"]) => void = (payload, nodeName) => {
+  #onDispatch: (...args: NodeEventMap["dispatch"]) => void = (payload, name) => {
+    const node = this.#nodes.get(name);
+    if (!node) return;
     switch (payload.op) {
-      case OPType.PlayerUpdate: {
-        this.#player.queues.onStateUpdate(payload);
+      case OPType.Event:
+        this.player.queues[OnEventUpdateSymbol](payload);
         break;
-      }
-      case OPType.Stats: {
-        this.#updateMetrics(nodeName, payload);
+      case OPType.PlayerUpdate:
+        this.player.queues[OnStateUpdateSymbol](payload);
         break;
-      }
-      case OPType.Event: {
-        this.#player.queues.onEventUpdate(payload);
+      case OPType.Stats:
+        this.#updateMetrics(name, payload);
         break;
-      }
     }
-    this.#player.emit("nodeDispatch", this.#nodes.get(nodeName)!, payload);
+    this.player.emit("nodeDispatch", node, payload);
   };
 
-  #onError: (...args: NodeEventMap["error"]) => void = (err, nodeName) => {
-    this.#player.emit("nodeError", this.#nodes.get(nodeName)!, err);
+  #onError: (...args: NodeEventMap["error"]) => void = (err, name) => {
+    const node = this.#nodes.get(name);
+    if (!node) return;
+    this.player.emit("nodeError", node, err);
   };
 
-  #onClose: (...args: NodeEventMap["close"]) => void = (code, reason, nodeName) => {
-    this.#cache.delete(nodeName);
-    this.#player.emit("nodeClose", this.#nodes.get(nodeName)!, code, reason);
-    if (this.#player.options.relocateQueues) this.#player.queues.relocate(nodeName).catch(noop);
+  #onClose: (...args: NodeEventMap["close"]) => void = (code, reason, name) => {
+    const node = this.#nodes.get(name);
+    if (!node) return;
+    this.metrics.delete(name);
+    this.player.emit("nodeClose", node, code, reason);
   };
 
-  #onDisconnect: (...args: NodeEventMap["disconnect"]) => void = (code, reason, byLocal, nodeName) => {
-    this.#cache.delete(nodeName);
-    this.#player.voices.regions.forEach((r) => r.forgetNode(nodeName));
-    this.#player.emit("nodeDisconnect", this.#nodes.get(nodeName)!, code, reason, byLocal);
-    if (this.#player.options.relocateQueues) this.#player.queues.relocate(nodeName).catch(noop);
+  #onDisconnect: (...args: NodeEventMap["disconnect"]) => void = (code, reason, byLocal, name) => {
+    const node = this.#nodes.get(name);
+    if (!node) return;
+    this.metrics.delete(name);
+    this.player.emit("nodeDisconnect", node, code, reason, byLocal);
   };
 
-  #attachEvents(node: Node) {
+  #attachListeners(node: Node) {
     node.on("connect", this.#onConnect);
     node.on("ready", this.#onReady);
     node.on("dispatch", this.#onDispatch);
@@ -276,7 +268,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
     node.on("disconnect", this.#onDisconnect);
   }
 
-  #detachEvents(node: Node) {
+  #detachListeners(node: Node) {
     node.removeListener("connect", this.#onConnect);
     node.removeListener("ready", this.#onReady);
     node.removeListener("dispatch", this.#onDispatch);

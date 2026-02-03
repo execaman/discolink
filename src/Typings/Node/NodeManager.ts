@@ -6,7 +6,15 @@ import type { NodeOptions } from "./Node";
 export type CreateNodeOptions = Omit<NodeOptions, "clientId">;
 
 /**
- * NodeManager intrinsic data
+ * Types of node features for support evaluation
+ */
+export type FeatureTypes = "filter" | "source" | "plugin";
+
+/**
+ * Simplified node stats for relevance evaluation.
+ *
+ * The value of each field lies within [0, 1]
+ * except `streaming`, where -1 reports insufficient data
  */
 export interface NodeMetrics {
   memory: number;
