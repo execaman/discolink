@@ -5,19 +5,40 @@
 
 ### ⚠ BREAKING CHANGES
 
-* better plugin system ([#11](https://github.com/execaman/discolink/issues/11))
+* **Plugins:** better plugin system ([#11](https://github.com/execaman/discolink/issues/11))
+* **Player:** removed `relocateQueues` option ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **Player:** removed `nodes` and `plugins` from instance options ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **Player:** renamed `initialized` property to `ready` ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **REST:** removed `retryLimit` option ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **REST:** removed request queue and `dropSessionRequests()` ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **Node:** removed `handshakeTimeout` property ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **FilterManager:** removed `data` property ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **QueueManager:** removed `cache` and `relocate()` ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **VoiceManager:** removed `cache` property ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **VoiceManager:** removed queue auto-destroy feature on guild/channel delete ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **NodeManager:** removed queue auto-relocation feature on close/disconnect ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **VoiceRegion:** removed `nodes` property ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **VoiceRegion:** `getAveragePing()` now returns `null` for insufficient data ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **VoiceState:** removed `valid`, `sessionId`, `token`, `endpoint`, `muted`, `deafened`, and `reconnect()` ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
 
 ### Features
 
-* better plugin system ([#11](https://github.com/execaman/discolink/issues/11)) ([e0a791e](https://github.com/execaman/discolink/commit/e0a791e54adae982cbc97a921231801b5b28c888))
+* **Plugins:** better plugin system ([#11](https://github.com/execaman/discolink/issues/11)) ([e0a791e](https://github.com/execaman/discolink/commit/e0a791e54adae982cbc97a921231801b5b28c888))
+* **Player:** `autoInit` option to control initialization ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
 * **REST:** directly usable common http methods ([#16](https://github.com/execaman/discolink/issues/16)) ([0415148](https://github.com/execaman/discolink/commit/04151484d41d808f408d079eee39bc08db7e3c81))
+* **Node:** `reconnectLimit` can now be an integer, 0 for none, positive for limit, negative for no limit ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **Node:** exposed `reconnectLimit` property ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **NodeManager:** exposed `metrics` and `supports()` ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **REST:** exposed `baseUrl` and `userAgent` properties ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **FilterManager:** included `pluginFilters` as a valid filter key ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **FilterManager:** added clear filter types `native` and `plugin` for `clear()` ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
 
 
 ### Bug Fixes
 
-* **isString:** only pass for http strings on url check ([#12](https://github.com/execaman/discolink/issues/12)) ([03c4945](https://github.com/execaman/discolink/commit/03c4945379acf71628284ce358a942cbe7d0e5b8))
-* **isString:** strict check url protocol for http ([#17](https://github.com/execaman/discolink/issues/17)) ([7654447](https://github.com/execaman/discolink/commit/765444707ae1de9c37232b789c275a7c18b37d72))
 * **Node:** record timestamp before sending ping ([#15](https://github.com/execaman/discolink/issues/15)) ([b510b3c](https://github.com/execaman/discolink/commit/b510b3cc75caee2de0b4c69cccfdfc00ede5b5df))
+* **Node:** persist `sessionId` when reconnecting ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
+* **Playlist:** mandate track(s) in raw api data ([e5077c2](https://github.com/execaman/discolink/commit/e5077c2f8a49fe258bb1aefe9b7047b4eb320e73))
 
 ## [1.3.0](https://github.com/execaman/discolink/compare/v1.2.1...v1.3.0) (2025-11-14)
 
