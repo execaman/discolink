@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0](https://github.com/execaman/discolink/compare/v1.3.0...v2.0.0) (2026-02-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* better plugin system ([#11](https://github.com/execaman/discolink/issues/11))
+
+### Features
+
+* better plugin system ([#11](https://github.com/execaman/discolink/issues/11)) ([e0a791e](https://github.com/execaman/discolink/commit/e0a791e54adae982cbc97a921231801b5b28c888))
+* **REST:** directly usable common http methods ([#16](https://github.com/execaman/discolink/issues/16)) ([0415148](https://github.com/execaman/discolink/commit/04151484d41d808f408d079eee39bc08db7e3c81))
+
+
+### Bug Fixes
+
+* **isString:** only pass for http strings on url check ([#12](https://github.com/execaman/discolink/issues/12)) ([03c4945](https://github.com/execaman/discolink/commit/03c4945379acf71628284ce358a942cbe7d0e5b8))
+* **isString:** strict check url protocol for http ([#17](https://github.com/execaman/discolink/issues/17)) ([7654447](https://github.com/execaman/discolink/commit/765444707ae1de9c37232b789c275a7c18b37d72))
+* **Node:** record timestamp before sending ping ([#15](https://github.com/execaman/discolink/issues/15)) ([b510b3c](https://github.com/execaman/discolink/commit/b510b3cc75caee2de0b4c69cccfdfc00ede5b5df))
+
 ## [1.3.0](https://github.com/execaman/discolink/compare/v1.2.1...v1.3.0) (2025-11-14)
 
 
