@@ -1,12 +1,13 @@
 <div align="center">
   <img alt="Discolink" src="assets/music-album.png" width="120" />
   
-  [Icon designed by juicy_fish](https://www.flaticon.com/authors/juicy-fish)
+  [Icon by juicy_fish](https://www.flaticon.com/authors/juicy-fish)
   <br/>
-  [Documentation](https://github.com/execaman/discolink/wiki) | [API Reference](https://execaman.github.io/discolink)
-  
+  [API Reference](https://execaman.github.io/discolink) | [Coverage](http://app.codecov.io/gh/execaman/discolink)
+
 ![NPM Version](https://img.shields.io/npm/v/discolink?style=flat&logo=npm)
-![NPM Downloads](https://img.shields.io/npm/dm/discolink)
+![Codecov Coverage](https://img.shields.io/codecov/c/github/execaman/discolink?logo=codecov)
+
 </div>
 
 ## 🎯 Purpose
