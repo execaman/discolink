@@ -5,6 +5,8 @@ on: [push, pull_request]
 jobs:
   run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -23,5 +25,3 @@ jobs:
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
