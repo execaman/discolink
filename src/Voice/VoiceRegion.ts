@@ -47,8 +47,6 @@ export class VoiceRegion {
 
   getRelevantNode() {
     return this.player.nodes.relevant().sort((a, b) => {
-      if (!this.#pings.has(a.name)) return -1;
-      if (!this.#pings.has(b.name)) return 1;
       return (this.getAveragePing(a.name) ?? 0) - (this.getAveragePing(b.name) ?? 0);
     })[0];
   }
