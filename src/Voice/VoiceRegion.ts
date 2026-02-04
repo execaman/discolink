@@ -14,9 +14,7 @@ export class VoiceRegion {
   readonly player: Player;
 
   constructor(player: Player, regionId: string) {
-    if (player.voices.regions.has(regionId)) {
-      throw new Error(`An identical voice region already exists`);
-    }
+    if (player.voices.regions.has(regionId)) throw new Error(`An identical voice region already exists`);
 
     this.id = regionId;
     this.player = player;

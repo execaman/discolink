@@ -8,13 +8,12 @@ export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
   #voice: VoiceState;
 
   constructor(player: Player, guildId: string) {
-    if (player.queues.has(guildId)) {
-      throw new Error(`A Queue already exists with its own FilterManager`);
-    }
-    const _player = player.queues[LookupSymbol](guildId);
-    const voice = player.voices.get(guildId);
+    if (player.queues.has(guildId)) throw new Error(`A Queue already exists with its own FilterManager`);
 
+    const _player = player.queues[LookupSymbol](guildId);
     if (!_player) throw new Error(`No player found for guild '${guildId}'`);
+
+    const voice = player.voices.get(guildId);
     if (!voice) throw new Error(`No connection found for guild '${guildId}'`);
 
     this.#player = _player;

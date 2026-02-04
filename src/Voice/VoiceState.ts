@@ -15,9 +15,8 @@ export class VoiceState {
   readonly player: Player;
 
   constructor(player: Player, node: string, guildId: string) {
-    if (player.voices.has(guildId)) {
-      throw new Error(`An identical voice state already exists`);
-    }
+    if (player.voices.has(guildId)) throw new Error(`An identical voice state already exists`);
+
     const _node = player.nodes.get(node);
 
     if (!_node) throw new Error(`Node '${node}' not found`);
