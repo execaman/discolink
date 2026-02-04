@@ -31,20 +31,20 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
   readonly player: Player;
 
   constructor(player: Player, guildId: string, context?: Context) {
-    const _player = player.queues[LookupSymbol](guildId);
-    const voice = player.voices.get(guildId);
+    if (player.queues.has(guildId)) throw new Error("An identical queue already exists");
 
+    const _player = player.queues[LookupSymbol](guildId);
     if (!_player) throw new Error(`No player found for guild '${guildId}'`);
+
+    const voice = player.voices.get(guildId);
     if (!voice) throw new Error(`No connection found for guild '${guildId}'`);
 
     this.#player = _player;
+    if (context !== undefined) this.context = context;
 
     this.voice = voice;
-    this.player = player;
-
     this.filters = new FilterManager(player, guildId);
-
-    if (context !== undefined) this.context = context;
+    this.player = player;
 
     const immutable: PropertyDescriptor = {
       writable: false,
