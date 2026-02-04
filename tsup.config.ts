@@ -1,8 +1,5 @@
-import { readFileSync } from "node:fs";
 import { defineConfig } from "tsup";
-
-const packageJsonString = readFileSync("./package.json", "utf8");
-const { name, version, repository } = JSON.parse(packageJsonString);
+import { name, version, repository } from "./package.json";
 
 export default defineConfig({
   clean: true,
