@@ -22,9 +22,9 @@ import type {
 } from "../Typings";
 import type { Player } from "../Main";
 
-export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
-  implements Partial<Map<string, Queue<Context>>>
-{
+export class QueueManager<Context extends Record<string, unknown> = EmptyObject> implements Partial<
+  Map<string, Queue<Context>>
+> {
   #cache = new Map<string, APIPlayer>();
 
   #queues = new Map<string, Queue<Context>>();

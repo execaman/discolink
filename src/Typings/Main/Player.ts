@@ -125,8 +125,8 @@ export interface SearchOptions {
 export interface PlayOptions<
   Context extends Record<string, unknown> = EmptyObject,
   UserData extends JsonObject = EmptyObject,
-> extends SearchOptions,
-    CreateQueueOptions<Context> {
+>
+  extends SearchOptions, CreateQueueOptions<Context> {
   userData?: UserData;
 }
 

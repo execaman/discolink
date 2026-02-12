@@ -19,7 +19,7 @@ The goal of this library is to abstract away obvious steps involved in the proce
 - **Runtime** - one of the following:
   - [Node.js](https://nodejs.org) v22+
   - [Bun](https://bun.com) v1+
-  - [Deno](https://deno.com) v1.4+ (unstable)
+  - [Deno](https://deno.com) v2+
 - **Library** - any gateway client that supports:
   - sending raw payloads over the connection
   - receiving raw payloads from the connection

@@ -60,7 +60,8 @@ export type DiscordDispatchPayload = BotReadyPayload | VoiceStateUpdatePayload |
  * Internal ref representing client-side voice state
  */
 export interface BotVoiceState
-  extends Required<NonNullableProp<Omit<VoiceStateUpdatePayload["d"], "guild_id" | "user_id">, "channel_id">>,
+  extends
+    Required<NonNullableProp<Omit<VoiceStateUpdatePayload["d"], "guild_id" | "user_id">, "channel_id">>,
     NonNullableProp<Omit<VoiceServerUpdatePayload["d"], "guild_id">, "endpoint"> {
   connected: boolean;
   node_session_id: string;

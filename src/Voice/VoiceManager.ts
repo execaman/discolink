@@ -18,8 +18,7 @@ import type {
 import type { Player } from "../Main";
 
 interface JoinRequest
-  extends PromiseWithResolvers<VoiceState>,
-    Pick<CreateQueueOptions, "context" | "node" | "voiceId"> {
+  extends PromiseWithResolvers<VoiceState>, Pick<CreateQueueOptions, "context" | "node" | "voiceId"> {
   config?: Pick<CreateQueueOptions, "filters" | "volume">;
 }
 
