@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/execaman/discolink/compare/v2.0.1...v2.0.2) (2026-02-13)
+
+
+### Bug Fixes
+
+* **Node:** prevent immediate connect on initial failure ([#23](https://github.com/execaman/discolink/issues/23)) ([3d5bd22](https://github.com/execaman/discolink/commit/3d5bd227f4c87753bb5e0977089284614dc16cb1))
+
 ## [2.0.1](https://github.com/execaman/discolink/compare/v2.0.0...v2.0.1) (2026-02-04)
 
 
