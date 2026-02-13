@@ -3,7 +3,7 @@ name: Coverage
 on: [push, pull_request]
 
 jobs:
-  run:
+  report:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           cache: npm
-          node-version: 22
+          node-version: 22.22
 
       - name: Install dependencies
         run: npm ci
