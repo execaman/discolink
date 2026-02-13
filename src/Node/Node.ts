@@ -31,7 +31,7 @@ export class Node extends EventEmitter<NodeEventMap> {
   #ping: number | null = null;
   #lastPingTime: number | null = null;
 
-  #reconnectInit = false;
+  #reconnectCycle = true;
   #reconnectAttempts = 0;
 
   #manualDisconnect = false;
@@ -185,16 +185,16 @@ export class Node extends EventEmitter<NodeEventMap> {
   }
 
   #reconnect() {
-    this.#reconnectInit = false;
+    this.#reconnectCycle = false;
     this.#reconnectTimer?.refresh();
     this.#reconnectTimer ??= setTimeout(() => {
-      this.#reconnectInit = true;
+      this.#reconnectCycle = true;
       this.connect();
     }, this.#reconnectDelay).unref();
   }
 
-  #stopReconnecting(resetCount = true, reconnectInit = false) {
-    this.#reconnectInit = reconnectInit;
+  #stopReconnecting(resetCount = true, reconnectCycle = false) {
+    this.#reconnectCycle = reconnectCycle;
     if (resetCount) this.#reconnectAttempts = 0;
     if (this.#reconnectTimer !== null) clearTimeout(this.#reconnectTimer);
     this.#reconnectTimer = null;
@@ -223,7 +223,7 @@ export class Node extends EventEmitter<NodeEventMap> {
     if (this.#socket !== null) return this.#connectPromise ?? this.connected;
     if (this.reconnecting) {
       this.#reconnectAttempts++;
-      if (!this.#reconnectInit) this.#stopReconnecting(false, true);
+      if (!this.#reconnectCycle) this.#stopReconnecting(false, true);
     }
     this.#socket = new WebSocket(this.#socketUrl, this.#socketConfig);
     this.#socket.once("open", () => {
@@ -302,14 +302,14 @@ export class Node extends EventEmitter<NodeEventMap> {
       this.emit("disconnect", code, reason, byLocal, this.name);
       return;
     }
-    if (this.#reconnectInit) {
+    if (this.#reconnectCycle) {
       this.#reconnect();
       this.emit("close", code, reason, this.name);
       return;
     }
     const immediate = setImmediate(() => {
       clearImmediate(immediate);
-      this.#reconnectInit = true;
+      this.#reconnectCycle = true;
       this.connect();
     });
   }
