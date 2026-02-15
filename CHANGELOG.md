@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/execaman/discolink/compare/v2.1.0...v3.0.0) (2026-02-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* typings and queue sync ([#27](https://github.com/execaman/discolink/issues/27))
+
+### Bug Fixes
+
+* typings and queue sync ([#27](https://github.com/execaman/discolink/issues/27)) ([2821059](https://github.com/execaman/discolink/commit/28210592f38ee2acdbeb4bdb1b04e602f67bbcba))
+
 ## [2.1.0](https://github.com/execaman/discolink/compare/v2.0.1...v2.1.0) (2026-02-15)
 
 
