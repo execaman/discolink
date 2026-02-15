@@ -432,7 +432,7 @@ export interface VibratoFilter {
   /**
    * The vibrato depth 0.0 < x ≤ 1.0
    */
-  vibrato?: number;
+  depth?: number;
 }
 
 /**
@@ -539,7 +539,7 @@ export interface PlayerUpdateRequestBody {
   /**
    * Specification for a new track to load, as well as user data to set
    */
-  track?: PlayerUpdateTrackData | null;
+  track?: PlayerUpdateTrackData;
 
   /**
    * The track position in milliseconds
@@ -549,7 +549,7 @@ export interface PlayerUpdateRequestBody {
   /**
    * The track end time in milliseconds (must be > 0). `null` resets this if it was set previously
    */
-  endTime?: number;
+  endTime?: number | null;
 
   /**
    * The player volume, in percentage, from 0 to 1000
