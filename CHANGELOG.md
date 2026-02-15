@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.1.0](https://github.com/execaman/discolink/compare/v2.0.1...v2.1.0) (2026-02-15)
+
+
+### Features
+
+* **Player:** add options to toggle queue sync and relocation ([ef33034](https://github.com/execaman/discolink/commit/ef3303489c7971a4b248996d672afb85d2850e18))
+* queue sync and relocation options ([#26](https://github.com/execaman/discolink/issues/26)) ([ef33034](https://github.com/execaman/discolink/commit/ef3303489c7971a4b248996d672afb85d2850e18))
+* **Queue:** implement sync method ([ef33034](https://github.com/execaman/discolink/commit/ef3303489c7971a4b248996d672afb85d2850e18))
+* **QueueManager:** implement sync and relocate methods ([ef33034](https://github.com/execaman/discolink/commit/ef3303489c7971a4b248996d672afb85d2850e18))
+* **VoiceState:** new property for 'disconnected' state ([#25](https://github.com/execaman/discolink/issues/25)) ([4fb06a0](https://github.com/execaman/discolink/commit/4fb06a04badd8019a02c242e1b7b8842d6d0c911))
+
+
+### Bug Fixes
+
+* **Node:** prevent immediate connect on initial failure ([#23](https://github.com/execaman/discolink/issues/23)) ([3d5bd22](https://github.com/execaman/discolink/commit/3d5bd227f4c87753bb5e0977089284614dc16cb1))
+
 ## [2.0.1](https://github.com/execaman/discolink/compare/v2.0.0...v2.0.1) (2026-02-04)
 
 
