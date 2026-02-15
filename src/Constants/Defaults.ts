@@ -11,7 +11,7 @@ export const DefaultRestOptions = Object.seal({
   version: 4,
   userAgent: $clientName + "/" + $clientVersion + " (" + $clientRepository + ")",
   stackTrace: false,
-  requestTimeout: 15_000,
+  requestTimeout: 10_000,
 } as const satisfies Partial<RESTOptions>);
 
 /**
@@ -30,7 +30,9 @@ export const DefaultNodeOptions = Object.seal({
  */
 export const DefaultPlayerOptions = Object.seal({
   autoInit: true,
+  autoSync: true,
   queryPrefix: "ytsearch",
+  relocateQueues: true,
   async fetchRelatedTracks() {
     return [];
   },
