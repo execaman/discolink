@@ -83,17 +83,21 @@ export class VoiceState {
     return this.#state.suppress;
   }
 
+  get destroyed() {
+    return this.player.voices.get(this.guildId) !== this;
+  }
+
   get connected() {
     if (!this.#player.state.connected) return false;
     return this.#state.connected && this.#state.node_session_id === this.#node.sessionId;
   }
 
-  get destroyed() {
-    return this.player.voices.get(this.guildId) !== this;
-  }
-
   get reconnecting() {
     return this.#state.reconnecting;
+  }
+
+  get disconnected() {
+    return !this.connected && !this.reconnecting;
   }
 
   get changingNode() {
@@ -125,13 +129,13 @@ export class VoiceState {
     this.#changePromise = resolver.promise;
 
     const request: PlayerUpdateRequestBody = {
-      filters: this.#player.filters,
-      paused: this.#player.paused,
       voice: {
         endpoint: this.#state.endpoint,
         sessionId: this.#state.session_id,
         token: this.#state.token,
       },
+      filters: this.#player.filters,
+      paused: this.#player.paused,
       volume: this.#player.volume,
     };
 
