@@ -1,5 +1,5 @@
 import { Severity } from "../Typings";
-import { LookupSymbol } from "../Constants/Symbols";
+import { LookupSymbol, UpdateSymbol } from "../Constants/Symbols";
 import { formatDuration, isArray, isNumber } from "../Functions";
 import { Playlist, Track } from "../index";
 import { VoiceState } from "../Voice";
@@ -172,13 +172,31 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
   }
 
   async sync(target: "local" | "remote" = "local") {
-    let player: APIPlayer;
-
-    if (target === "local") player = await this.rest.fetchPlayer(this.guildId);
-    else if (target === "remote") player = await this.rest.updatePlayer(this.guildId, this.#player);
-    else throw new Error("Target must be 'local' or 'remote'");
-
-    Object.assign(this.#player, player);
+    if (target === "local") {
+      const player = await this.rest.fetchPlayer(this.guildId);
+      Object.assign(this.#player, player);
+      return;
+    }
+    if (target !== "remote") throw new Error("Target must be 'local' or 'remote'");
+    const voice = this.player.voices[LookupSymbol](this.guildId);
+    if (!voice) return;
+    const player = this.#player;
+    const request: PlayerUpdateRequestBody = {
+      voice: {
+        endpoint: voice.endpoint,
+        sessionId: voice.session_id,
+        token: voice.token,
+      },
+      filters: player.filters,
+      paused: player.paused,
+      volume: player.volume,
+    };
+    if (player.track !== null) {
+      request.track = { encoded: player.track.encoded, userData: player.track.userData };
+      request.position = player.state.position;
+    }
+    await this.#update(request);
+    this.player.voices[UpdateSymbol](this.guildId, { node_session_id: this.node.sessionId! });
   }
 
   async search(query: string, prefix = this.player.options.queryPrefix) {

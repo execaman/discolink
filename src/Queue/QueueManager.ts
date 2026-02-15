@@ -119,20 +119,12 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
       for (const player of players) this[UpdateSymbol](player.guildId, player);
       return;
     }
-    if (target !== "remote") throw new Error("Target must be 'local' or 'remote'");
-
-    const players = this.#queues.values().reduce((t, q) => {
-      if (q.node.name !== node) return t;
-      t.push(this.#cache.get(q.guildId)!);
-      return t;
-    }, [] as APIPlayer[]);
-
-    const results = await Promise.allSettled(players.map((p) => _node.rest.updatePlayer(p.guildId, p)));
-
-    for (const result of results) {
-      if (result.status === "rejected") continue;
-      this[UpdateSymbol](result.value.guildId, result.value);
+    if (target === "remote") {
+      const queues = this.#queues.values().filter((q) => q.node.name === node);
+      await Promise.allSettled(queues.map((q) => q.sync("remote")));
+      return;
     }
+    throw new Error("Target must be 'local' or 'remote'");
   }
 
   async relocate(node: string) {
