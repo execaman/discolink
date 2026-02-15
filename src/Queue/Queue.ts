@@ -171,6 +171,16 @@ export class Queue<Context extends Record<string, unknown> = EmptyObject> {
     Object.assign(this.#player, player);
   }
 
+  async sync(target: "local" | "remote" = "local") {
+    let player: APIPlayer;
+
+    if (target === "local") player = await this.rest.fetchPlayer(this.guildId);
+    else if (target === "remote") player = await this.rest.updatePlayer(this.guildId, this.#player);
+    else throw new Error("Target must be 'local' or 'remote'");
+
+    Object.assign(this.#player, player);
+  }
+
   async search(query: string, prefix = this.player.options.queryPrefix) {
     return this.player.search(query, { prefix, node: this.node.name });
   }

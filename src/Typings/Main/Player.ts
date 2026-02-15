@@ -73,10 +73,22 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
   autoInit?: boolean;
 
   /**
+   * Whether to update players for nodes that couldn't resume.
+   * @default true
+   */
+  autoSync?: boolean;
+
+  /**
    * The prefix to use for search queries (not URLs) by default.
    * @default "ytsearch"
    */
   queryPrefix?: string;
+
+  /**
+   * Whether to relocate queues when a node closes/disconnects.
+   * @default true
+   */
+  relocateQueues?: boolean;
 
   /**
    * Forward voice state updates to your bot's gateway connection

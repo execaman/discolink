@@ -26,9 +26,10 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
   Map<string, Queue<Context>>
 > {
   #cache = new Map<string, APIPlayer>();
-
   #queues = new Map<string, Queue<Context>>();
+
   #destroys = new Map<string, Promise<void>>();
+  #relocations = new Map<string, Promise<void>>();
 
   readonly player: Player;
 
@@ -69,13 +70,18 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
 
   async create(options: CreateQueueOptions<Context>) {
     if (!isRecord(options)) throw new Error("Queue create options must be an object");
-    if (this.#queues.has(options.guildId)) return this.#queues.get(options.guildId)!;
-    if (!this.player.voices.has(options.guildId)) {
-      await this.player.voices.connect(options.guildId, options.voiceId, options);
-      return this.#queues.get(options.guildId)!;
+
+    const guildId = options.guildId;
+    if (this.#queues.has(guildId)) return this.#queues.get(guildId)!;
+
+    if (!this.player.voices.has(guildId)) {
+      await this.player.voices.connect(guildId, options.voiceId, options);
+      return this.#queues.get(guildId)!;
     }
-    const queue = new Queue<Context>(this.player, options.guildId, options.context);
-    this.#queues.set(options.guildId, queue);
+
+    const queue = new Queue<Context>(this.player, guildId, options.context);
+    this.#queues.set(guildId, queue);
+
     this.player.emit("queueCreate", queue);
     return queue;
   }
@@ -100,6 +106,79 @@ export class QueueManager<Context extends Record<string, unknown> = EmptyObject>
 
     resolver.resolve();
     this.#destroys.delete(guildId);
+  }
+
+  async sync(node: string, target: "local" | "remote" = "local") {
+    const _node = this.player.nodes.get(node);
+
+    if (!_node) throw new Error(`Node '${node}' not found`);
+    if (!_node.ready) throw new Error(`Node '${node}' not ready`);
+
+    if (target === "local") {
+      const players = await _node.rest.fetchPlayers();
+      for (const player of players) this[UpdateSymbol](player.guildId, player);
+      return;
+    }
+    if (target !== "remote") throw new Error("Target must be 'local' or 'remote'");
+
+    const players = this.#queues.values().reduce((t, q) => {
+      if (q.node.name !== node) return t;
+      t.push(this.#cache.get(q.guildId)!);
+      return t;
+    }, [] as APIPlayer[]);
+
+    const results = await Promise.allSettled(players.map((p) => _node.rest.updatePlayer(p.guildId, p)));
+
+    for (const result of results) {
+      if (result.status === "rejected") continue;
+      this[UpdateSymbol](result.value.guildId, result.value);
+    }
+  }
+
+  async relocate(node: string) {
+    if (this.#relocations.has(node)) return this.#relocations.get(node)!;
+
+    const queues = this.#queues
+      .values()
+      .filter((q) => q.node.name === node && !q.voice.reconnecting)
+      .toArray()
+      .sort((a, b) => Number(a.playing) - Number(b.playing));
+
+    if (queues.length === 0) return;
+
+    const nodes = [] as { name: string; share: number; score: number }[];
+
+    for (const [name, stats] of this.player.nodes.metrics) {
+      if (name === node) continue;
+      nodes.push({
+        name,
+        share: 0,
+        score: stats.memory * 0.6 + stats.workload * 0.4,
+      });
+    }
+    nodes.sort((a, b) => b.score - a.score);
+
+    if (nodes.length === 0) return;
+
+    const resolver = Promise.withResolvers<void>();
+    this.#relocations.set(node, resolver.promise);
+
+    for (let i = 0, j = 0, target = nodes[0]!; i < queues.length; i++) {
+      for (j = 0; j < nodes.length; j++) {
+        const current = nodes[j]!;
+        if (current.share / current.score < target.share / target.score) target = current;
+      }
+      target.share++;
+    }
+    nodes.sort((a, b) => b.share - a.share);
+
+    const shifts = nodes.map((n) => Promise.allSettled(queues.splice(-n.share).map((q) => q.voice.changeNode(n.name))));
+
+    Promise.all(shifts).then(() => {
+      resolver.resolve();
+      this.#relocations.delete(node);
+    });
+    return resolver.promise;
   }
 
   async #onTrackStart(queue: Queue, payload: TrackStartEventPayload) {

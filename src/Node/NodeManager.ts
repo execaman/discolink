@@ -218,6 +218,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
   #onReady: (...args: NodeEventMap["ready"]) => void = (resumed, sessionId, name) => {
     const node = this.#nodes.get(name);
     if (!node) return;
+    if (!resumed && this.player.options.autoSync) this.player.queues.sync(name, "remote");
     this.player.emit("nodeReady", node, resumed, sessionId);
     if (!this.info.has(name)) this.fetchInfo(name).catch(noop);
   };
@@ -249,6 +250,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
     const node = this.#nodes.get(name);
     if (!node) return;
     this.metrics.delete(name);
+    if (this.player.options.relocateQueues) this.player.queues.relocate(name);
     this.player.emit("nodeClose", node, code, reason);
   };
 
@@ -256,6 +258,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
     const node = this.#nodes.get(name);
     if (!node) return;
     this.metrics.delete(name);
+    if (this.player.options.relocateQueues) this.player.queues.relocate(name);
     this.player.emit("nodeDisconnect", node, code, reason, byLocal);
   };
 
