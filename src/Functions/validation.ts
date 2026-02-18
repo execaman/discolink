@@ -45,7 +45,7 @@ export const isRecord = <T extends Record<any, any>>(input: unknown, check?: "no
 /**
  * Check if input is an array
  * @param input value
- * @param check `non-empty`, `function` ({@linkcode Array.prototype.every}, but empty array gives `false`)
+ * @param check `non-empty`, `function` (same as {@linkcode Array.prototype.every})
  * @returns `true` if the input passed, `false` otherwise
  */
 export const isArray = <T extends any[]>(
@@ -55,6 +55,6 @@ export const isArray = <T extends any[]>(
   if (!Array.isArray(input)) return false;
   if (check === undefined) return true;
   if (check === "non-empty") return input.length !== 0;
-  if (typeof check === "function") return input.length !== 0 && input.every(check);
+  if (typeof check === "function") return input.every(check);
   return false;
 };
