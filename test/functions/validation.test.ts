@@ -13,6 +13,10 @@ describe("isArray", () => {
     expect(isArray([], "non-empty")).toBe(false);
   });
 
+  it("must return true for [] (check: Number.isNaN)", () => {
+    expect(isArray([], Number.isNaN)).toBe(true);
+  });
+
   it("must return true for [NaN] (check: Number.isNaN)", () => {
     expect(isArray([Number.NaN], Number.isNaN)).toBe(true);
   });
