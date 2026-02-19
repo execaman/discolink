@@ -1,3 +1,5 @@
+import type { PlayerPlugin } from "../Main";
+
 /**
  * Represents an empty object
  */
@@ -29,6 +31,16 @@ export type RequiredProp<T, P extends keyof T> = Omit<T, P> & Required<Pick<T, P
 export type NonNullableProp<T, P extends keyof T> = {
   [K in keyof T]: K extends P ? NonNullable<T[K]> : T[K];
 };
+
+/**
+ * Merges a union type into one
+ */
+export type MergeUnionType<U> = (U extends any ? (i: U) => void : never) extends (i: infer I) => void ? I : never;
+
+/**
+ * Extracts the event map of a plugin
+ */
+export type PluginEventMap<Plugin> = Plugin extends PlayerPlugin<infer EventMap> ? EventMap : {};
 
 /**
  * Queue context, extend via module declaration
