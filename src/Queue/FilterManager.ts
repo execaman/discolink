@@ -1,9 +1,9 @@
 import { LookupSymbol } from "../Constants/Symbols";
-import type { APIPlayer, EmptyObject, FilterNames, FilterValue, JsonObject, Filters } from "../Typings";
+import type { APIPlayer, FilterNames, FilterValue, JsonObject, Filters, CommonPluginFilters } from "../Typings";
 import type { VoiceState } from "../Voice";
 import type { Player } from "../Main";
 
-export class FilterManager<PluginFilters extends JsonObject = EmptyObject> {
+export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilters> {
   #player: APIPlayer;
   #voice: VoiceState;
 

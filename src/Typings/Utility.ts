@@ -29,3 +29,23 @@ export type RequiredProp<T, P extends keyof T> = Omit<T, P> & Required<Pick<T, P
 export type NonNullableProp<T, P extends keyof T> = {
   [K in keyof T]: K extends P ? NonNullable<T[K]> : T[K];
 };
+
+/**
+ * Queue context, extend via module declaration
+ */
+export interface QueueContext extends Record<string & {}, unknown> {}
+
+/**
+ * Basic user data, extend via module declaration
+ */
+export interface CommonUserData extends Record<string & {}, JsonLike> {}
+
+/**
+ * Common info provided by plugins, extend via module declaration
+ */
+export interface CommonPluginInfo extends Record<string & {}, JsonLike> {}
+
+/**
+ * Common plugin filters, extend via module declaration
+ */
+export interface CommonPluginFilters extends Record<string & {}, JsonLike> {}

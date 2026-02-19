@@ -1,11 +1,11 @@
 import { formatDuration, isArray, isNumber, isRecord, isString } from "../Functions";
 import { Track } from "./index";
-import type { APIPlaylist, EmptyObject, JsonObject } from "../Typings";
+import type { APIPlaylist, CommonPluginInfo, JsonObject } from "../Typings";
 
 /**
  * A class representing API Playlist
  */
-export class Playlist<PluginInfo extends JsonObject = EmptyObject> {
+export class Playlist<PluginInfo extends JsonObject = CommonPluginInfo> {
   /**
    * Name of the playlist
    */

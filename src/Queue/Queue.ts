@@ -6,16 +6,16 @@ import { VoiceState } from "../Voice";
 import { FilterManager } from "./index";
 import type {
   APIPlayer,
-  EmptyObject,
   Exception,
   JsonObject,
   PlayerUpdateQueryParams,
   PlayerUpdateRequestBody,
+  QueueContext,
   RepeatMode,
 } from "../Typings";
 import type { Player } from "../Main";
 
-export class Queue<Context extends Record<string, unknown> = EmptyObject> {
+export class Queue<Context extends Record<string, unknown> = QueueContext> {
   #player: APIPlayer;
 
   #autoplay = false;

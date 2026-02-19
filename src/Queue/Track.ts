@@ -1,7 +1,7 @@
 import { formatDuration, isNumber, isRecord, isString } from "../Functions";
-import type { APITrack, EmptyObject, JsonObject } from "../Typings";
+import type { APITrack, CommonPluginInfo, CommonUserData, JsonObject } from "../Typings";
 
-export class Track<UserData extends JsonObject = EmptyObject, PluginInfo extends JsonObject = EmptyObject> {
+export class Track<UserData extends JsonObject = CommonUserData, PluginInfo extends JsonObject = CommonPluginInfo> {
   /**
    * Id of the track
    */
