@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.0.0](https://github.com/execaman/discolink/compare/v3.0.0...v4.0.0) (2026-02-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **Plugins:** improve event system ([#32](https://github.com/execaman/discolink/issues/32))
+
+### Features
+
+* **Plugins:** improve event system ([#32](https://github.com/execaman/discolink/issues/32)) ([3bdbd90](https://github.com/execaman/discolink/commit/3bdbd90dc896ea4f09b0afbcbfcd44b8ce90bb00))
+* **types:** add commonly used augmentable types ([#31](https://github.com/execaman/discolink/issues/31)) ([f211709](https://github.com/execaman/discolink/commit/f211709f55ca39f157fe034b378b7cab7b518f86))
+
+
+### Bug Fixes
+
+* **isArray:** no implicit non-empty check when check is a predicate ([#29](https://github.com/execaman/discolink/issues/29)) ([547006a](https://github.com/execaman/discolink/commit/547006a4ac5389b108ad9d3964f6867fc7d36c5f))
+
 ## [3.0.0](https://github.com/execaman/discolink/compare/v2.1.0...v3.0.0) (2026-02-15)
 
 
