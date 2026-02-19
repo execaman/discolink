@@ -15,14 +15,14 @@ import type {
   EventPayload,
   TrackEndEventPayload,
   CreateQueueOptions,
-  EmptyObject,
   TrackStartEventPayload,
   TrackExceptionEventPayload,
   TrackStuckEventPayload,
+  QueueContext,
 } from "../Typings";
 import type { Player } from "../Main";
 
-export class QueueManager<Context extends Record<string, unknown> = EmptyObject> implements Partial<
+export class QueueManager<Context extends Record<string, unknown> = QueueContext> implements Partial<
   Map<string, Queue<Context>>
 > {
   #cache = new Map<string, APIPlayer>();

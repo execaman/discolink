@@ -7,7 +7,6 @@ import { VoiceManager } from "../Voice";
 import { Playlist, Queue, QueueManager, Track } from "../Queue";
 import type {
   CreateQueueOptions,
-  EmptyObject,
   PlayerEventMap,
   PlayerOptions,
   PlayOptions,
@@ -18,10 +17,11 @@ import type {
   SearchResult,
   CreateNodeOptions,
   PlayerInstanceOptions,
+  QueueContext,
 } from "../Typings";
 
 export class Player<
-  Context extends Record<string, unknown> = EmptyObject,
+  Context extends Record<string, unknown> = QueueContext,
   Plugins extends PlayerPlugin[] = PlayerPlugin[],
 > extends EventEmitter<Plugins[number]["eventMap"] & PlayerEventMap> {
   #initialized = false;

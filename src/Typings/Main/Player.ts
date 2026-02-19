@@ -1,4 +1,4 @@
-import type { EmptyObject, JsonObject, RequiredProp } from "../Utility";
+import type { CommonUserData, JsonObject, QueueContext, RequiredProp } from "../Utility";
 import type { Exception, PlayerState, TrackEndReason } from "../API";
 import type { CreateNodeOptions, NodeEventMap } from "../Node";
 import type { CreateQueueOptions } from "../Queue";
@@ -135,8 +135,8 @@ export interface SearchOptions {
  * Options for customizing a 'play' operation
  */
 export interface PlayOptions<
-  Context extends Record<string, unknown> = EmptyObject,
-  UserData extends JsonObject = EmptyObject,
+  Context extends Record<string, unknown> = QueueContext,
+  UserData extends JsonObject = CommonUserData,
 >
   extends SearchOptions, CreateQueueOptions<Context> {
   userData?: UserData;

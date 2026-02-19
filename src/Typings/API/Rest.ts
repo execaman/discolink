@@ -1,4 +1,4 @@
-import type { EmptyObject, JsonObject } from "../Utility";
+import type { CommonPluginFilters, CommonPluginInfo, CommonUserData, EmptyObject, JsonObject } from "../Utility";
 import type { Exception, PlayerState } from "./Websocket";
 
 export const enum LoadType {
@@ -94,7 +94,10 @@ export interface RestError {
   path: string;
 }
 
-export interface APITrack<UserData extends JsonObject = EmptyObject, PluginInfo extends JsonObject = EmptyObject> {
+export interface APITrack<
+  UserData extends JsonObject = CommonUserData,
+  PluginInfo extends JsonObject = CommonPluginInfo,
+> {
   /**
    * The base64 encoded track data
    */
@@ -190,7 +193,7 @@ export interface TrackLoadResult {
   data: APITrack;
 }
 
-export interface APIPlaylist<PluginInfo extends JsonObject = EmptyObject> {
+export interface APIPlaylist<PluginInfo extends JsonObject = CommonPluginInfo> {
   /**
    * The info of the playlist
    */
@@ -283,7 +286,7 @@ export interface APIVoiceState {
   sessionId: string;
 }
 
-export interface Filters<PluginFilters extends JsonObject = EmptyObject> {
+export interface Filters<PluginFilters extends JsonObject = CommonPluginFilters> {
   /**
    * Adjusts the player volume from 0.0 to 5.0, where 1.0 is 100%. Values >1.0 may cause clipping
    */
@@ -572,7 +575,7 @@ export interface PlayerUpdateRequestBody {
   voice?: APIVoiceState;
 }
 
-export interface PlayerUpdateTrackData<UserData extends JsonObject = EmptyObject> {
+export interface PlayerUpdateTrackData<UserData extends JsonObject = CommonUserData> {
   /**
    * The base64 encoded track to play. `null` stops the current track.
    * `encoded` and `identifier` are mutually exclusive.

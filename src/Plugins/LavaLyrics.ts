@@ -2,13 +2,13 @@ import { HttpStatusCode } from "axios";
 import { OPType } from "../Typings";
 import { Routes } from "../Constants";
 import { isString } from "../Functions";
-import type { BaseEventPayload, EmptyObject, JsonObject, PlayerPlugin } from "../Typings";
+import type { BaseEventPayload, CommonPluginInfo, JsonObject, PlayerPlugin } from "../Typings";
 import type { Node } from "../Node";
 import type { Queue } from "../Queue";
 import type { Player } from "../Main";
 
 export namespace LavaLyrics {
-  export interface Lyrics<PluginInfo extends JsonObject = EmptyObject> {
+  export interface Lyrics<PluginInfo extends JsonObject = CommonPluginInfo> {
     sourceName: string;
     provider: string;
     text: string | null;
@@ -16,7 +16,7 @@ export namespace LavaLyrics {
     plugin: PluginInfo;
   }
 
-  export interface LyricsLine<PluginInfo extends JsonObject = EmptyObject> {
+  export interface LyricsLine<PluginInfo extends JsonObject = CommonPluginInfo> {
     timestamp: number;
     duration: number | null;
     line: string;
