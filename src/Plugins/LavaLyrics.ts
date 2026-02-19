@@ -2,7 +2,8 @@ import { HttpStatusCode } from "axios";
 import { OPType } from "../Typings";
 import { Routes } from "../Constants";
 import { isString } from "../Functions";
-import type { BaseEventPayload, CommonPluginInfo, JsonObject, PlayerPlugin } from "../Typings";
+import { PlayerPlugin } from "../Main";
+import type { BaseEventPayload, CommonPluginInfo, JsonObject } from "../Typings";
 import type { Node } from "../Node";
 import type { Queue } from "../Queue";
 import type { Player } from "../Main";
@@ -47,24 +48,22 @@ export namespace LavaLyrics {
 
   export type Event = LyricsFoundEvent | LyricsNotFoundEvent | LyricsLineEvent;
 
-  export type EventMap = {
-    lyricsFound: [queue: Queue, lyrics: Lyrics];
-    lyricsNotFound: [queue: Queue];
-    lyricsLine: [queue: Queue, line: LyricsLine, index: number, skipped: boolean];
-  };
-
   export interface PluginOptions {
     skipTrackSource?: boolean;
   }
 
-  export class Plugin implements PlayerPlugin {
-    name = "lavalyrics" as const;
-    eventMap!: EventMap;
+  export class Plugin extends PlayerPlugin<{
+    lyricsFound: [queue: Queue, lyrics: Lyrics];
+    lyricsNotFound: [queue: Queue];
+    lyricsLine: [queue: Queue, line: LyricsLine, index: number, skipped: boolean];
+  }> {
+    name = "lavalyrics";
 
     #player!: Player;
     skipTrackSource: boolean;
 
     constructor(options?: PluginOptions) {
+      super();
       this.skipTrackSource = options?.skipTrackSource === true;
     }
 

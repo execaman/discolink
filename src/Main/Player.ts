@@ -5,12 +5,12 @@ import { isString } from "../Functions";
 import { NodeManager } from "../Node";
 import { VoiceManager } from "../Voice";
 import { Playlist, Queue, QueueManager, Track } from "../Queue";
+import { PlayerPlugin } from "./index";
 import type {
   CreateQueueOptions,
   PlayerEventMap,
   PlayerOptions,
   PlayOptions,
-  PlayerPlugin,
   PluginRecord,
   RepeatMode,
   SearchOptions,
@@ -18,12 +18,18 @@ import type {
   CreateNodeOptions,
   PlayerInstanceOptions,
   QueueContext,
+  PluginEventMap,
+  MergeUnionType,
 } from "../Typings";
+
+type ConstrainEventMap<T> = {
+  [K in keyof T]: T[K] extends any[] ? T[K] : never;
+};
 
 export class Player<
   Context extends Record<string, unknown> = QueueContext,
-  Plugins extends PlayerPlugin[] = PlayerPlugin[],
-> extends EventEmitter<Plugins[number]["eventMap"] & PlayerEventMap> {
+  Plugins extends PlayerPlugin[] = [],
+> extends EventEmitter<ConstrainEventMap<PlayerEventMap & MergeUnionType<PluginEventMap<Plugins[number]>>>> {
   #initialized = false;
   #initPromise: Promise<void> | null = null;
 
@@ -52,7 +58,10 @@ export class Player<
     this.plugins = {} as PluginRecord<Plugins>;
 
     if (_options.plugins !== undefined) {
-      for (const plugin of _options.plugins) (this.plugins as { [x: string]: PlayerPlugin })[plugin.name] = plugin;
+      for (const plugin of _options.plugins) {
+        if (!(plugin instanceof PlayerPlugin)) throw new Error("Invalid plugin(s)");
+        (this.plugins as { [x: string]: PlayerPlugin })[plugin.name] = plugin;
+      }
       delete _options.plugins;
     }
 
