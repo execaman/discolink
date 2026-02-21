@@ -43,8 +43,8 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
 
   has<Name extends FilterNames<PluginFilters>>(name: Name) {
     return (
-      name in this.#player.filters
-      || (this.#player.filters.pluginFilters !== undefined && name in this.#player.filters.pluginFilters)
+      Object.hasOwn(this.#player.filters, name)
+      || (this.#player.filters.pluginFilters !== undefined && Object.hasOwn(this.#player.filters.pluginFilters, name))
     );
   }
 
