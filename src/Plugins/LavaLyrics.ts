@@ -57,7 +57,7 @@ export namespace LavaLyrics {
     lyricsNotFound: [queue: Queue];
     lyricsLine: [queue: Queue, line: LyricsLine, index: number, skipped: boolean];
   }> {
-    name = "lavalyrics";
+    readonly name = "lavalyrics";
 
     #player!: Player;
     skipTrackSource: boolean;
