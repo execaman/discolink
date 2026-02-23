@@ -267,6 +267,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
       const player = await node.rest.updatePlayer(data.guild_id, {
         ...request?.config,
         voice: {
+          channelId: state.channel_id,
           endpoint: data.endpoint,
           sessionId: state.session_id,
           token: data.token,

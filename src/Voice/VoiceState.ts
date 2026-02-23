@@ -130,6 +130,7 @@ export class VoiceState {
 
     const request: PlayerUpdateRequestBody = {
       voice: {
+        channelId: this.#state.channel_id,
         endpoint: this.#state.endpoint,
         sessionId: this.#state.session_id,
         token: this.#state.token,

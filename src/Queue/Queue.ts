@@ -183,6 +183,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
     const player = this.#player;
     const request: PlayerUpdateRequestBody = {
       voice: {
+        channelId: voice.channel_id,
         endpoint: voice.endpoint,
         sessionId: voice.session_id,
         token: voice.token,
