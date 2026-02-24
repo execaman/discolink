@@ -1,5 +1,4 @@
-import { HttpStatusCode } from "axios";
-import { OPType } from "../Typings";
+import { HttpStatusCode, OPType } from "../Typings";
 import { Routes } from "../Constants";
 import { isString } from "../Functions";
 import { PlayerPlugin } from "../Main";
@@ -77,7 +76,7 @@ export namespace LavaLyrics {
       const _node = this.#player.nodes.get(node);
       if (!_node) throw new Error(`Node '${node}' not found`);
       skipTrackSource ??= this.skipTrackSource;
-      const res = await _node.rest.request<Lyrics>("GET", "/lyrics", { params: { track, skipTrackSource } });
+      const res = await _node.rest.request<Lyrics>("/lyrics", { params: { track, skipTrackSource } });
       return res.status === HttpStatusCode.Ok ? res.data : null;
     }
 
@@ -87,11 +86,9 @@ export namespace LavaLyrics {
       if (!queue.playing) throw new Error(`Queue is not playing anything`);
       if (!queue.node.ready) throw new Error(`Queue node '${queue.node.name}' not ready`);
       skipTrackSource ??= this.skipTrackSource;
-      const res = await queue.rest.request<Lyrics>(
-        "GET",
-        Routes.player(queue.node.sessionId!, guildId) + "/track/lyrics",
-        { params: { skipTrackSource } }
-      );
+      const res = await queue.rest.request<Lyrics>(Routes.player(queue.node.sessionId!, guildId) + "/track/lyrics", {
+        params: { skipTrackSource },
+      });
       return res.status === HttpStatusCode.Ok ? res.data : null;
     }
 
@@ -100,11 +97,10 @@ export namespace LavaLyrics {
       if (!queue) throw new Error(`Queue not found for guild '${guildId}'`);
       if (!queue.node.ready) throw new Error(`Queue node '${queue.node.name}' not ready`);
       skipTrackSource ??= this.skipTrackSource;
-      const res = await queue.rest.request(
-        "POST",
-        Routes.player(queue.node.sessionId!, guildId) + "/lyrics/subscribe",
-        { params: { skipTrackSource } }
-      );
+      const res = await queue.rest.request(Routes.player(queue.node.sessionId!, guildId) + "/lyrics/subscribe", {
+        method: "POST",
+        params: { skipTrackSource },
+      });
       return res.status === HttpStatusCode.NoContent;
     }
 
@@ -112,10 +108,9 @@ export namespace LavaLyrics {
       const queue = this.#player.getQueue(guildId);
       if (!queue) throw new Error(`Queue not found for guild '${guildId}'`);
       if (!queue.node.ready) throw new Error(`Queue node '${queue.node.name}' not ready`);
-      const res = await queue.rest.request(
-        "DELETE",
-        Routes.player(queue.node.sessionId!, guildId) + "/lyrics/subscribe"
-      );
+      const res = await queue.rest.request(Routes.player(queue.node.sessionId!, guildId) + "/lyrics/subscribe", {
+        method: "DELETE",
+      });
       return res.status === HttpStatusCode.NoContent;
     }
 
