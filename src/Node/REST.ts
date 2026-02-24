@@ -1,5 +1,6 @@
 import { URL } from "node:url";
 import { validateHeaderValue } from "node:http";
+import { clearTimeout, setTimeout } from "node:timers";
 import { HttpStatusCode } from "../Typings";
 import { DefaultRestOptions, Routes } from "../Constants";
 import { isArray, isNumber, isRecord, isString } from "../Functions";
@@ -58,8 +59,8 @@ export class REST {
       throw new Error("Request timeout must be a natural number");
     }
 
-    if (_options.sessionId !== undefined) this.sessionId = _options.sessionId;
     if (_options.stackTrace === true) this.#stackTrace = true;
+    if (_options.sessionId !== undefined) this.sessionId = _options.sessionId;
 
     this.#headers["User-Agent"] = _options.userAgent;
     this.#headers["Authorization"] = _options.password;
