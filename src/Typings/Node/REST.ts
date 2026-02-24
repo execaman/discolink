@@ -1,4 +1,4 @@
-import type { EmptyObject, JsonLike, JsonObject } from "../Utility";
+import type { JsonLike } from "../Utility";
 
 /**
  * Options to create a instance of REST
@@ -47,19 +47,29 @@ export interface RESTOptions {
 /**
  * Options for customizing a request
  */
-export interface RequestOptions<Data extends JsonLike = EmptyObject, Params extends JsonObject = EmptyObject> {
+export interface RequestOptions {
   /**
-   * The data to attach in request body
+   * The http method
    */
-  data?: Data;
+  method?: string;
 
   /**
-   * The query params to append to the endpoint
+   * The query params to `set` (not `append`)
    */
-  params?: Params;
+  params?: Record<string, Exclude<JsonLike, object>>;
 
   /**
-   * The abort signal for this request
+   * The headers to send
+   */
+  headers?: Record<string, Exclude<JsonLike, object>>;
+
+  /**
+   * The json data to attach
+   */
+  data?: unknown;
+
+  /**
+   * The abort signal
    */
   signal?: AbortSignal;
 
@@ -69,8 +79,32 @@ export interface RequestOptions<Data extends JsonLike = EmptyObject, Params exte
   timeout?: number;
 
   /**
-   * Whether this request should be versioned.
+   * Whether the base url should be versioned.
    * Default: `true`
    */
   versioned?: boolean;
+}
+
+export interface RestResponse<Data> extends Pick<Response, "status" | "statusText" | "ok" | "redirected" | "url"> {
+  headers: Record<string, string>;
+  data: Data;
+}
+
+export const enum HttpStatusCode {
+  /**
+   * @deprecated
+   */
+  Processing = 102,
+  Ok = 200,
+  NoContent = 204,
+  BadRequest = 400,
+  Unauthorized,
+  Forbidden = 403,
+  NotFound,
+  MethodNotAllowed,
+  TooManyRequests = 429,
+  InternalServerError = 500,
+  BadGateway = 502,
+  ServiceUnavailable,
+  GatewayTimeout,
 }
