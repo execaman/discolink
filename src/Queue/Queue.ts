@@ -254,6 +254,20 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
     throw new Error("Input must be a index or array of indices");
   }
 
+  clear(type?: "current" | "previous") {
+    switch (type) {
+      case "current":
+        if (!this.finished) this.#tracks.length = this.stopped ? 0 : 1;
+        break;
+      case "previous":
+        this.#previousTracks.length = 0;
+        break;
+      default:
+        if (!this.finished) this.#tracks.length = this.stopped ? 0 : 1;
+        this.#previousTracks.length = 0;
+    }
+  }
+
   async jump(index: number) {
     if (this.empty) throw this.#error("The queue is empty at the moment");
     if (!isNumber(index, "integer")) throw this.#error("Index must be a integer");
