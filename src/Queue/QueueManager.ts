@@ -19,6 +19,7 @@ import type {
   TrackExceptionEventPayload,
   TrackStuckEventPayload,
   QueueContext,
+  PlayerUpdateResponseBody,
 } from "../Typings";
 import type { Player } from "../Main";
 
@@ -253,7 +254,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     return this.#cache.get(guildId);
   }
 
-  [UpdateSymbol](guildId: string, payload: Partial<APIPlayer>, partial = true) {
+  [UpdateSymbol](guildId: string, payload: Partial<PlayerUpdateResponseBody>, partial = true) {
     const data = this.#cache.get(guildId);
     if (data !== undefined) Object.assign(data, payload);
     else if (!partial) this.#cache.set(guildId, payload as APIPlayer);

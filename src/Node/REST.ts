@@ -5,7 +5,6 @@ import { HttpStatusCode } from "../Typings";
 import { DefaultRestOptions, Routes } from "../Constants";
 import { isArray, isNumber, isRecord, isString } from "../Functions";
 import type {
-  APIPlayer,
   APITrack,
   LavalinkInfo,
   LoadResult,
@@ -19,6 +18,7 @@ import type {
   RoutePlannerStatus,
   SessionUpdateRequestBody,
   SessionUpdateResponseBody,
+  PlayerUpdateResponseBody,
 } from "../Typings";
 
 export class REST {
@@ -212,14 +212,14 @@ export class REST {
 
   async fetchPlayers(sessionId = this.sessionId!) {
     if (!isString(sessionId, "non-empty")) throw new Error("Session Id neither set nor provided");
-    const response = await this.request<APIPlayer[]>(Routes.player(sessionId));
+    const response = await this.request<PlayerUpdateResponseBody[]>(Routes.player(sessionId));
     return response.data;
   }
 
   async fetchPlayer(guildId: string, sessionId = this.sessionId!) {
     if (!isString(guildId, "non-empty")) throw new Error("Guild Id must be a non-empty string");
     if (!isString(sessionId, "non-empty")) throw new Error("Session Id neither set nor provided");
-    const response = await this.request<APIPlayer>(Routes.player(sessionId, guildId));
+    const response = await this.request<PlayerUpdateResponseBody>(Routes.player(sessionId, guildId));
     return response.data;
   }
 
@@ -232,7 +232,7 @@ export class REST {
     if (!isString(guildId, "non-empty")) throw new Error("Guild Id must be a non-empty string");
     if (!isString(sessionId, "non-empty")) throw new Error("Session Id neither set nor provided");
     if (!isRecord(options, "non-empty")) throw new Error("Player update options cannot be empty");
-    const response = await this.request<APIPlayer>(Routes.player(sessionId, guildId), {
+    const response = await this.request<PlayerUpdateResponseBody>(Routes.player(sessionId, guildId), {
       method: "PATCH",
       data: options,
       params: { ...params },

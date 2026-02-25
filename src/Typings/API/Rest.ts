@@ -1,4 +1,11 @@
-import type { CommonPluginFilters, CommonPluginInfo, CommonUserData, EmptyObject, JsonObject } from "../Utility";
+import type {
+  CommonPluginFilters,
+  CommonPluginInfo,
+  CommonUserData,
+  EmptyObject,
+  JsonObject,
+  NullableProp,
+} from "../Utility";
 import type { Exception, PlayerState } from "./Websocket";
 
 export const enum LoadType {
@@ -578,6 +585,10 @@ export interface PlayerUpdateRequestBody {
    * Information required for connecting to Discord
    */
   voice?: APIVoiceState;
+}
+
+export interface PlayerUpdateResponseBody extends Omit<APIPlayer, "voice"> {
+  voice: NullableProp<APIVoiceState, "channelId">;
 }
 
 export interface PlayerUpdateTrackData<UserData extends JsonObject = CommonUserData> {
