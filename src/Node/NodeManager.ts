@@ -83,6 +83,9 @@ export class NodeManager implements Partial<Map<string, Node>> {
     const node = this.#nodes.get(name);
     if (!node) return false;
     if (!node.disconnected) throw new Error(`Node '${name}' not disconnected`);
+    if (this.player.queues.values().some((q) => q.node.name === name)) {
+      throw new Error(`Node '${name}' is still assigned to one or more queues`);
+    }
     this.#detachListeners(node);
     this.player.voices.regions.forEach((r) => r.forgetNode(name));
     this.info.delete(name);
