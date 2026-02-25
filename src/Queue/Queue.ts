@@ -234,7 +234,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   remove(indices: number[]): Track[];
   remove(input: number | number[]) {
     if (isNumber(input, "integer")) {
-      if (input === 0) return;
+      if (input === 0 && !this.stopped) return;
       if (input < 0) return this.#previousTracks.splice(input, 1)[0];
       return this.#tracks.splice(input, 1)[0];
     }
@@ -246,13 +246,27 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
         i < indices.length;
         index = indices[++i]! - deletions
       ) {
-        if (index === 0) continue;
+        if (index === 0 && !this.stopped) continue;
         if (index < 0) tracks.push(...this.#previousTracks.splice(index, 1));
         else if (index < this.#tracks.length) (tracks.push(...this.#tracks.splice(index, 1)), deletions++);
       }
       return tracks;
     }
     throw new Error("Input must be a index or array of indices");
+  }
+
+  clear(type?: "current" | "previous") {
+    switch (type) {
+      case "current":
+        if (!this.finished) this.#tracks.length = this.stopped ? 0 : 1;
+        break;
+      case "previous":
+        this.#previousTracks.length = 0;
+        break;
+      default:
+        if (!this.finished) this.#tracks.length = this.stopped ? 0 : 1;
+        this.#previousTracks.length = 0;
+    }
   }
 
   async jump(index: number) {
