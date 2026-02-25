@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.1.0](https://github.com/execaman/discolink/compare/v4.0.0...v4.1.0) (2026-02-25)
+
+
+### Features
+
+* **HttpStatusCode:** add some http status codes ([d9c88bf](https://github.com/execaman/discolink/commit/d9c88bf2749bdd6df6c29c896eeb0e383fdf930e))
+* **Queue:** add 'clear' method ([4f0f32c](https://github.com/execaman/discolink/commit/4f0f32c7a2f7b0bbe2beb731997e8d391bb16f32))
+* **RequestOptions:** add 'headers' field ([d9c88bf](https://github.com/execaman/discolink/commit/d9c88bf2749bdd6df6c29c896eeb0e383fdf930e))
+* **REST:** replace axios with native fetch ([#35](https://github.com/execaman/discolink/issues/35)) ([d9c88bf](https://github.com/execaman/discolink/commit/d9c88bf2749bdd6df6c29c896eeb0e383fdf930e))
+
+
+### Bug Fixes
+
+* **FilterManager:** use object has-own instead of 'in' for has() ([1f8fac9](https://github.com/execaman/discolink/commit/1f8fac9dd05a430a8739ba418fa079e5ecd511e8))
+* **LavaLyrics:** mark plugin name as readonly ([7d31e17](https://github.com/execaman/discolink/commit/7d31e1793284fd1f8a08d1c7720123c222d20ea3))
+* **NodeManager:** prevent deletion of nodes with active queues ([ccff57d](https://github.com/execaman/discolink/commit/ccff57d60478c91104e3c376df2da6d84228cf77))
+* **Queue:** allow remove() to remove current track if queue is stopped ([71af92d](https://github.com/execaman/discolink/commit/71af92df95c2296c908fe59d7978db59bd77d7fc))
+
 ## [4.0.0](https://github.com/execaman/discolink/compare/v3.0.0...v4.0.0) (2026-02-19)
 
 
