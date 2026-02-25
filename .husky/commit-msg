@@ -1,1 +1,1 @@
-npx commitlint --edit
+npx commitlint --extends @commitlint/config-conventional --edit
