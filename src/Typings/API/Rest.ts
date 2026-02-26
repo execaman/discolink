@@ -4,7 +4,7 @@ import type {
   CommonUserData,
   EmptyObject,
   JsonObject,
-  NullableProp,
+  NonNullableProp,
 } from "../Utility";
 import type { Exception, PlayerState } from "./Websocket";
 
@@ -295,7 +295,7 @@ export interface APIVoiceState {
   /**
    * The Discord voice channel id the bot is connecting to
    */
-  channelId: string;
+  channelId: string | null;
 }
 
 export interface Filters<PluginFilters extends JsonObject = CommonPluginFilters> {
@@ -584,11 +584,7 @@ export interface PlayerUpdateRequestBody {
   /**
    * Information required for connecting to Discord
    */
-  voice?: APIVoiceState;
-}
-
-export interface PlayerUpdateResponseBody extends Omit<APIPlayer, "voice"> {
-  voice: NullableProp<APIVoiceState, "channelId">;
+  voice?: NonNullableProp<APIVoiceState, "channelId">;
 }
 
 export interface PlayerUpdateTrackData<UserData extends JsonObject = CommonUserData> {

@@ -26,13 +26,6 @@ export type JsonObject = { [x: string]: JsonLike };
 export type RequiredProp<T, P extends keyof T> = Omit<T, P> & Required<Pick<T, P>>;
 
 /**
- * Makes select properties nullable
- */
-export type NullableProp<T, P extends keyof T> = {
-  [K in keyof T]: K extends P ? T[K] | null : T[K];
-};
-
-/**
  * Makes select properties non-nullable
  */
 export type NonNullableProp<T, P extends keyof T> = {
