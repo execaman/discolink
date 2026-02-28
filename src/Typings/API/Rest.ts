@@ -1,4 +1,11 @@
-import type { CommonPluginFilters, CommonPluginInfo, CommonUserData, EmptyObject, JsonObject } from "../Utility";
+import type {
+  CommonPluginFilters,
+  CommonPluginInfo,
+  CommonUserData,
+  EmptyObject,
+  JsonObject,
+  NonNullableProp,
+} from "../Utility";
 import type { Exception, PlayerState } from "./Websocket";
 
 export const enum LoadType {
@@ -284,6 +291,11 @@ export interface APIVoiceState {
    * The Discord voice session id to authenticate with
    */
   sessionId: string;
+
+  /**
+   * The Discord voice channel id the bot is connecting to
+   */
+  channelId: string | null;
 }
 
 export interface Filters<PluginFilters extends JsonObject = CommonPluginFilters> {
@@ -572,7 +584,7 @@ export interface PlayerUpdateRequestBody {
   /**
    * Information required for connecting to Discord
    */
-  voice?: APIVoiceState;
+  voice?: NonNullableProp<APIVoiceState, "channelId">;
 }
 
 export interface PlayerUpdateTrackData<UserData extends JsonObject = CommonUserData> {
