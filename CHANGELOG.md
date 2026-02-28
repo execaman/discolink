@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/execaman/discolink/compare/v4.1.0...v4.2.0) (2026-02-28)
+
+
+### Features
+
+* **voice:** include channelId required for DAVE ([#34](https://github.com/execaman/discolink/issues/34)) ([782d686](https://github.com/execaman/discolink/commit/782d686caca9e87178df849508960e90cc98dab7))
+
 ## [4.1.0](https://github.com/execaman/discolink/compare/v4.0.0...v4.1.0) (2026-02-25)
 
 
