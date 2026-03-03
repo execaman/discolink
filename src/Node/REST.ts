@@ -96,23 +96,17 @@ export class REST {
     if (id === null || isString(id, "non-empty")) this.#sessionId = id;
   }
 
-  #error(
-    err: RestError | DOMException | Error,
-    message: string,
-    path: string,
-    status = HttpStatusCode.Processing,
-    statusText = "Processing"
-  ) {
-    const data = err as RestError | null;
+  #error(err: RestResponse<RestError> | DOMException | Error, message: string, path: string) {
+    const res = err as Partial<RestResponse<RestError>>;
     const error = new Error(message) as Error & RestError;
 
     error.name = `Error [${this.constructor.name}]`;
-    error.error = data?.error ?? statusText;
-    error.path = data?.path ?? path;
-    error.status = data?.status ?? status;
-    error.timestamp = data?.timestamp ?? Date.now();
+    error.error = res.data?.error ?? res.statusText ?? "Processing";
+    error.path = res.data?.path ?? path;
+    error.status = res.data?.status ?? res.status ?? HttpStatusCode.Processing;
+    error.timestamp = res.data?.timestamp ?? Date.now();
 
-    if (data?.trace !== undefined) error.trace = data.trace;
+    if (res.data?.trace !== undefined) error.trace = res.data.trace;
     return error;
   }
 
@@ -169,7 +163,7 @@ export class REST {
         err.ok === false ? `Request failed with status code ${err.status}`
         : !optSignal?.aborted && controller.signal.aborted ? `timeout of ${timeoutMs}ms exceeded`
         : (err.message ?? "An unexpected error occurred");
-      throw this.#error(err, message, endpoint, err.status, err.statusText);
+      throw this.#error(err, message, endpoint);
     } finally {
       clearTimeout(timeout);
       controller.abort();
