@@ -10,7 +10,7 @@ describe("Functions (utility)", () => {
   describe("formatDuration", () => {
     it("handles invalid inputs", () => {
       expect(util.formatDuration(NaN)).toBe("00:00");
-      expect(util.formatDuration(1000)).toBe("00:00");
+      expect(util.formatDuration(Infinity)).toBe("00:00");
       expect(util.formatDuration(-1000)).toBe("00:00");
       expect(util.formatDuration("1000" as any)).toBe("00:00");
     });
