@@ -5,11 +5,9 @@ const config: Config = {
   clearMocks: true,
   collectCoverage: true,
   collectCoverageFrom: [
-    "src/Functions/**/*.ts",
-    "src/Queue/Playlist.ts",
-    "src/Queue/Track.ts",
-    "!src/Typings/**/*",
-    "!src/**/index.ts",
+    "src/Functions/{utility,validation}.ts",
+    "src/Node/{REST,Node}.ts",
+    "src/Queue/{Track,Playlist}.ts",
   ],
   coverageDirectory: "coverage",
   coverageProvider: "v8",
@@ -20,6 +18,7 @@ const config: Config = {
   },
   preset: "ts-jest",
   testEnvironment: "node",
+  verbose: true,
   ...createDefaultPreset(),
 };
 
