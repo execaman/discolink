@@ -2,9 +2,13 @@ name: Coverage
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   report:
