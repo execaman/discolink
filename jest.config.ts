@@ -4,7 +4,11 @@ import type { Config } from "jest";
 const config: Config = {
   clearMocks: true,
   collectCoverage: true,
-  collectCoverageFrom: ["src/Functions/{utility,validation}.ts", "src/Queue/{Track,Playlist}.ts"],
+  collectCoverageFrom: [
+    "src/Functions/{utility,validation}.ts",
+    "src/Node/{REST,Node}.ts",
+    "src/Queue/{Track,Playlist}.ts",
+  ],
   coverageDirectory: "coverage",
   coverageProvider: "v8",
   globals: {
