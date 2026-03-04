@@ -23,6 +23,7 @@
     "outDir": "lib",
     "strict": true,
     "target": "ESNext",
+    "types": ["vitest/globals"],
     "useDefineForClassFields": true,
     "useUnknownInCatchVariables": false
   },

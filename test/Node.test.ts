@@ -1,52 +1,54 @@
-import { EventEmitter } from "node:events";
 import { setImmediate, setTimeout } from "node:timers/promises";
 import { OPType } from "../src/Typings";
 import type { NodeOptions, ReadyPayload, StatsPayload } from "../src/Typings";
 
-let ws: MockWebSocket;
+let ws: InstanceType<typeof MockWebSocket>;
 
-class MockWebSocket extends EventEmitter {
-  static readonly CONNECTING = 0;
-  static readonly OPEN = 1;
-  static readonly CLOSED = 3;
+const MockWebSocket = await vi.hoisted(async () => {
+  const { EventEmitter } = await import("node:events");
+  return class MockWebSocket extends EventEmitter {
+    static readonly CONNECTING = 0;
+    static readonly OPEN = 1;
+    static readonly CLOSED = 3;
 
-  readyState = MockWebSocket.CONNECTING;
+    readyState = MockWebSocket.CONNECTING;
 
-  constructor() {
-    super();
-    ws = this;
-  }
+    constructor() {
+      super();
+      ws = this;
+    }
 
-  open() {
-    this.readyState = MockWebSocket.OPEN;
-    this.emit("open");
-  }
+    open() {
+      this.readyState = MockWebSocket.OPEN;
+      this.emit("open");
+    }
 
-  message(data: string) {
-    this.emit("message", Buffer.from(data));
-  }
+    message(data: string) {
+      this.emit("message", Buffer.from(data));
+    }
 
-  error() {
-    this.emit("error", new Error("mock_ws_err"));
-  }
+    error() {
+      this.emit("error", new Error("mock_ws_err"));
+    }
 
-  close(code = 1006, reason = "") {
-    this.readyState = MockWebSocket.CLOSED;
-    this.emit("close", code, Buffer.from(reason));
-  }
+    close(code = 1006, reason = "") {
+      this.readyState = MockWebSocket.CLOSED;
+      this.emit("close", code, Buffer.from(reason));
+    }
 
-  ping() {
-    this.emit("pong");
-  }
+    ping() {
+      this.emit("pong");
+    }
 
-  terminate() {
-    const connecting = this.readyState === MockWebSocket.CONNECTING;
-    this.readyState = MockWebSocket.CLOSED;
-    if (connecting) this.emit("close", 1006, Buffer.from(""));
-  }
-}
+    terminate() {
+      const connecting = this.readyState === MockWebSocket.CONNECTING;
+      this.readyState = MockWebSocket.CLOSED;
+      if (connecting) this.emit("close", 1006, Buffer.from(""));
+    }
+  };
+});
 
-jest.mock("ws", () => ({ WebSocket: MockWebSocket }));
+vi.mock("ws", () => ({ WebSocket: MockWebSocket }));
 
 import { Node, REST } from "../src/Node";
 
