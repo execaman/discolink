@@ -33,6 +33,8 @@ jobs:
       - name: Setup Bun
         if: matrix.runtime == 'bun'
         uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
 
       - name: Setup Deno
         if: matrix.runtime == 'deno'
@@ -46,10 +48,10 @@ jobs:
         if: matrix.runtime == 'bun'
         run: bun install
 
-      - name: Install dependencies (deno)
-        if: matrix.runtime == 'deno'
-        # maybe?
-        run: deno install
+      # - name: Install dependencies (deno)
+      #   if: matrix.runtime == 'deno'
+      #   # maybe?
+      #   run: deno install
 
       - name: Run tests (node)
         if: matrix.runtime == 'node'
