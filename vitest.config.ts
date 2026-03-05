@@ -14,7 +14,7 @@ export default defineConfig({
     coverage: {
       enabled: true,
       provider: "v8",
-      reporter: ["text", "lcov", "clover", "json"],
+      reporter: ["text", "lcov", "clover"],
       reportsDirectory: "coverage",
       include: ["src/Functions/{utility,validation}.ts", "src/Node/{REST,Node}.ts", "src/Queue/{Track,Playlist}.ts"],
     },
