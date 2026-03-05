@@ -48,10 +48,9 @@ jobs:
         if: matrix.runtime == 'bun'
         run: bun install
 
-      # - name: Install dependencies (deno)
-      #   if: matrix.runtime == 'deno'
-      #   # maybe?
-      #   run: deno install
+      - name: Install dependencies (deno)
+        if: matrix.runtime == 'deno'
+        run: deno install
 
       - name: Run tests (node)
         if: matrix.runtime == 'node'
@@ -59,7 +58,10 @@ jobs:
 
       - name: Run tests (bun)
         if: matrix.runtime == 'bun'
-        run: bun run test
+        run: |
+          bun --version
+          bun -e "console.log(Promise.withResolvers)"
+          bun run test
 
       - name: Run tests (deno)
         if: matrix.runtime == 'deno'
