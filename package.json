@@ -1,22 +1,21 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "discolink",
+  "type": "module",
   "version": "4.2.0",
-  "description": "A javascript library for discord bots to interact with Lavalink",
+  "description": "A Lavalink client for Discord bots in TypeScript",
   "exports": {
-    ".": {
-      "require": {
-        "types": "./lib/index.d.ts",
-        "default": "./lib/index.js"
-      },
-      "import": {
-        "types": "./lib/index.d.mts",
-        "default": "./lib/index.mjs"
-      }
+    "import": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "require": {
+      "types": "./lib/index.d.cts",
+      "default": "./lib/index.cjs"
     }
   },
-  "main": "./lib/index.js",
-  "module": "./lib/index.mjs",
+  "main": "./lib/index.cjs",
+  "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "files": [
     "./lib/",
@@ -27,10 +26,9 @@
   "homepage": "https://execaman.github.io/discolink",
   "bugs": "https://github.com/execaman/discolink/issues",
   "keywords": [
-    "api",
+    "audio",
+    "player",
     "client",
-    "library",
-    "music",
     "discord",
     "lavalink"
   ],
