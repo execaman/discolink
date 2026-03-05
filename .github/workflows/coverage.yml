@@ -58,10 +58,7 @@ jobs:
 
       - name: Run tests (bun)
         if: matrix.runtime == 'bun'
-        run: |
-          bun --version
-          bun -e "console.log(Promise.withResolvers)"
-          bun run test
+        run: bun --bun run test
 
       - name: Run tests (deno)
         if: matrix.runtime == 'deno'
