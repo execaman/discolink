@@ -53,7 +53,7 @@ describe("REST", () => {
   });
 
   describe("method", () => {
-    const req = jest.fn();
+    const req = vi.fn();
 
     const mockResponse = (res: Partial<Omit<Response, "headers"> & RestResponse<any>>) => {
       req.mockImplementationOnce(async (url: URL) => ({
@@ -123,13 +123,13 @@ describe("REST", () => {
       mockResponse({});
       await expect(r.request("/", { ...opts, method: "HEAD" })).resolves.toMatchObject({ data: undefined });
 
-      init = req.mock.lastCall[1];
+      init = req.mock.lastCall![1];
       expect(init.body).toBeUndefined();
 
       mockResponse({ data: [] });
       await expect(r.request("/", { ...opts, method: "POST" })).resolves.toMatchObject({ data: [] });
 
-      init = req.mock.lastCall[1];
+      init = req.mock.lastCall![1];
 
       expect(init.body).toBe(JSON.stringify(opts.data));
       expect(init.headers).toMatchObject({ "Content-Type": "application/json" });
@@ -137,7 +137,7 @@ describe("REST", () => {
       mockResponse({ data: [] });
       await expect(r.request("/", { method: "POST", data: "data" })).resolves.toMatchObject({ data: [] });
 
-      init = req.mock.lastCall[1];
+      init = req.mock.lastCall![1];
       expect(init.body).toBe("data");
 
       mockResponse({ headers: { "content-type": "text/plain" } });

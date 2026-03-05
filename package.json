@@ -41,7 +41,7 @@
   },
   "scripts": {
     "lint": "prettier --check . && tsc --noEmit",
-    "test": "jest",
+    "test": "vitest run",
     "build": "tsup",
     "docs": "typedoc",
     "format": "prettier --log-level error --write .",
@@ -60,18 +60,17 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^20.4.1",
-    "@types/jest": "^30.0.0",
     "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "^4.0.18",
     "husky": "^9.1.7",
-    "jest": "^30.2.0",
     "npm-check-updates": "^19.3.2",
     "prettier": "^3.8.1",
-    "ts-jest": "^29.4.6",
     "tsup": "^8.5.1",
     "typedoc": "^0.28.16",
     "typedoc-material-theme": "^1.4.1",
     "typedoc-plugin-dt-links": "^2.0.41",
     "typedoc-plugin-mdn-links": "^5.1.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
