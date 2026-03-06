@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Open Discord
+    url: https://discord.com/invite/1sT-952570101784281139
+    about: Mention @execaman in chat for simple questions
+
+  - name: Open Discussions
+    url: https://github.com/execaman/discolink/discussions
+    about: For things that may take long or must be on GitHub

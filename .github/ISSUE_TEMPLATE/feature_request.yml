@@ -1,0 +1,27 @@
+name: Feature Request
+description: Request a feature
+
+labels: [enhancement]
+assignees: [execaman]
+
+body:
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: Type
+      options:
+        - Addition
+        - Improvement
+      default: 0
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Description
+      placeholder: |
+        Compose description with things like:
+        1. what this request is about
+        2. what you want improved or introduced
+        3. any external references this was inspired by

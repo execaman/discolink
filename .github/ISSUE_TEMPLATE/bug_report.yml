@@ -1,0 +1,50 @@
+name: Bug Report
+description: Report a bug
+
+labels: [bug]
+assignees: [execaman]
+
+body:
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: Priority
+      options:
+        - Low (can wait)
+        - Medium (should be fixed soon)
+        - High (needs urgent attention)
+      default: 0
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Description
+      placeholder: |
+        Compose description with things like:
+        1. what happened
+        2. how often it occurs
+        3. full stack trace of errors (if any)
+
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      placeholder: |
+        Steps to reproduce:
+        1. do this
+        2. do that
+        3. see error
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Version Description
+      placeholder: |
+        Mention versions of things like:
+        1. Lavalink: v4.2.1
+        2. Discolink: v4.2.1
+        3. Library: discord.js - v14.17.3
+        4. Runtime: Node.js - v24.4.1
+        5. Operating System: Ubuntu 24.04 LTS (Noble Numbat)
