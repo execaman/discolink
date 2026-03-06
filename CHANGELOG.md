@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.3.0](https://github.com/execaman/discolink/compare/v4.2.0...v4.3.0) (2026-03-06)
+
+
+### Features
+
+* **VoiceCloseCodes:** add enum for DAVE protocol required ([5891b91](https://github.com/execaman/discolink/commit/5891b91122b5fef950064fc93853ca995b489183))
+
+
+### Bug Fixes
+
+* **REST:** format error response correctly ([584aea9](https://github.com/execaman/discolink/commit/584aea90839e7b9d50d97f8e6d67563797f743e1))
+
 ## [4.2.0](https://github.com/execaman/discolink/compare/v4.1.0...v4.2.0) (2026-02-28)
 
 
