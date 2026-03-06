@@ -139,6 +139,11 @@ export const enum VoiceCloseCodes {
   UnknownEncryptionMode,
 
   /**
+   * This channel requires a client supporting [E2EE via the DAVE Protocol](https://docs.discord.com/developers/topics/voice-connections#end-to-end-encryption-dave-protocol)
+   */
+  DAVEProtocolRequired,
+
+  /**
    * You sent a malformed request.
    */
   BadRequest = 4020,
