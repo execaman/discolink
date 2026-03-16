@@ -1,3 +1,4 @@
+import { setImmediate } from "node:timers/promises";
 import { EventType, TrackEndReason } from "../Typings";
 import {
   LookupSymbol,
@@ -121,7 +122,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     }
     if (target === "remote") {
       const queues = this.#queues.values().filter((q) => q.node.name === node);
-      await Promise.allSettled(queues.map((q) => q.sync("remote")));
+      for (const queue of queues) await queue.sync("remote").then(setImmediate, noop);
       return;
     }
     throw new Error("Target must be 'local' or 'remote'");
@@ -130,47 +131,66 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
   async relocate(node: string) {
     if (this.#relocations.has(node)) return this.#relocations.get(node)!;
 
-    const queues = this.#queues
-      .values()
-      .filter((q) => q.node.name === node && !q.voice.reconnecting)
-      .toArray()
-      .sort((a, b) => Number(a.playing) - Number(b.playing));
+    const nodes = [] as {
+      name: string;
+      load: number;
+      score: number;
+      target: number;
+    }[];
 
-    if (queues.length === 0) return;
-
-    const nodes = [] as { name: string; share: number; score: number }[];
+    let totalScore = 0;
 
     for (const [name, stats] of this.player.nodes.metrics) {
-      if (name === node) continue;
-      nodes.push({
-        name,
-        share: 0,
-        score: stats.memory * 0.6 + stats.workload * 0.4,
-      });
+      if (name === node || !this.player.nodes.state(name, "ready")) continue;
+      const score = stats.memory * 0.6 + stats.workload * 0.4;
+      totalScore += score;
+      nodes.push({ name, score, load: 0, target: 0 });
     }
-    nodes.sort((a, b) => b.score - a.score);
 
     if (nodes.length === 0) return;
+
+    let totalLoad = 0;
+
+    const isEligible = (q: Queue) => q.node.name === node && !q.destroyed && !q.voice.reconnecting;
+
+    const queues = this.#queues.values().reduce<{ load: number; value: Queue }[]>((t, q) => {
+      if (!isEligible(q)) return t;
+      const load = this.#cache.get(q.guildId)!.track === null ? 1 : 2;
+      totalLoad += load;
+      t.push({ load, value: q });
+      return t;
+    }, []);
+
+    if (queues.length === 0) return;
 
     const resolver = Promise.withResolvers<void>();
     this.#relocations.set(node, resolver.promise);
 
-    for (let i = 0, j = 0, target = nodes[0]!; i < queues.length; i++) {
-      for (j = 0; j < nodes.length; j++) {
-        const current = nodes[j]!;
-        if (current.share / current.score < target.share / target.score) target = current;
-      }
-      target.share++;
+    queues.sort((a, b) => a.load - b.load);
+
+    for (const n of nodes) {
+      n.score /= totalScore;
+      n.target = n.score * totalLoad;
     }
-    nodes.sort((a, b) => b.share - a.share);
 
-    const shifts = nodes.map((n) => Promise.allSettled(queues.splice(-n.share).map((q) => q.voice.changeNode(n.name))));
+    do {
+      const q = queues.pop()!;
+      let curr = nodes[0]!;
+      for (const n of nodes) {
+        const cap = n.target - n.load;
+        const currCap = curr.target - curr.load;
+        if (cap > currCap) curr = n;
+      }
+      curr.load += q.load;
+      if (!isEligible(q.value)) continue;
+      try {
+        await q.value.voice.changeNode(curr.name);
+      } catch {}
+      await setImmediate();
+    } while (queues.length !== 0);
 
-    Promise.all(shifts).then(() => {
-      resolver.resolve();
-      this.#relocations.delete(node);
-    });
-    return resolver.promise;
+    resolver.resolve();
+    this.#relocations.delete(node);
   }
 
   async #onTrackStart(queue: Queue, payload: TrackStartEventPayload) {
