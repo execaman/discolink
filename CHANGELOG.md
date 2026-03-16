@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.4.0](https://github.com/execaman/discolink/compare/v4.3.0...v4.4.0) (2026-03-16)
+
+
+### Features
+
+* **QueueManager:** account for different loads in relocate() ([00445b3](https://github.com/execaman/discolink/commit/00445b390958ffed501c5021174a4b70af4126c1))
+* **QueueManager:** improve sync and relocate methods ([#42](https://github.com/execaman/discolink/issues/42)) ([00445b3](https://github.com/execaman/discolink/commit/00445b390958ffed501c5021174a4b70af4126c1))
+
+
+### Bug Fixes
+
+* **QueueManager:** make relocate() send requests sequentially ([00445b3](https://github.com/execaman/discolink/commit/00445b390958ffed501c5021174a4b70af4126c1))
+* **QueueManager:** make remote sync() send requests sequentially ([00445b3](https://github.com/execaman/discolink/commit/00445b390958ffed501c5021174a4b70af4126c1))
+
 ## [4.3.0](https://github.com/execaman/discolink/compare/v4.2.0...v4.3.0) (2026-03-06)
 
 
