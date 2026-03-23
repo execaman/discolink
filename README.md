@@ -16,7 +16,7 @@ The goal of this library is to abstract away obvious steps involved in the proce
 
 ## 🙌 Motivation
 
-It's the JS ecosystem, how can we not have 30 libs for the same thing. My friends were monkey-patching, applying hotfixes, despite their clients being open-source; and I wanted to do a project professionally while exploring more of GitHub. **This project follows SemVer and an Agile SDLC**.
+It's the JS ecosystem, how can we not have 30 libs for the same thing. My friends were monkey-patching, applying hotfixes, despite their clients being open-source; and I wanted to do a project professionally while exploring more of GitHub. **This project follows [SemVer](https://semver.org/) and an [Agile SDLC](https://www.geeksforgeeks.org/software-engineering/agile-sdlc-software-development-life-cycle/)**.
 
 ## ⚙️ Requirements
 
@@ -24,7 +24,7 @@ It's the JS ecosystem, how can we not have 30 libs for the same thing. My friend
   - [Node.js](https://nodejs.org) v22+
   - [Bun](https://bun.com) v1+
   - [Deno](https://deno.com) v2+
-- **Library** - any gateway client that supports:
+- **Library** - any [gateway client](https://docs.discord.com/developers/events/gateway) that supports:
   - sending raw payloads over the connection
   - receiving raw payloads from the connection
 
@@ -114,13 +114,13 @@ export class CustomPlugin extends PlayerPlugin<{
 
 ### Additional Notes
 
-- Handle track end reasons other than `cleanup` and `finished`
-- Handle voice states carefully, e.g. `reconnecting`, `changingNode`, etc.
+- Handle track end reasons other than [`cleanup`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#cleanup) and [`finished`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#finished)
+- Handle voice states carefully, e.g. [`reconnecting`](https://execaman.github.io/discolink/classes/Voice.VoiceState.html#reconnecting), [`changingNode`](https://execaman.github.io/discolink/classes/Voice.VoiceState.html#changingnode), etc.
 - Handle queue destruction/relocation, e.g. guild/channel delete, node close/disconnect, etc.
 
 ### Session Resumption
 
-Resuming a node's session after your bot restarts requires careful planning, depending on scale. As such, the lib has no plans to provide built-in support for it. Disable both `autoSync` and `relocateQueues` for predictable behavior if you're implementing this feature.
+Resuming a node's session after your bot restarts requires careful planning, depending on scale. As such, the lib has no plans to provide built-in support for it. Disable both [`autoSync`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#autosync) and [`relocateQueues`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#relocatequeues) for predictable behavior if you're implementing this feature.
 
 ## 🤖 Bots in Production
 
