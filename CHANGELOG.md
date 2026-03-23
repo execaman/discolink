@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.5.0](https://github.com/execaman/discolink/compare/v4.4.0...v4.5.0) (2026-03-23)
+
+
+### Features
+
+* **VoiceRegion:** add forgetAllNodes() method ([ebf4357](https://github.com/execaman/discolink/commit/ebf435781485795c35e73d0e1c54558a377daa20))
+* **VoiceRegion:** improve latency based node selection ([#46](https://github.com/execaman/discolink/issues/46)) ([ebf4357](https://github.com/execaman/discolink/commit/ebf435781485795c35e73d0e1c54558a377daa20))
+
+
+### Bug Fixes
+
+* **QueueManager:** do not add ineligible queue load to node in relocate() ([#44](https://github.com/execaman/discolink/issues/44)) ([8d11e02](https://github.com/execaman/discolink/commit/8d11e026a6bb300c9d037002d0606f0503789862))
+
 ## [4.4.0](https://github.com/execaman/discolink/compare/v4.3.0...v4.4.0) (2026-03-16)
 
 
