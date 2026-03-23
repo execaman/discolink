@@ -175,6 +175,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
 
     do {
       const q = queues.pop()!;
+      if (!isEligible(q.value)) continue;
       let curr = nodes[0]!;
       for (const n of nodes) {
         const cap = n.target - n.load;
@@ -182,7 +183,6 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
         if (cap > currCap) curr = n;
       }
       curr.load += q.load;
-      if (!isEligible(q.value)) continue;
       try {
         await q.value.voice.changeNode(curr.name);
       } catch {}
