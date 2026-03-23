@@ -3,12 +3,13 @@ import type { PlayerState } from "../Typings";
 import type { Player } from "../Main";
 
 interface VoiceNodePingStats {
-  history: number[];
-  lastPingTime: number;
+  pingCount: number;
+  pingTotal: number;
+  startTime: number;
 }
 
 export class VoiceRegion {
-  #pings = new Map<string, VoiceNodePingStats>();
+  #stats = new Map<string, VoiceNodePingStats>();
 
   readonly id: string;
   readonly player: Player;
@@ -31,16 +32,22 @@ export class VoiceRegion {
   }
 
   inSync() {
-    return !this.player.nodes.values().some((n) => n.ready && !this.#pings.has(n.name));
+    return !this.player.nodes.values().some((n) => n.ready && !this.#stats.has(n.name));
   }
 
   forgetNode(name: string) {
-    return this.#pings.delete(name);
+    return this.#stats.delete(name);
   }
 
-  getAveragePing(name: string) {
-    const pings = this.#pings.get(name)?.history;
-    return !pings?.length ? null : Math.round(pings.reduce((t, c) => t + c, 0) / pings.length);
+  forgetAllNodes() {
+    this.#stats.clear();
+  }
+
+  getAveragePing(node: string) {
+    const stats = this.#stats.get(node);
+    if (!stats) return null;
+    if (Date.now() - stats.startTime > 60_000) return null;
+    return Math.round(stats.pingTotal / stats.pingCount);
   }
 
   getRelevantNode() {
@@ -49,17 +56,25 @@ export class VoiceRegion {
     })[0];
   }
 
-  [OnPingUpdateSymbol](name: string, state: PlayerState) {
+  [OnPingUpdateSymbol](node: string, state: PlayerState) {
     if (!state.connected) return;
     if (state.ping <= 0 || state.time <= 0) return;
-    const pings = this.#pings.get(name);
-    if (!pings) {
-      this.#pings.set(name, { history: [state.ping], lastPingTime: state.time });
+    const stats = this.#stats.get(node);
+    if (!stats) {
+      this.#stats.set(node, {
+        pingCount: 1,
+        pingTotal: state.ping,
+        startTime: state.time,
+      });
       return;
     }
-    if (state.time - pings.lastPingTime < 12_000) return;
-    pings.lastPingTime = state.time;
-    pings.history.push(state.ping);
-    if (pings.history.length > 5) pings.history.shift();
+    if (state.time - stats.startTime <= 60_000) {
+      stats.pingTotal += state.ping;
+      stats.pingCount++;
+      return;
+    }
+    stats.pingCount = 1;
+    stats.pingTotal = state.ping;
+    stats.startTime = state.time;
   }
 }
