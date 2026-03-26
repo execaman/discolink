@@ -35,6 +35,22 @@ Do NOT chase metrics (e.g. 100% coverage) focus on valid branch and line coverag
 > [!NOTE]
 > Tests are not run automatically like code formatting and linting do everytime you commit or push to avoid unnecessary distraction, as such, if you do forget to test your code the CI will report them for you in your branch for that commit anyway.
 
+### Managing Dependencies
+
+**Check for updates**
+
+```sh
+npm run deps <type>
+```
+
+**Types** `prod` `dev` `peer` `optional`
+
+**Update all**
+
+```sh
+npm run upgrade
+```
+
 ### Code Ownership
 
 If you make certain additions that you will continue to maintain in the future for the most part (e.g. adding a plugin), you might want to edit the `CODEOWNERS` file.

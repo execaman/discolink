@@ -1,31 +1,43 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "compilerOptions": {
-    "allowSyntheticDefaultImports": false,
+    // https://www.typescriptlang.org/tsconfig/#Type_Checking_6248
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "esModuleInterop": false,
     "exactOptionalPropertyTypes": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "lib": ["ESNext"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": true,
-    "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "lib",
     "strict": true,
-    "target": "ESNext",
+    "useUnknownInCatchVariables": false,
+
+    // https://www.typescriptlang.org/tsconfig/#Modules_6244
+    "allowArbitraryExtensions": false,
+    "allowImportingTsExtensions": false,
+    "allowUmdGlobalAccess": false,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noUncheckedSideEffectImports": true,
+
+    // https://www.typescriptlang.org/tsconfig/#Emit_6246
+    "noEmit": true,
+
+    // https://www.typescriptlang.org/tsconfig/#Interop_Constraints_6252
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+
+    // https://www.typescriptlang.org/tsconfig/#Language_and_Environment_6254
+    "lib": ["ESNext"],
+    "target": "esnext",
     "types": ["vitest/globals"],
     "useDefineForClassFields": true,
-    "useUnknownInCatchVariables": false
+
+    // https://www.typescriptlang.org/tsconfig/#Completeness_6257
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "test/**/*.test.ts"]
+  "include": ["src", "test/**/*.test.ts"]
 }

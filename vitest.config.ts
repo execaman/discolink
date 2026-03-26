@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vitest/config";
-import { name, version, repository } from "./package.json";
+
+const packageJsonString = readFileSync("./package.json", "utf8");
+const { name, version, repository } = JSON.parse(packageJsonString);
 
 export default defineConfig({
   define: {
@@ -9,13 +12,13 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    reporters: process.env.GITHUB_ACTIONS ? ["tree", "github-actions"] : ["tree"],
     environment: "node",
+    reporters: process.env.GITHUB_ACTIONS ? ["tree", "github-actions"] : ["tree"],
     coverage: {
       enabled: true,
       provider: "v8",
-      reporter: ["text", "lcov", "clover", "json"],
       reportsDirectory: "coverage",
+      reporter: ["text", "lcov", "clover", "json"],
       include: ["src/Functions/{utility,validation}.ts", "src/Node/{REST,Node}.ts", "src/Queue/{Track,Playlist}.ts"],
     },
   },
