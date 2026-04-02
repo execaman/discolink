@@ -124,11 +124,12 @@ Resuming a node's session after your bot restarts requires careful planning, dep
 
 ## 🤖 Bots in Production
 
-| Name                                                                       | Since         | Owner                                                            |
-| -------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------- |
-| [`Mesuic`](https://discord.com/discovery/applications/1157589891287367730) | 18th Feb 2026 | [`@knifecodez`](https://discord.com/users/1053918356375351386)   |
-| [`Fuego`](https://discord.com/discovery/applications/1050423676689985606)  | 19th Feb 2026 | [`@painfuego`](https://discord.com/users/692617937512562729)     |
-| [`Flame`](https://discord.com/discovery/applications/1476630661996613755)  | 28th Feb 2026 | [`@aiosqlite.db`](https://discord.com/users/1243212619825942568) |
+| Name                                                                          | Since         | Owner                                                            |
+| ----------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------- |
+| [`Mesuic`](https://discord.com/discovery/applications/1157589891287367730)    | 18th Feb 2026 | [`@knifecodez`](https://discord.com/users/1053918356375351386)   |
+| [`Fuego`](https://discord.com/discovery/applications/1050423676689985606)     | 19th Feb 2026 | [`@painfuego`](https://discord.com/users/692617937512562729)     |
+| [`Flame`](https://discord.com/discovery/applications/1476630661996613755)     | 28th Feb 2026 | [`@aiosqlite.db`](https://discord.com/users/1243212619825942568) |
+| [`Bumblebee`](https://discord.com/discovery/applications/1232384723188449283) | 2nd Apr 2026  | [`@freycikkk`](https://discord.com/users/1156173961034465333)    |
 
 ## 🤝 Acknowledgements
 
