@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.6.0](https://github.com/execaman/discolink/compare/v4.5.0...v4.6.0) (2026-04-06)
+
+
+### Features
+
+* **QueueManager:** new arg 'inQueue' for track events ([62ad965](https://github.com/execaman/discolink/commit/62ad965dde4e19dbfd6d2e7844a2b71c6fe94484))
+* **QueueManager:** prefer local track objects in events ([#48](https://github.com/execaman/discolink/issues/48)) ([62ad965](https://github.com/execaman/discolink/commit/62ad965dde4e19dbfd6d2e7844a2b71c6fe94484))
+
 ## [4.5.0](https://github.com/execaman/discolink/compare/v4.4.0...v4.5.0) (2026-03-23)
 
 
