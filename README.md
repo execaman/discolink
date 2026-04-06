@@ -42,7 +42,13 @@ import { Player } from "discolink";
 const client = new Client(...);
 
 const player = new Player({
-  nodes: [], // add your nodes
+  nodes: [ // add your nodes
+    {
+      name: "local",
+      origin: "http://localhost:2333",
+      password: "youshallnotpass"
+    }
+  ],
   async forwardVoiceUpdate(guildId, payload) {
     // send the given payload to your gateway connection
     client.guilds.cache.get(guildId).shard.send(payload);
@@ -63,21 +69,28 @@ client.login();
 <summary>Module Augmentation - TypeScript</summary>
 
 ```ts
+/**
+ * fields defined here appear wherever they're concerned
+ */
 declare module "discolink" {
+  // appears on queue, related options, etc
   interface QueueContext {
     textId: string;
   }
 
+  // appears on track, related options, etc
   interface CommonUserData {
     id: string;
     username: string;
     displayName: string;
   }
 
+  // appears on track, playlist, etc
   interface CommonPluginInfo {
     save_uri?: string;
   }
 
+  // appears throughout filter management
   interface CommonPluginFilters {
     custom: string;
   }
@@ -93,7 +106,8 @@ declare module "discolink" {
 import { PlayerPlugin, type Player } from "discolink";
 
 export class CustomPlugin extends PlayerPlugin<{
-  event: [a: string, b: object];
+  // define events you want to emit on player
+  eventName: [s: number, d: object];
 }> {
   readonly name = "custom"; // 'readonly' is mandatory
   #player!: Player; // optional, just for convenience
@@ -103,9 +117,13 @@ export class CustomPlugin extends PlayerPlugin<{
     player.on("nodeDispatch", this.#onDispatch);
   }
 
+  transform(...args: unknown[]): [s: number, d: object] {}
+
   #onDispatch(this: Player, ...args: unknown[]) {
     // work with data
-    // e.g. transform -> name event -> dispatch
+    // e.g. transform -> rename event -> dispatch
+    const transformed = this.transform(...args);
+    this.emit("eventName", ...transformed);
   }
 }
 ```
@@ -114,13 +132,18 @@ export class CustomPlugin extends PlayerPlugin<{
 
 ### Additional Notes
 
-- Handle track end reasons other than [`cleanup`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#cleanup) and [`finished`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#finished)
-- Handle voice states carefully, e.g. [`reconnecting`](https://execaman.github.io/discolink/classes/Voice.VoiceState.html#reconnecting), [`changingNode`](https://execaman.github.io/discolink/classes/Voice.VoiceState.html#changingnode), etc.
-- Handle queue destruction/relocation, e.g. guild/channel delete, node close/disconnect, etc.
+- Destroy queues when necessary, e.g. events like guild/channel delete, etc.
+
+- Check voice states like [`reconnecting`](https://execaman.github.io/discolink/classes/Voice.VoiceState.html#reconnecting) and [`changingNode`](https://execaman.github.io/discolink/classes/Voice.VoiceState.html#changingnode) before taking action
+
+- Handle track end reasons other than [`cleanup`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#cleanup) and [`finished`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#finished) - especially [`replaced`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#replaced)
+
+> [!NOTE]
+> [`replaced`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#replaced) is an edge case where we cannot reliably determine the exact track object in queue that ended. The queue implements a workaround for this and provides a [`inQueue`](http://localhost:3000/docs/interfaces/Typings.PlayerEventMap.html#trackstart) (think cache hit/miss) boolean in track events
 
 ### Session Resumption
 
-Resuming a node's session after your bot restarts requires careful planning, depending on scale. As such, the lib has no plans to provide built-in support for it. Disable both [`autoSync`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#autosync) and [`relocateQueues`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#relocatequeues) for predictable behavior if you're implementing this feature.
+Resuming a node's session after your bot restarts requires careful planning, depending on scale. As such, the lib has no plans to provide built-in support for it. Disable either or both of [`autoSync`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#autosync) and [`relocateQueues`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#relocatequeues) options for predictable behavior if you're implementing this feature.
 
 ## 🤖 Bots in Production
 

@@ -1,6 +1,7 @@
 import { setImmediate } from "node:timers/promises";
 import { EventType, TrackEndReason } from "../Typings";
 import {
+  LastTrackSymbol,
   LookupSymbol,
   OnEventUpdateSymbol,
   OnPingUpdateSymbol,
@@ -20,6 +21,7 @@ import type {
   TrackExceptionEventPayload,
   TrackStuckEventPayload,
   QueueContext,
+  APITrack,
 } from "../Typings";
 import type { Player } from "../Main";
 
@@ -193,20 +195,33 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     this.#relocations.delete(node);
   }
 
+  #getLocalTrack(queue: Queue, track: APITrack, replaced = false) {
+    const trackId = track.info.identifier;
+    const lastTrack = queue[LastTrackSymbol];
+    if (lastTrack !== null) queue[LastTrackSymbol] = null;
+    const _track =
+      !replaced && queue.track?.id === trackId ? queue.track
+      : lastTrack?.id === trackId ? lastTrack
+      : null;
+    return [_track ?? new Track(track), _track !== null] as const;
+  }
+
   async #onTrackStart(queue: Queue, payload: TrackStartEventPayload) {
-    this.player.emit("trackStart", queue, new Track(payload.track));
+    this.player.emit("trackStart", queue, ...this.#getLocalTrack(queue, payload.track));
   }
 
   async #onTrackError(queue: Queue, payload: TrackExceptionEventPayload) {
-    this.player.emit("trackError", queue, new Track(payload.track), payload.exception);
+    const [track, inQueue] = this.#getLocalTrack(queue, payload.track);
+    this.player.emit("trackError", queue, track, payload.exception, inQueue);
   }
 
   async #onTrackStuck(queue: Queue, payload: TrackStuckEventPayload) {
-    this.player.emit("trackStuck", queue, new Track(payload.track), payload.thresholdMs);
+    const [track, inQueue] = this.#getLocalTrack(queue, payload.track);
+    this.player.emit("trackStuck", queue, track, payload.thresholdMs, inQueue);
   }
 
   async #onTrackEnd(queue: Queue, payload: TrackEndEventPayload) {
-    const track = new Track(payload.track);
+    const [track, inQueue] = this.#getLocalTrack(queue, payload.track, payload.reason === TrackEndReason.Replaced);
     switch (payload.reason) {
       case TrackEndReason.Cleanup:
         if (track.id !== queue.track?.id) break;
@@ -217,10 +232,10 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
         if (queue.repeatMode !== "track") queue.previousTracks.push(queue.tracks.shift()!);
         break;
       default:
-        this.player.emit("trackFinish", queue, track, payload.reason);
+        this.player.emit("trackFinish", queue, track, payload.reason, inQueue);
         return;
     }
-    this.player.emit("trackFinish", queue, track, payload.reason);
+    this.player.emit("trackFinish", queue, track, payload.reason, inQueue);
     try {
       if (queue.finished) {
         if (queue.hasPrevious && queue.repeatMode === "queue") queue.tracks.push(queue.previousTracks.shift()!);
@@ -233,7 +248,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     }
   }
 
-  [OnStateUpdateSymbol](payload: PlayerUpdatePayload) {
+  async [OnStateUpdateSymbol](payload: PlayerUpdatePayload) {
     const queue = this.#queues.get(payload.guildId);
     if (!queue) return;
     this[UpdateSymbol](payload.guildId, { state: payload.state });
@@ -265,6 +280,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
         return this.#onTrackStuck(queue, payload);
 
       case EventType.WebSocketClosed:
+        cache.state.connected = false;
         return this.player.voices[OnVoiceCloseSymbol](queue.voice, payload);
     }
   }
