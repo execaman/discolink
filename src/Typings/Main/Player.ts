@@ -30,10 +30,10 @@ export interface PlayerEventMap {
   queueFinish: [queue: Queue];
   queueDestroy: [queue: Queue, reason: string];
 
-  trackStart: [queue: Queue, track: Track];
-  trackStuck: [queue: Queue, track: Track, thresholdMs: number];
-  trackError: [queue: Queue, track: Track, exception: Exception];
-  trackFinish: [queue: Queue, track: Track, reason: TrackEndReason];
+  trackStart: [queue: Queue, track: Track, inQueue: boolean];
+  trackStuck: [queue: Queue, track: Track, thresholdMs: number, inQueue: boolean];
+  trackError: [queue: Queue, track: Track, exception: Exception, inQueue: boolean];
+  trackFinish: [queue: Queue, track: Track, reason: TrackEndReason, inQueue: boolean];
 }
 
 /**

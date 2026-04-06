@@ -299,10 +299,6 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   }
 
   async [OnVoiceCloseSymbol](voice: Queue["voice"], payload: WebSocketClosedEventPayload) {
-    const player = this.player.queues[LookupSymbol](payload.guildId);
-
-    if (player !== undefined) player.state.connected = false;
-
     switch (payload.code) {
       case VoiceCloseCodes.AuthenticationFailed:
       case VoiceCloseCodes.ServerNotFound:
@@ -311,7 +307,6 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
         break;
     }
     this.player.emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
-
     if (!voice.reconnecting) return;
     try {
       await voice.connect();
