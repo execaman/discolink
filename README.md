@@ -139,7 +139,7 @@ export class CustomPlugin extends PlayerPlugin<{
 - Handle track end reasons other than [`cleanup`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#cleanup) and [`finished`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#finished) - especially [`replaced`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#replaced)
 
 > [!NOTE]
-> [`replaced`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#replaced) is an edge case where we cannot reliably determine the exact track object in queue that ended. The queue implements a workaround for this and provides a [`inQueue`](http://localhost:3000/docs/interfaces/Typings.PlayerEventMap.html#trackstart) (think cache hit/miss) boolean in track events
+> [`replaced`](https://execaman.github.io/discolink/enums/Typings.TrackEndReason.html#replaced) is an edge case where we cannot reliably determine the exact track object in queue that ended. The queue implements a workaround for this and provides a [`inQueue`](https://execaman.github.io/discolink/interfaces/Typings.PlayerEventMap.html#trackstart) (think cache hit/miss) boolean in track events
 
 ### Session Resumption
 
