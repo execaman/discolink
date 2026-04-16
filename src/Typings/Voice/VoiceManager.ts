@@ -10,7 +10,7 @@ export interface CommonDispatchPayloadInfo {
 }
 
 /**
- * Discord client ready payload (partial, essential only)
+ * Discord bot ready payload (partial, essential only)
  */
 export interface BotReadyPayload extends CommonDispatchPayloadInfo {
   t: "READY";
@@ -70,7 +70,7 @@ export interface BotVoiceState
 }
 
 /**
- * Options for customizing the player while connecting
+ * Options for the queue while connecting to a voice channel
  */
 export interface ConnectOptions extends Pick<CreateQueueOptions, "context" | "filters" | "node" | "volume"> {}
 

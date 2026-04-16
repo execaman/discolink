@@ -1,6 +1,9 @@
 import { formatDuration, isNumber, isRecord, isString } from "../Functions";
 import type { APITrack, CommonPluginInfo, CommonUserData, JsonObject } from "../Typings";
 
+/**
+ * Class representing a track
+ */
 export class Track<UserData extends JsonObject = CommonUserData, PluginInfo extends JsonObject = CommonPluginInfo> {
   /**
    * Id of the track
@@ -113,6 +116,9 @@ export class Track<UserData extends JsonObject = CommonUserData, PluginInfo exte
     if (isString(data.info.sourceName, "non-empty")) this.sourceName = data.info.sourceName;
   }
 
+  /**
+   * @returns Name of the track
+   */
   toString() {
     return this.title;
   }

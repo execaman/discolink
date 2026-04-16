@@ -25,6 +25,9 @@ import type {
 } from "../Typings";
 import type { Player } from "../Main";
 
+/**
+ * Utility class for managing queues
+ */
 export class QueueManager<Context extends Record<string, unknown> = QueueContext> implements Partial<
   Map<string, Queue<Context>>
 > {
@@ -71,6 +74,10 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     return this.#queues.entries();
   }
 
+  /**
+   * Create a queue
+   * @param options Options for creating the queue
+   */
   async create(options: CreateQueueOptions<Context>) {
     if (!isRecord(options)) throw new Error("Queue create options must be an object");
 
@@ -89,6 +96,11 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     return queue;
   }
 
+  /**
+   * Destroy a queue
+   * @param guildId Id of the guild
+   * @param reason Reason for destroying
+   */
   async destroy(guildId: string, reason = "destroyed") {
     if (this.#destroys.has(guildId)) return this.#destroys.get(guildId)!;
 
@@ -111,6 +123,11 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     this.#destroys.delete(guildId);
   }
 
+  /**
+   * Sync multiple lavalink player data
+   * @param node Name of the node
+   * @param target Target to update (`local` for queues, `remote` for node)
+   */
   async sync(node: string, target: "local" | "remote" = "local") {
     const _node = this.player.nodes.get(node);
 
@@ -130,6 +147,10 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     throw new Error("Target must be 'local' or 'remote'");
   }
 
+  /**
+   * Relocate all queues of a specific node
+   * @param node Name of the node
+   */
   async relocate(node: string) {
     if (this.#relocations.has(node)) return this.#relocations.get(node)!;
 

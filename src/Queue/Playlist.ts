@@ -3,7 +3,7 @@ import { Track } from "./index";
 import type { APIPlaylist, CommonPluginInfo, JsonObject } from "../Typings";
 
 /**
- * A class representing API Playlist
+ * Class representing a Playlist
  */
 export class Playlist<PluginInfo extends JsonObject = CommonPluginInfo> {
   /**
@@ -12,12 +12,12 @@ export class Playlist<PluginInfo extends JsonObject = CommonPluginInfo> {
   name = "Unknown Playlist";
 
   /**
-   * Index of a track this playlist's source URL pointed to
+   * Index of the track this playlist's source URL included, `-1` if none
    */
   selectedTrack = -1;
 
   /**
-   * List of tracks this playlist contains
+   * List of tracks
    */
   tracks: Track[] = [];
 
@@ -27,12 +27,12 @@ export class Playlist<PluginInfo extends JsonObject = CommonPluginInfo> {
   pluginInfo = {} as PluginInfo;
 
   /**
-   * Total duration of this playlist in milliseconds
+   * Duration in milliseconds (live tracks excluded)
    */
   duration = 0;
 
   /**
-   * Formatted total duration of this playlist
+   * Formatted duration (live tracks excluded)
    */
   formattedDuration = "00:00";
 
@@ -54,6 +54,9 @@ export class Playlist<PluginInfo extends JsonObject = CommonPluginInfo> {
     if (this.duration > 0) this.formattedDuration = formatDuration(this.duration);
   }
 
+  /**
+   * @returns Name of the playlist
+   */
   toString() {
     return this.name;
   }

@@ -26,6 +26,9 @@ type ConstrainEventMap<T> = {
   [K in keyof T]: T[K] extends any[] ? T[K] : never;
 };
 
+/**
+ * Main class putting together all essential managers, also the entry point to get you started
+ */
 export class Player<
   Context extends Record<string, unknown> = QueueContext,
   Plugins extends PlayerPlugin[] = [],

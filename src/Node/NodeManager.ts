@@ -13,6 +13,9 @@ import type {
 } from "../Typings";
 import type { Player } from "../Main";
 
+/**
+ * Utility class for managing nodes
+ */
 export class NodeManager implements Partial<Map<string, Node>> {
   #nodes = new Map<string, Node>();
 
@@ -61,7 +64,16 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return this.#nodes.entries();
   }
 
+  /**
+   * Get the state of a node
+   * @param name Name of the node
+   */
   state(name: string): NodeState;
+  /**
+   * Check if a node is in a certain state
+   * @param name Name of the node
+   * @param equals Expected state of the node
+   */
   state(name: string, equals: NodeState): boolean;
   state(name: string, equals?: NodeState) {
     const node = this.#nodes.get(name);
@@ -69,6 +81,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return equals === undefined ? node.state : node.state === equals;
   }
 
+  /**
+   * Create a new node
+   * @param options Options for creating the node
+   */
   create(options: CreateNodeOptions) {
     if (this.player.clientId === null) throw new Error("Player has not been initialized");
     if (this.#nodes.has(options.name)) throw new Error(`Node '${options.name}' already exists`);
@@ -79,6 +95,11 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return node;
   }
 
+  /**
+   * Delete a node
+   * @remarks Only a disconnected node with no queues can be deleted, an error is thrown otherwise
+   * @param name Name of the node
+   */
   delete(name: string) {
     const node = this.#nodes.get(name);
     if (!node) return false;
@@ -94,7 +115,18 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return true;
   }
 
+  /**
+   * List nodes that support a certain feature
+   * @param feat Type of feature
+   * @param name Name of the feature
+   */
   supports(feat: FeatureTypes, name: string): Node[];
+  /**
+   * Check if a node supports a certain feature
+   * @param feat Type of feature
+   * @param name Name of the feature
+   * @param node Name of the node
+   */
   supports(feat: FeatureTypes, name: string, node: string): boolean;
   supports(feat: FeatureTypes, name: string, node?: string) {
     if (node !== undefined) return this.#hasSupportFor(feat, name, node);
@@ -104,6 +136,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     }, []);
   }
 
+  /**
+   * List nodes that are ready, sorted by metrics
+   * @param weights Numeric weights for each metric
+   */
   relevant(weights: Partial<NodeMetrics> = { memory: 0.3, workload: 0.2, streaming: 0.5 }) {
     weights.memory = Math.min(1, Math.max(0, weights.memory ?? 0));
     weights.workload = Math.min(1, Math.max(0, weights.workload ?? 0));
@@ -133,7 +169,14 @@ export class NodeManager implements Partial<Map<string, Node>> {
     });
   }
 
+  /**
+   * Connect to all nodes
+   */
   connect(): Promise<void>;
+  /**
+   * Connect to a specific node
+   * @param name Name of the node
+   */
   connect(name: string): Promise<boolean>;
   async connect(name?: string): Promise<void | boolean> {
     if (name !== undefined) {
@@ -144,6 +187,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     for (const node of this.#nodes.values()) await node.connect();
   }
 
+  /**
+   * Disconnect from a specific node (all if none specified)
+   * @param name Name of the node
+   */
   async disconnect(name?: string) {
     if (name !== undefined) {
       const node = this.#nodes.get(name);
@@ -153,6 +200,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
     for (const node of this.#nodes.values()) await node.disconnect();
   }
 
+  /**
+   * Fetch info for a specific node (cache-first)
+   * @param name Name of the node
+   */
   async fetchInfo(name: string) {
     if (this.info.has(name)) return this.info.get(name)!;
     const node = this.#nodes.get(name);

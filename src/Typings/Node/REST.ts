@@ -1,7 +1,7 @@
 import type { JsonLike } from "../Utility";
 
 /**
- * Options to create a instance of REST
+ * Options to create a REST instance
  */
 export interface RESTOptions {
   /**
@@ -45,7 +45,7 @@ export interface RESTOptions {
 }
 
 /**
- * Options for customizing a request
+ * Options for making a request
  */
 export interface RequestOptions {
   /**

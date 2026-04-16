@@ -92,6 +92,7 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
    * Return empty or populated array of related tracks
    * @param queue The queue requesting track(s)
    * @param track The track suggested for reference
+   * @remarks DO NOT throw an error
    */
   fetchRelatedTracks?: (queue: Queue, track: Track) => Promise<Track[]>;
 }
@@ -115,7 +116,7 @@ export interface VoiceUpdatePayload {
 }
 
 /**
- * Options for customizing a 'search' operation
+ * Options for searching tracks
  */
 export interface SearchOptions {
   node?: string;
@@ -123,7 +124,7 @@ export interface SearchOptions {
 }
 
 /**
- * Options for customizing a 'play' operation
+ * Options for playing tracks
  */
 export interface PlayOptions<
   Context extends Record<string, unknown> = QueueContext,

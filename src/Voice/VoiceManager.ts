@@ -22,6 +22,9 @@ interface JoinRequest
   config?: Pick<CreateQueueOptions, "filters" | "volume">;
 }
 
+/**
+ * Utility class for managing voice connections
+ */
 export class VoiceManager implements Partial<Map<string, VoiceState>> {
   #cache = new Map<string, BotVoiceState>();
   #voices = new Map<string, VoiceState>();
@@ -71,6 +74,11 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     return this.#voices.entries();
   }
 
+  /**
+   * Destroy a voice connection
+   * @param guildId Id of the guild
+   * @param reason Reason for destroying
+   */
   async destroy(guildId: string, reason = "destroyed") {
     if (this.player.queues.has(guildId)) return this.player.queues.destroy(guildId, reason);
     if (this.#destroys.has(guildId)) return this.#destroys.get(guildId)!;
@@ -92,6 +100,12 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     this.#destroys.delete(guildId);
   }
 
+  /**
+   * Connect to a voice channel
+   * @param guildId Id of the guild
+   * @param voiceId Id of the voice channel
+   * @param options Options for the queue
+   */
   async connect(guildId: string, voiceId: string, options?: ConnectOptions) {
     if (!isString(guildId, SnowflakeRegex)) throw new Error("Guild Id is not a valid Discord Id");
     if (!isString(voiceId, SnowflakeRegex)) throw new Error("Voice Id is not a valid Discord Id");
@@ -149,11 +163,19 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     }
   }
 
+  /**
+   * Disconnect from a voice channel
+   * @param guildId Id of the guild
+   */
   async disconnect(guildId: string) {
     if (this.#voices.has(guildId)) return this.#sendVoiceUpdate(guildId, null);
     throw new Error(`No connection found for guild '${guildId}'`);
   }
 
+  /**
+   * Handle payloads received by your bot
+   * @param payload Dispatched payload
+   */
   handleDispatch(payload: unknown): Promise<void>;
   async handleDispatch(payload: DiscordDispatchPayload) {
     if (payload.op !== 0) return;

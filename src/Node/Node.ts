@@ -12,7 +12,7 @@ import type { ClientOptions } from "ws";
 import type { ClientHeaders, MessagePayload, NodeEventMap, NodeOptions, NodeState, StatsPayload } from "../Typings";
 
 /**
- * A class representing a lavalink node
+ * Class representing a lavalink node
  */
 export class Node extends EventEmitter<NodeEventMap> {
   #socketConfig = {

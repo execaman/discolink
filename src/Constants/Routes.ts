@@ -1,5 +1,5 @@
 /**
- * An object holding methods that construct api routes based on params
+ * Object holding methods to construct api routes
  */
 export const Routes = {
   websocket() {

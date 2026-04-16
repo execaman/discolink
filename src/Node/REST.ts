@@ -21,6 +21,9 @@ import type {
   SessionUpdateResponseBody,
 } from "../Typings";
 
+/**
+ * Functional class for interacting with lavalink's REST API
+ */
 export class REST {
   #headers = {
     Accept: "application/json",
