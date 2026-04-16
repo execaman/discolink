@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.1](https://github.com/execaman/discolink/compare/v4.6.0...v4.6.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* **VoiceRegion:** use stats interval from default node options ([#51](https://github.com/execaman/discolink/issues/51)) ([4c91117](https://github.com/execaman/discolink/commit/4c91117f05405b6cc91eae6de3a146aba30ef1d5))
+
 ## [4.6.0](https://github.com/execaman/discolink/compare/v4.5.0...v4.6.0) (2026-04-06)
 
 
