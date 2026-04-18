@@ -22,6 +22,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noUncheckedSideEffectImports": true,
+    "types": ["node", "vitest/globals"],
 
     // https://www.typescriptlang.org/tsconfig/#Emit_6246
     "noEmit": true,
@@ -33,7 +34,6 @@
     // https://www.typescriptlang.org/tsconfig/#Language_and_Environment_6254
     "lib": ["ESNext"],
     "target": "esnext",
-    "types": ["vitest/globals"],
     "useDefineForClassFields": true,
 
     // https://www.typescriptlang.org/tsconfig/#Completeness_6257
