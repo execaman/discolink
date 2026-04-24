@@ -11,7 +11,7 @@ export default defineConfig({
     $clientRepository: `"${repository}"`,
   },
   test: {
-    globals: true,
+    globals: false,
     environment: "node",
     reporters: process.env.GITHUB_ACTIONS ? ["tree", "github-actions"] : ["tree"],
     coverage: {

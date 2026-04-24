@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import * as util from "../src/Functions/utility";
 
 describe("Functions (utility)", () => {

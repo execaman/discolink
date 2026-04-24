@@ -22,7 +22,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noUncheckedSideEffectImports": true,
-    "types": ["node", "vitest/globals"],
+    "types": ["node"],
 
     // https://www.typescriptlang.org/tsconfig/#Emit_6246
     "noEmit": true,

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { Track } from "../src/Queue/Track";
 import type { APITrack } from "../src/Typings";
 

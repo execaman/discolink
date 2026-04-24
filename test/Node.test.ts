@@ -1,3 +1,4 @@
+import { describe, expect, it, test, vi } from "vitest";
 import { setImmediate, setTimeout } from "node:timers/promises";
 import { OPType } from "../src/Typings";
 import type { NodeOptions, ReadyPayload, StatsPayload } from "../src/Typings";

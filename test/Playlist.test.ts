@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { Playlist } from "../src/Queue/Playlist";
 import type { APIPlaylist, APITrack } from "../src/Typings";
 

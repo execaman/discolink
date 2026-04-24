@@ -2,6 +2,7 @@ declare const $clientName: string;
 declare const $clientVersion: string;
 declare const $clientRepository: string;
 
+import { describe, expect, it, test, vi } from "vitest";
 import { REST } from "../src/Node/REST";
 import type { RequestOptions, RESTOptions, RestResponse } from "../src/Typings";
 
