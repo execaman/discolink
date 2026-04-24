@@ -10,13 +10,11 @@
 
 </div>
 
-## 🎯 Purpose
+## ℹ️ Introduction
 
-The goal of this library is to abstract away obvious steps involved in the process of acting as an intermediary between [Lavalink](https://lavalink.dev/api) and [Discord](https://discord.com/developers/docs/events/gateway) to give developers a cleaner and intuitive interface to work with.
+> **This project follows [SemVer](https://semver.org/) and an [Agile SDLC](https://www.geeksforgeeks.org/software-engineering/agile-sdlc-software-development-life-cycle/)**.
 
-## 🙌 Motivation
-
-It's the JS ecosystem, how can we not have 30 libs for the same thing. My friends were monkey-patching, applying hotfixes, despite their clients being open-source; and I wanted to do a project professionally while exploring more of GitHub. **This project follows [SemVer](https://semver.org/) and an [Agile SDLC](https://www.geeksforgeeks.org/software-engineering/agile-sdlc-software-development-life-cycle/)**.
+The goal of this library is to abstract away obvious steps involved in the process of acting as an intermediary between a [Lavalink](https://lavalink.dev/api) server and a [Discord](https://discord.com/developers/docs/events/gateway) bot to provide a simple and intuitive interface to work with.
 
 ## ⚙️ Requirements
 
@@ -144,20 +142,3 @@ export class CustomPlugin extends PlayerPlugin<{
 ### Session Resumption
 
 Resuming a node's session after your bot restarts requires careful planning, depending on scale. As such, the lib has no plans to provide built-in support for it. Disable either or both of [`autoSync`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#autosync) and [`relocateQueues`](https://execaman.github.io/discolink/interfaces/Typings.PlayerOptions.html#relocatequeues) options for predictable behavior if you're implementing this feature.
-
-## 🤖 Bots in Production
-
-| Name                                                                          | Since         | Owner                                                            |
-| ----------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------- |
-| [`Mesuic`](https://discord.com/discovery/applications/1157589891287367730)    | 18th Feb 2026 | [`@knifecodez`](https://discord.com/users/1053918356375351386)   |
-| [`Fuego`](https://discord.com/discovery/applications/1050423676689985606)     | 19th Feb 2026 | [`@painfuego`](https://discord.com/users/692617937512562729)     |
-| [`Flame`](https://discord.com/discovery/applications/1476630661996613755)     | 28th Feb 2026 | [`@aiosqlite.db`](https://discord.com/users/1243212619825942568) |
-| [`Bumblebee`](https://discord.com/discovery/applications/1232384723188449283) | 2nd Apr 2026  | [`@freycikkk`](https://discord.com/users/1156173961034465333)    |
-
-## 🤝 Acknowledgements
-
-Key aspects of this lib were inspired from the following projects:
-
-- [`distube`](https://github.com/skick1234/DisTube) player-queue design
-- [`discord.js`](https://github.com/discordjs/discord.js) manager-cache concept
-- [`Hoshimi`](https://github.com/Ganyu-Studios/Hoshimi) module augmentation (typings)
