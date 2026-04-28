@@ -63,7 +63,7 @@
     "husky": "^9.1.7",
     "npm-check-updates": "^21.0.2",
     "prettier": "^3.8.3",
-    "tsdown": "^0.21.9",
+    "tsdown": "^0.21.8",
     "typedoc": "^0.28.19",
     "typedoc-material-theme": "^1.4.1",
     "typedoc-plugin-dt-links": "^2.0.50",
