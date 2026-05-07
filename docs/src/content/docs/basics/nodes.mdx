@@ -3,8 +3,6 @@ title: Nodes
 description: Connecting to Lavalink servers and letting discolink manage them.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
-
 A node is a connection to a single Lavalink server. `player.nodes` is a `NodeManager` that handles all of them — connecting, reconnecting, scoring, routing, and cleanup.
 
 ## Declaring nodes
@@ -183,4 +181,4 @@ const removed = player.nodes.delete("backup"); // → boolean
 
 On deletion, the node's entry is removed from `info`, `metrics`, and all `VoiceRegion` ping stats.
 
-<Aside type="tip">Full option types: [NodeOptions](/discolink/api/interfaces/Typings.NodeOptions.html)</Aside>
+Full option types: [NodeOptions](/discolink/api/interfaces/Typings.NodeOptions.html)
