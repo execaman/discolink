@@ -1,0 +1,287 @@
+/* discolink docs — custom styles */
+
+/* ─── Palette: warm amber/gold from the logo ─────────────────────────────── */
+:root {
+  /* accent: amber-gold */
+  --sl-color-accent-low: #2a1f00;
+  --sl-color-accent: #c9922a;
+  --sl-color-accent-high: #f5b945;
+
+  /* surface grays — warm-tinted dark */
+  --sl-color-white: #fdf6e3;
+  --sl-color-gray-1: #e8dfc8;
+  --sl-color-gray-2: #b8a98a;
+  --sl-color-gray-3: #7a6e58;
+  --sl-color-gray-4: #4a4232;
+  --sl-color-gray-5: #2e2820;
+  --sl-color-gray-6: #1e1a14;
+  --sl-color-black: #120f0a;
+
+  /* table custom tokens */
+  --dl-table-border: #3a3020;
+  --dl-table-head-bg: #1e1a14;
+  --dl-table-head-color: #f5b945;
+  --dl-table-row-alt: #1a1610;
+  --dl-table-row-hover: #2a2318;
+
+  /* inline code custom tokens */
+  --dl-code-bg: #2a2010;
+  --dl-code-color: #f5c96a;
+  --dl-code-border: #4a3a18;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #fff3cc;
+  --sl-color-accent: #a07010;
+  --sl-color-accent-high: #6b4a00;
+
+  --sl-color-white: #1a1208;
+  --sl-color-gray-1: #2e2416;
+  --sl-color-gray-2: #5a4a30;
+  --sl-color-gray-3: #8a7050;
+  --sl-color-gray-4: #b89a68;
+  --sl-color-gray-5: #d8c090;
+  --sl-color-gray-6: #f0e4c0;
+  --sl-color-black: #fdf6e3;
+
+  --dl-table-border: #d4b870;
+  --dl-table-head-bg: #f5e8c0;
+  --dl-table-head-color: #6b4a00;
+  --dl-table-row-alt: #fdf6e3;
+  --dl-table-row-hover: #f5e8c0;
+
+  --dl-code-bg: #fdf0d0;
+  --dl-code-color: #7a4800;
+  --dl-code-border: #d4a840;
+}
+
+/* ─── Sidebar: kill the all-caps group labels ─────────────────────────────── */
+.group-label span,
+[class*="group-label"] span {
+  text-transform: none !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--sl-color-accent-high);
+}
+
+/* ─── Code blocks ─────────────────────────────────────────────────────────── */
+/* The outer wrapper needs overflow:hidden so the rounded figure clips correctly */
+.expressive-code {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--dl-table-border);
+  /* subtle amber glow */
+  box-shadow:
+    0 0 0 1px rgba(245, 185, 69, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Remove any border/radius on the inner figure — the wrapper handles it */
+.expressive-code .frame {
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Tint the header bar (language label / filename tab) to match the palette */
+.expressive-code .frame .header {
+  background-color: #1a1510 !important;
+  border-bottom: 1px solid var(--dl-table-border) !important;
+}
+
+:root[data-theme="light"] .expressive-code {
+  box-shadow:
+    0 0 0 1px rgba(160, 112, 16, 0.15),
+    0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Inline code ─────────────────────────────────────────────────────────── */
+:not(pre) > code {
+  background-color: var(--dl-code-bg) !important;
+  color: var(--dl-code-color) !important;
+  border: 1px solid var(--dl-code-border) !important;
+  border-radius: 5px !important;
+  padding: 0.1em 0.42em !important;
+  font-size: 0.83em !important;
+}
+
+/* ─── Tables ──────────────────────────────────────────────────────────────── */
+table {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  border: 1px solid var(--dl-table-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+thead tr {
+  background-color: var(--dl-table-head-bg);
+}
+
+th {
+  color: var(--dl-table-head-color);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.65rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--dl-table-border);
+}
+
+td {
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--dl-table-border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:nth-child(even) {
+  background-color: var(--dl-table-row-alt);
+}
+
+tbody tr:hover {
+  background-color: var(--dl-table-row-hover);
+}
+
+/* inline code inside tables */
+td code,
+th code {
+  font-size: 0.8rem;
+}
+
+/* ─── Badge tweaks ────────────────────────────────────────────────────────── */
+.sl-badge {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Accent link color ───────────────────────────────────────────────────── */
+a:not([class]) {
+  color: var(--sl-color-accent-high);
+}
+
+a:not([class]):hover {
+  color: var(--sl-color-accent);
+}
+
+/* ─── Blockquotes ─────────────────────────────────────────────────────────── */
+blockquote {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--dl-table-border);
+  background: linear-gradient(135deg, rgba(42, 32, 16, 0.6) 0%, rgba(30, 22, 10, 0.4) 100%);
+  /* left accent bar */
+  border-left: 3px solid var(--sl-color-accent-high);
+  box-shadow: inset 0 0 40px rgba(245, 185, 69, 0.03);
+  font-style: italic;
+  color: var(--sl-color-gray-2);
+}
+
+blockquote::before {
+  content: "\201C";
+  position: absolute;
+  top: -0.1rem;
+  left: 0.9rem;
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--sl-color-accent-high);
+  opacity: 0.25;
+  font-style: normal;
+  pointer-events: none;
+}
+
+blockquote p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+blockquote p + p {
+  margin-top: 0.6rem;
+}
+
+:root[data-theme="light"] blockquote {
+  background: linear-gradient(135deg, rgba(245, 232, 192, 0.5) 0%, rgba(253, 246, 227, 0.3) 100%);
+  color: var(--sl-color-gray-2);
+}
+
+/* ─── Asides (Note / Tip / Caution) ──────────────────────────────────────── */
+.starlight-aside {
+  border-radius: 8px;
+  border: 1px solid var(--dl-table-border);
+  border-inline-start-width: 3px; /* keep the left accent bar, just thicker */
+  padding: 1rem 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Faint diagonal shimmer in the top-right corner */
+.starlight-aside::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 90% 10%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── Note (blue → amber-tinted slate) */
+.starlight-aside--note {
+  --sl-color-asides-border: #c9922a;
+  --sl-color-asides-text-accent: #f5b945;
+  background-color: #1e1a0e;
+}
+
+:root[data-theme="light"] .starlight-aside--note {
+  --sl-color-asides-border: #a07010;
+  --sl-color-asides-text-accent: #6b4a00;
+  background-color: #fdf3d0;
+}
+
+/* ── Tip (purple → warm green-gold) */
+.starlight-aside--tip {
+  --sl-color-asides-border: #7a9a30;
+  --sl-color-asides-text-accent: #b8d060;
+  background-color: #141a0a;
+}
+
+:root[data-theme="light"] .starlight-aside--tip {
+  --sl-color-asides-border: #5a7820;
+  --sl-color-asides-text-accent: #3a5010;
+  background-color: #f0f7e0;
+}
+
+/* ── Caution (orange → deep amber-red) */
+.starlight-aside--caution {
+  --sl-color-asides-border: #c05820;
+  --sl-color-asides-text-accent: #f08040;
+  background-color: #1e1008;
+}
+
+:root[data-theme="light"] .starlight-aside--caution {
+  --sl-color-asides-border: #a04010;
+  --sl-color-asides-text-accent: #7a2800;
+  background-color: #fff0e4;
+}
+
+/* Title row */
+.starlight-aside__title {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Links inside asides inherit the accent color */
+.starlight-aside__content a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

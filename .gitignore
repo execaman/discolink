@@ -1,4 +1,6 @@
-/coverage
-/docs
-/lib
+.vscode/
 node_modules/
+
+/coverage
+/site
+/lib

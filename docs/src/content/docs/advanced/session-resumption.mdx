@@ -1,0 +1,86 @@
+---
+title: Session resumption
+description: Keeping audio alive across bot restarts.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Lavalink can keep a session alive for a configurable window after your bot disconnects. If you reconnect within that window and present the original session ID, Lavalink resumes — queues keep playing, no interruption.
+
+discolink doesn't implement this automatically. The right approach depends on your scale and persistence layer.
+
+## 1. Opt in and persist the session ID
+
+On a fresh connection, tell Lavalink to keep the session alive and store the session ID:
+
+```ts
+player.on("nodeReady", async (node, resumed) => {
+  if (!resumed) {
+    // Enable resumption with a 60-second window
+    await node.rest.updateSession({ resuming: true, timeout: 60 });
+    // Persist the session ID — use your preferred storage
+    await db.set(`session:${node.name}`, node.sessionId);
+  }
+});
+```
+
+## 2. Pass the session ID on reconnect
+
+Pass the stored session ID via the node's `sessionId` option — discolink sends it as the `Session-Id` WebSocket header during the handshake:
+
+```ts
+const storedSessionId = await db.get("session:main");
+
+const player = new Player({
+  nodes: [
+    {
+      name: "main",
+      origin: "http://localhost:2333",
+      password: "youshallnotpass",
+      sessionId: storedSessionId ?? undefined,
+    },
+  ],
+  // Disable automatic recovery — must be set at construction, not after
+  autoSync: false,
+  relocateQueues: false,
+  // ...
+});
+```
+
+<Aside type="caution">
+  `autoSync` and `relocateQueues` must be set in the constructor. They are part of `player.options` which is immutable
+  after construction. Setting them after the fact has no effect.
+</Aside>
+
+When resuming, you don't want discolink overwriting Lavalink's state (`autoSync: false`) or migrating queues to other nodes (`relocateQueues: false`).
+
+## 3. Sync local state after a successful resume
+
+After a successful resume, pull Lavalink's player state into your local queues:
+
+```ts
+player.on("nodeReady", async (node, resumed) => {
+  if (resumed) {
+    // Pull Lavalink's player state into local queues
+    await player.queues.sync(node.name, "local");
+  }
+});
+```
+
+<Aside type="caution">
+  Sessions expire. If your bot is down longer than the configured timeout, Lavalink creates a new session instead of
+  resuming. Always handle the `resumed: false` case — store the new session ID and continue normally.
+</Aside>
+
+## Complete pattern
+
+```ts
+player.on("nodeReady", async (node, resumed) => {
+  if (resumed) {
+    await player.queues.sync(node.name, "local");
+  } else {
+    await node.rest.updateSession({ resuming: true, timeout: 60 });
+    await db.set(`session:${node.name}`, node.sessionId);
+  }
+});
+```

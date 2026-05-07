@@ -1,0 +1,37 @@
+---
+title: Installation
+description: Install discolink and get a Lavalink server running.
+---
+
+import { Tabs, TabItem, Steps, Aside } from "@astrojs/starlight/components";
+
+<Tabs>
+  <TabItem label="npm">```sh npm install discolink ```</TabItem>
+  <TabItem label="pnpm">```sh pnpm add discolink ```</TabItem>
+  <TabItem label="yarn">```sh yarn add discolink ```</TabItem>
+  <TabItem label="bun">```sh bun add discolink ```</TabItem>
+</Tabs>
+
+Ships with ESM and CJS builds and bundled type declarations. No `@types` package needed.
+
+## Requirements
+
+- Node.js v22 or later (equivalent bun, deno versions supported)
+- A Discord library that lets you send raw payloads and subscribe to raw dispatch events
+
+## TSConfig Options
+
+If you use typescript, try to use modern lib and module resolution to get the most of this package:
+
+```json
+{
+  "compilerOptions": {
+    // ...
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+    // ...
+  }
+}
+```

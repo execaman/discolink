@@ -1,0 +1,239 @@
+---
+title: Plugins
+description: How the plugin system works, how to write a plugin, and a practical example.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Plugins extend `Player` with custom logic and typed events. They're the right tool when you need to tap into the node dispatch pipeline, react to Lavalink server plugin payloads, or add cross-cutting behaviour that doesn't belong in your command handlers.
+
+## How it works
+
+`Player` is generic over a `Plugins` tuple:
+
+```ts
+class Player<
+  Context extends Record<string, unknown> = QueueContext,
+  Plugins extends PlayerPlugin[] = [],
+>
+```
+
+When you pass plugins in the constructor, TypeScript infers the tuple type and uses it to:
+
+1. Build `player.plugins` as a record keyed by each plugin's literal `name` type
+2. Merge all plugin event maps into the player's `EventEmitter` type via `MergeUnionType<PluginEventMap<Plugins[number]>>`
+
+This is why `player.on('myEvent', ...)` is fully typed — it's resolved at the constructor call site, not at runtime.
+
+## Using a plugin
+
+```ts
+import { Player, LavaLyrics } from "discolink";
+
+const player = new Player({
+  plugins: [new LavaLyrics.Plugin()],
+  nodes: [
+    /* ... */
+  ],
+  async forwardVoiceUpdate(guildId, payload) {
+    /* ... */
+  },
+});
+
+// player.plugins is typed as { lavalyrics: LavaLyrics.Plugin }
+const lyricsPlugin = player.plugins.lavalyrics;
+
+// player.on() knows about lyricsFound, lyricsNotFound, lyricsLine
+player.on("lyricsFound", (queue, lyrics) => {
+  /* ... */
+});
+```
+
+## Writing a plugin
+
+### The contract
+
+```ts
+abstract class PlayerPlugin<EventMap extends Record<string, unknown[]> = {}> {
+  declare protected _: EventMap; // type-only field — never used at runtime
+  abstract readonly name: string;
+  abstract init(player: Player): void;
+}
+```
+
+Three things to implement:
+
+- **`name`** — must be `readonly` with a string literal type. TypeScript uses the literal to key `player.plugins`. A mutable `name` (e.g. `name = 'foo'` without `readonly`) widens to `string` and breaks inference.
+- **`init(player)`** — called once, after all nodes are created but before they connect. The player is fully constructed and `player.nodes` is populated, but nodes are not yet `ready`.
+- **`EventMap`** — the generic parameter. Each key is an event name, each value is a tuple of argument types. Pass `{}` if your plugin emits no events.
+
+The `declare protected _: EventMap` field is a TypeScript trick — it forces the generic to be retained in the emitted type information so `PluginEventMap<T>` can extract it. You never read or write it.
+
+### Minimal example
+
+```ts
+import { PlayerPlugin } from "discolink";
+import type { Player } from "discolink";
+
+export class MyPlugin extends PlayerPlugin<{
+  myEvent: [guildId: string, data: string];
+}> {
+  readonly name = "myplugin";
+
+  init(player: Player): void {
+    // init runs after nodes are created but before they connect
+    // player.nodes is populated — nodes exist but are not yet ready
+    // subscribe to events here; node.rest calls should wait for nodeReady
+    player.on("nodeDispatch", this.#onDispatch as any);
+  }
+
+  #onDispatch(this: Player, _node: Node, payload: unknown) {
+    if (!isMyPayload(payload)) return;
+    this.emit("myEvent", payload.guildId, payload.data);
+  }
+}
+```
+
+Events are emitted on the `Player` instance, not the plugin. Consumers subscribe normally:
+
+```ts
+player.on("myEvent", (guildId, data) => {
+  /* ... */
+});
+```
+
+<Aside type="note">
+  `PlayerPlugin` has no `destroy()` or cleanup hook. If your plugin registers event listeners, it's responsible for
+  managing their lifetime. For listeners that should persist for the life of the player, this is fine — just be aware
+  there's no automatic teardown.
+</Aside>
+
+### Typing `this` in dispatch handlers
+
+When a handler needs to call player methods (`this.getQueue()`, `this.emit()`, etc.), type `this` explicitly:
+
+```ts
+#onDispatch(this: Player<{}, [MyPlugin]>, _node: Node, payload: unknown) {
+  const queue = this.getQueue(payload.guildId);
+  if (!queue) return;
+  this.emit('myEvent', queue.guildId, payload.data);
+}
+```
+
+The `as any` cast on `player.on('nodeDispatch', this.#onDispatch as any)` is necessary because the handler's `this` type doesn't match the generic `Player` signature — this is a known TypeScript limitation with bound `this` parameters on event handlers.
+
+### Augmenting types
+
+If your plugin introduces custom filters, context fields, or plugin info, declare them in a `.d.ts` file:
+
+```ts
+declare module "discolink" {
+  interface CommonPluginFilters {
+    myFilter: { intensity: number };
+  }
+  interface CommonPluginInfo {
+    myField: string;
+  }
+}
+```
+
+---
+
+## Practical example: node health monitor
+
+A plugin that tracks node health over time, emits a warning event when a node's streaming quality drops below a threshold, and exposes a method to query current health.
+
+```ts
+import { PlayerPlugin } from "discolink";
+import type { Player, Node } from "discolink";
+
+interface NodeHealth {
+  name: string;
+  streaming: number; // 0–1 or -1
+  workload: number; // 0–1
+  memory: number; // 0–1
+  ping: number | null;
+  players: number;
+  playingPlayers: number;
+}
+
+export class NodeHealthPlugin extends PlayerPlugin<{
+  nodeHealthWarning: [node: Node, health: NodeHealth];
+}> {
+  readonly name = "nodehealth";
+
+  #player!: Player;
+  #threshold: number;
+
+  constructor(options: { streamingThreshold?: number } = {}) {
+    super();
+    // Warn when streaming quality drops below this value (default 0.5)
+    this.#threshold = options.streamingThreshold ?? 0.5;
+  }
+
+  init(player: Player): void {
+    this.#player = player;
+    player.on("nodeDispatch", this.#onDispatch as any);
+  }
+
+  /**
+   * Get current health snapshot for all ready nodes.
+   */
+  getHealth(): NodeHealth[] {
+    const result: NodeHealth[] = [];
+    for (const [name, node] of this.#player.nodes) {
+      if (!node.ready) continue;
+      const metrics = this.#player.nodes.metrics.get(name);
+      result.push({
+        name,
+        streaming: metrics?.streaming ?? -1,
+        workload: metrics?.workload ?? 0,
+        memory: metrics?.memory ?? 0,
+        ping: node.ping,
+        players: node.stats?.players ?? 0,
+        playingPlayers: node.stats?.playingPlayers ?? 0,
+      });
+    }
+    return result;
+  }
+
+  #onDispatch(this: Player<{}, [NodeHealthPlugin]>, node: Node, payload: unknown) {
+    const p = payload as { op?: string };
+    if (p.op !== "stats") return;
+
+    const plugin = this.plugins.nodehealth;
+    const metrics = this.nodes.metrics.get(node.name);
+    if (!metrics) return;
+
+    // streaming is -1 when there are no active players — skip
+    if (metrics.streaming === -1) return;
+
+    if (metrics.streaming < plugin.#threshold) {
+      const health = plugin.getHealth().find((h) => h.name === node.name);
+      if (health) this.emit("nodeHealthWarning", node, health);
+    }
+  }
+}
+```
+
+**Usage:**
+
+```ts
+const player = new Player({
+  plugins: [new NodeHealthPlugin({ streamingThreshold: 0.6 })],
+  // ...
+});
+
+player.on("nodeHealthWarning", (node, health) => {
+  console.warn(
+    `Node ${node.name} streaming quality degraded: ${(health.streaming * 100).toFixed(1)}% `
+      + `(${health.playingPlayers}/${health.players} players active, ping: ${health.ping}ms)`
+  );
+});
+
+// Query health on demand
+const health = player.plugins.nodehealth.getHealth();
+console.table(health);
+```
+
+This pattern — subscribing to `nodeDispatch`, filtering by `op`, reading from `player.nodes.metrics`, and emitting a typed event — is the core loop for most monitoring plugins.

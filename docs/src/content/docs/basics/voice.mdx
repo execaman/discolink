@@ -1,0 +1,142 @@
+---
+title: Voice
+description: How discolink establishes and manages Discord voice connections.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+`player.voices` holds one `VoiceState` per connected guild. A voice connection requires two Discord gateway events to assemble — discolink handles the handshake once you forward raw payloads.
+
+## Forwarding payloads
+
+When your bot joins a voice channel, Discord sends `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE`. discolink waits for both, then makes a request to Lavalink to register the player. Forward all raw dispatches — discolink filters internally:
+
+```ts
+// discord.js
+// 'rawWS' for eris
+client.on("raw", (payload) => player.voices.handleDispatch(payload));
+```
+
+`handleDispatch` processes three event types:
+
+- `VOICE_STATE_UPDATE` — captures the bot's session ID and channel
+- `VOICE_SERVER_UPDATE` — captures the endpoint and token, then completes the connection
+- `READY` — triggers `player.init()` automatically when `autoInit: true`
+
+## Connecting
+
+```ts
+const voice = await player.voices.connect(guildId, voiceChannelId);
+
+// With options (only applied when creating a new connection)
+await player.voices.connect(guildId, voiceChannelId, {
+  node: "eu-west", // pin to a specific node
+  volume: 80, // initial volume for the queue (0–1000)
+  filters: { timescale: { speed: 1.1 } }, // initial filters
+  context: { textChannelId }, // initial queue context
+});
+```
+
+If a connection to the same guild and channel is already in progress, `connect()` returns the existing promise rather than starting a new one. If the bot is already connected to that channel and the connection is live, it returns the existing `VoiceState` immediately.
+
+`connect()` times out after 30 seconds if the gateway events don't arrive.
+
+#### Why a connection might fail
+
+- **`forwardVoiceUpdate` not wired up** — the bot never sends the voice state update to Discord, so the gateway handshake never starts.
+- **`handleDispatch` not wired up** — `VOICE_STATE_UPDATE` / `VOICE_SERVER_UPDATE` are never forwarded to discolink, so it never receives the data it needs to complete the connection.
+- **Missing `GuildVoiceStates` intent** — Discord won't send `VOICE_STATE_UPDATE` without it, which means the session ID is never captured.
+- **Missing channel permissions** — the bot needs `Connect` (and `Speak` to produce audio) on the target channel.
+- **Voice channel is full** — easy to miss: when the channel has hit its user limit, Discord does not send any voice updates, so the connection times out. The bot needs the `Move Members` permission to bypass the limit and receive both events.
+
+## Node selection for voice
+
+When a new connection is established, discolink picks the best node for the voice region. It uses `VoiceRegion.getRelevantNode()`, which:
+
+1. Runs `NodeManager.relevant()` to get ready nodes sorted by load metrics
+2. Sorts that list by average voice WebSocket ping for the region (lower = better)
+3. Returns the first result
+
+Ping data is collected from `queueUpdate` ticks — each tick carries the voice WebSocket latency from Lavalink. The average is computed over the current `statsInterval` window (default 60s). Nodes with no ping data for the region yet are treated as having 0ms ping, so they're tried first until data accumulates.
+
+## Connection state
+
+```ts
+const voice = player.voices.get(guildId)!;
+
+voice.connected; // true when Lavalink's player state reports connected AND
+// the node session ID matches the current node's session
+voice.reconnecting; // true during a voice reconnect triggered by Discord close codes
+voice.disconnected; // true when not connected and not reconnecting
+voice.changingNode; // true while changeNode() is in progress
+voice.destroyed; // true if this VoiceState instance is no longer the active one
+
+voice.channelId; // current voice channel ID
+voice.regionId; // voice region extracted from the endpoint (e.g. 'us-east')
+voice.ping; // voice WebSocket latency in ms, sourced from Lavalink player state
+voice.node; // the Node this connection is on
+
+voice.selfDeaf; // whether the bot has deafened itself
+voice.selfMute; // whether the bot has muted itself
+voice.serverDeaf; // whether the guild has deafened the bot
+voice.serverMute; // whether the guild has muted the bot
+voice.suppressed; // whether the bot is suppressed (stage channels)
+```
+
+<Aside type="caution">
+  Check `voice.reconnecting` and `voice.changingNode` before issuing playback commands. Both are transient and resolve
+  on their own — commands issued during them may fail or produce unexpected results.
+</Aside>
+
+## Automatic voice reconnection
+
+When Discord closes the voice WebSocket, discolink emits `voiceClose` and checks the close code. For recoverable codes — `AuthenticationFailed`, `ServerNotFound`, `SessionNoLongerValid` — it sets `voice.reconnecting = true` and calls `voice.connect()` to re-establish. If reconnection fails, the voice connection and its queue are destroyed.
+
+Non-recoverable codes (e.g. `Disconnected`, `DisconnectedRateLimited`) do not trigger reconnection.
+
+## Disconnecting and destroying
+
+```ts
+// Leave the channel but keep the VoiceState and queue alive
+await player.voices.disconnect(guildId);
+
+// Tear everything down — destroys the queue first, then the VoiceState
+await player.voices.destroy(guildId, "User left the channel");
+```
+
+`destroy()` is the right call when you're done with a guild — on channel delete, bot kick, or the last user leaving. If a queue exists for the guild, `voices.destroy()` delegates to `queues.destroy()` which handles both.
+
+<Aside type="note">
+  `disconnect()` does not permanently sever the connection. If a `VOICE_SERVER_UPDATE` arrives from Discord while the
+  `VoiceState` is still alive (i.e. not destroyed), discolink will process it and the bot may reconnect automatically.
+  The only way to prevent this is to call `destroy()`, which will destroy the queue as well.
+</Aside>
+
+You can also call these directly on a `VoiceState` instance:
+
+```ts
+const voice = player.voices.get(guildId)!;
+await voice.connect(); // reconnect to the same channel
+await voice.connect(otherChannelId); // move to a different channel
+await voice.disconnect();
+await voice.destroy("reason");
+```
+
+## Moving to a different node
+
+```ts
+await player.voices.get(guildId)!.changeNode("eu-west");
+```
+
+`changeNode()` migrates the player to the new node:
+
+1. Destroys the player on the old node
+2. Creates it on the new node with the same filters, volume, and paused state
+3. If a track was playing and the new node supports its source, resumes from the current position
+4. Emits `voiceChange` with the previous node and whether playback was active
+
+If `changeNode()` is already in progress for this voice state, the call returns the existing promise.
+
+With `relocateQueues: true` (the default), this happens automatically when a node closes or disconnects. The relocation algorithm distributes queues across available nodes proportionally by their load scores.
+
+Full API: [VoiceState](/api/classes/Voice.VoiceState.html)

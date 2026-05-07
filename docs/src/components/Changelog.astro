@@ -1,0 +1,241 @@
+---
+/**
+ * Reads the root CHANGELOG.md at build time, parses it into structured
+ * release sections, and renders them with automatic "latest" / "breaking" badges.
+ *
+ * Parsing rules (release-please format):
+ *   - Version headings: ## [x.y.z](compare-url) (YYYY-MM-DD)
+ *   - Breaking indicator: any section containing "### ⚠ BREAKING CHANGES"
+ *   - Commit hash suffixes: " ([abc1234](commit-url))" stripped from bullets
+ */
+
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+// Read from the workspace root (two levels up from docs/)
+const raw = readFileSync(resolve('..', 'CHANGELOG.md'), 'utf-8');
+
+interface Release {
+  version: string;
+  compareUrl: string | null;
+  date: string;
+  breaking: boolean;
+  sections: { title: string; items: string[] }[];
+}
+
+function parseChangelog(md: string): Release[] {
+  const releases: Release[] = [];
+
+  // Split on version headings, keeping the heading in each chunk
+  const chunks = md.split(/^(?=## \[)/m).filter(c => c.trim().startsWith('## ['));
+
+  for (const chunk of chunks) {
+    const lines = chunk.split('\n');
+    const heading = lines[0];
+
+    // ## [4.6.1](url) (2026-04-16)
+    const headingMatch = heading.match(
+      /^## \[([^\]]+)\]\(([^)]+)\)\s+\((\d{4}-\d{2}-\d{2})\)/
+    );
+    if (!headingMatch) continue;
+
+    const [, version, compareUrl, date] = headingMatch;
+    const body = lines.slice(1).join('\n');
+    const breaking = /###\s+⚠\s+BREAKING CHANGES/i.test(body);
+
+    // Parse sub-sections (### Heading)
+    const sections: { title: string; items: string[] }[] = [];
+    const sectionChunks = body.split(/^(?=### )/m).filter(s => s.trim());
+
+    for (const sec of sectionChunks) {
+      const secLines = sec.split('\n');
+      const title = secLines[0].replace(/^###\s+/, '').replace(/^⚠\s+/, '').trim();
+
+      const items = secLines
+        .slice(1)
+        .filter(l => /^[*-]\s+/.test(l))
+        .map(l => {
+          let text = l
+            .replace(/^[*-]\s+/, '')
+            // strip trailing commit hash links: " ([abc1234](url))"
+            .replace(/\s+\(\[[0-9a-f]{7,}\]\([^)]+\)\)\s*$/g, '')
+            // strip inline commit hash links mid-line too
+            .replace(/\s*\(\[[0-9a-f]{7,}\]\([^)]+\)\)/g, '')
+            .trim();
+          // Convert markdown inline links [text](url) → <a href="url">text</a>
+          text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+          // Convert **bold** → <strong>bold</strong>
+          text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+          // Convert `code` → <code>code</code>
+          text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+          return text;
+        })
+        .filter(Boolean);
+
+      if (items.length > 0) sections.push({ title, items });
+    }
+
+    releases.push({ version, compareUrl, date, breaking, sections });
+  }
+
+  return releases;
+}
+
+const releases = parseChangelog(raw);
+const latestVersion = releases[0]?.version;
+
+// Section title normalisation for display
+function displayTitle(title: string): string {
+  const map: Record<string, string> = {
+    'Bug Fixes': 'Bug fixes',
+    'Features': 'Features',
+    'BREAKING CHANGES': 'Breaking changes',
+  };
+  return map[title] ?? title;
+}
+---
+
+<div class="changelog">
+  {releases.map((release, i) => (
+    <section class="release" id={`v${release.version}`}>
+      <div class="release-header">
+        <h2>
+          {release.compareUrl
+            ? <a href={release.compareUrl}>{release.version}</a>
+            : release.version}
+          {release.version === latestVersion && (
+            <span class="badge badge-latest">latest</span>
+          )}
+          {release.breaking && (
+            <span class="badge badge-breaking">breaking</span>
+          )}
+          <span class="release-date">{release.date}</span>
+        </h2>
+      </div>
+
+      {release.sections.map(section => (
+        <div class="release-section">
+          <h3>{displayTitle(section.title)}</h3>
+          <ul>
+            {section.items.map(item => (
+              <li set:html={item} />
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  ))}
+</div>
+
+<style>
+  .changelog {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .release {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--dl-table-border);
+  }
+
+  .release:last-child {
+    border-bottom: none;
+  }
+
+  .release-header h2 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    border: none;
+    padding: 0;
+  }
+
+  .release-header h2 a {
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+
+  .release-header h2 a:hover {
+    color: var(--sl-color-accent-high);
+  }
+
+  .release-date {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--sl-color-gray-3);
+    margin-left: 0.25rem;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15em 0.55em;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.6;
+  }
+
+  .badge-latest {
+    background-color: rgba(74, 160, 74, 0.2);
+    color: #7ecf7e;
+    border: 1px solid rgba(74, 160, 74, 0.4);
+  }
+
+  .badge-breaking {
+    background-color: rgba(180, 60, 60, 0.2);
+    color: #f08080;
+    border: 1px solid rgba(180, 60, 60, 0.4);
+  }
+
+  :root[data-theme='light'] .badge-latest {
+    background-color: rgba(40, 120, 40, 0.1);
+    color: #2a6e2a;
+    border-color: rgba(40, 120, 40, 0.3);
+  }
+
+  :root[data-theme='light'] .badge-breaking {
+    background-color: rgba(160, 40, 40, 0.1);
+    color: #8b1a1a;
+    border-color: rgba(160, 40, 40, 0.3);
+  }
+
+  /* Section headings */
+  .release-section h3 {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+    margin: 1rem 0 0.4rem;
+    border: none;
+    padding: 0;
+  }
+
+  .release-section ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .release-section li {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--sl-color-gray-2);
+  }
+
+  /* Bold scope labels like **VoiceRegion:** */
+  .release-section li strong {
+    color: var(--sl-color-gray-1);
+  }
+</style>
