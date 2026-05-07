@@ -40,6 +40,10 @@ jobs:
         run: npm ci
         working-directory: docs
 
+      - name: Rebuild sharp for Linux
+        run: npm rebuild sharp
+        working-directory: docs
+
       - name: Build documentation
         run: npm run build
         working-directory: docs
