@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.2](https://github.com/execaman/discolink/compare/v4.6.1...v4.6.2) (2026-05-07)
+
+
+### Bug Fixes
+
+* docs build and workspace scripts ([#56](https://github.com/execaman/discolink/issues/56)) ([e2e7b71](https://github.com/execaman/discolink/commit/e2e7b71f09c847bb25bbec7980f37cddcd7dfcf1))
+
 ## [4.6.1](https://github.com/execaman/discolink/compare/v4.6.0...v4.6.1) (2026-04-16)
 
 
