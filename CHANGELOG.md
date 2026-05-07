@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.2](https://github.com/execaman/discolink/compare/v4.6.1...v4.6.2) (2026-05-07)
+
+
+### Bug Fixes
+
+* resolve docs build error in CI by normalizing outDir ([#58](https://github.com/execaman/discolink/issues/58)) ([4599ccd](https://github.com/execaman/discolink/commit/4599ccd77876e4a26880a7044ab1b0a04e533526))
+
 ## [4.6.1](https://github.com/execaman/discolink/compare/v4.6.0...v4.6.1) (2026-04-16)
 
 
