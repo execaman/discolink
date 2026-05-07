@@ -1,9 +1,9 @@
 <div align="center">
-  <img alt="Discolink" src="assets/music-album.png" width="120" />
+  <img alt="Discolink" src="docs/src/assets/logo.png" width="120" />
   
   [Icon by juicy_fish](https://www.flaticon.com/authors/juicy-fish)
   <br/>
-  [API Reference](https://execaman.github.io/discolink) | [Coverage](http://app.codecov.io/gh/execaman/discolink)
+  [Documentation](https://execaman.github.io/discolink) | [Coverage](http://app.codecov.io/gh/execaman/discolink)
 
 ![NPM Version](https://img.shields.io/npm/v/discolink?style=flat&logo=npm)
 ![Codecov Coverage](https://img.shields.io/codecov/c/github/execaman/discolink?label=codecov&logo=codecov)

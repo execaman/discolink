@@ -1,0 +1,38 @@
+---
+title: Introduction
+description: What discolink is, what it does, and what it leaves to you.
+---
+
+import { LinkCard, CardGrid } from "@astrojs/starlight/components";
+
+Discolink is the client sitting between your bot and Lavalink. It handles communication with Lavalink, syncs with voice events from Discord, and gives you a queue-based playback API — so you write bot logic, not protocol code.
+
+## What's included
+
+- Multi-node support with automatic reconnection
+- Local and remote player state syncing with Lavalink
+- Fully typed high-level playback methods and filter API
+- Manual or automatic node selection with failover for queues
+- Automatic syncing of Lavalink players to gateway voice updates
+- TypeScript module augmentation for common interfaces and data shapes
+- Plugin system for integrating Lavalink server plugins or adding your own logic
+
+## What's not included
+
+- Discolink is not a framework. No implicit destruction of queues or voice connections, you get to decide when cleanup or resource management is necessary.
+- Session resumption is not built in — the right implementation depends on your scale and persistence layer. The [session resumption](/advanced/session-resumption.html) page discusses this further.
+
+---
+
+<CardGrid>
+  <LinkCard
+    title="Installation"
+    href="/setup/installation.html"
+    description="Install the package and understand requirements and tsconfig."
+  />
+  <LinkCard
+    title="Quick start"
+    href="/setup/quick-start.html"
+    description="Wire up the Player and get audio playing for your bot."
+  />
+</CardGrid>

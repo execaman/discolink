@@ -1,0 +1,148 @@
+---
+title: Playback
+description: Transport controls, queue manipulation, events, repeat, shuffle, and sync.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Transport controls
+
+Every playback method exists on both `Player` (takes a `guildId`) and `Queue` (operates on itself). They're identical in behaviour — use whichever is more convenient.
+
+```ts
+// Via Player
+await player.pause(guildId);
+await player.resume(guildId);
+await player.stop(guildId);
+await player.next(guildId);
+await player.previous(guildId);
+await player.seek(guildId, 30_000); // ms from start
+await player.jump(guildId, 3);
+
+// Via Queue
+const queue = player.getQueue(guildId)!;
+await queue.pause();
+await queue.resume();
+await queue.stop();
+await queue.seek(30_000);
+```
+
+**`stop()` vs `destroy()`** — `stop()` sends `{ track: { encoded: null } }` to Lavalink, clearing the active track while keeping the queue intact. `queue.stopped` becomes `true`. `resume()` calls `jump(0)` to reload the track. `destroy()` tears down the entire queue and voice connection.
+
+**`resume()` behaviour** — if `queue.stopped` is `true`, `resume()` calls `jump(0)` to restart the current track. Otherwise it unpauses.
+
+**`seek()` behaviour** — seeks to the given position in ms. Also unpauses if paused. Throws if the current track is not seekable or if `ms` exceeds the track duration.
+
+## `player.play()` in depth
+
+`player.play()` accepts either a search string or a pre-resolved source:
+
+```ts
+// String query — searches and plays the first result
+await player.play("lofi hip hop", { guildId, voiceId });
+
+// Pre-resolved Track
+await player.play(track, { guildId, voice });
+
+// Array of Tracks
+await player.play([track1, track2], { guildId, voiceId });
+
+// Playlist
+await player.play(playlist, { guildId, voiceId });
+```
+
+When given a string, it searches using the queue's node if a queue exists, or the best available node otherwise. If the result is a `query` type, it takes the first result. If the result is `empty` or `error`, it throws.
+
+If a queue already exists and is stopped, `play()` adds the track and calls `resume()`. If it's already playing, the track is added to the end of the queue.
+
+## Volume
+
+Range is 0–1000. Default is 100. Values above 100 amplify and may clip.
+
+```ts
+await queue.setVolume(80);
+await queue.setVolume(0); // mute
+await queue.setVolume(150); // amplify (may clip)
+```
+
+## Navigation
+
+```ts
+await queue.next(); // advance one track
+await queue.previous(); // go back one track
+await queue.jump(3); // jump to index 3 in the upcoming list
+await queue.jump(0); // restart the current track
+await queue.jump(-1); // jump to the most recent previous track
+await queue.jump(-2); // jump two tracks back
+```
+
+`jump()` always starts playback — it sends the track to Lavalink immediately and triggers `trackStart`. It throws if the queue is empty or the index is out of range.
+
+**`next()` with `repeatMode: 'queue'`** — when the upcoming list is exhausted and there are previous tracks, `next()` moves the oldest previous track to the end of the upcoming list and jumps to it, cycling the queue.
+
+**`next()` with autoplay** — when the upcoming list is exhausted and autoplay is on, `next()` calls `addRelated()` and jumps to the first related track if any are returned.
+
+## Queue manipulation
+
+```ts
+queue.remove(1); // remove by index → Track | undefined
+queue.remove([1, 3, 5]); // remove multiple → Track[]
+queue.remove(-1); // remove the most recent previous track
+```
+
+Index 0 (the current track) can only be removed when `queue.stopped` is `true`.
+
+```ts
+queue.clear(); // remove everything (keeps current if playing)
+queue.clear("current"); // remove current + upcoming only (keeps current if playing)
+queue.clear("previous"); // remove history only
+
+queue.shuffle(); // shuffle upcoming tracks (index 1+), no-op if fewer than 3
+queue.shuffle(true); // pull all previous tracks into upcoming, then shuffle
+```
+
+<Aside type="note">
+  `shuffle()` only shuffles if `tracks.length >= 3`. With 0–2 tracks there's nothing meaningful to shuffle.
+</Aside>
+
+## Repeat and autoplay
+
+```ts
+queue.setRepeatMode("none"); // play through once (default)
+queue.setRepeatMode("track"); // loop the current track indefinitely
+queue.setRepeatMode("queue"); // loop the entire queue
+
+queue.setAutoplay(true);
+queue.setAutoplay(false);
+
+// Add related tracks manually without enabling autoplay
+await queue.addRelated();
+await queue.addRelated(specificTrack);
+```
+
+Autoplay calls `fetchRelatedTracks` when the queue empties after a track finishes. The default implementation returns `[]` — you need to provide your own:
+
+```ts
+const player = new Player({
+  async fetchRelatedTracks(queue, track) {
+    // track is the one that just finished
+    // DO NOT throw — return [] to stop gracefully
+    return [];
+  },
+});
+```
+
+## Syncing with Lavalink
+
+If local state drifts — most commonly after a node reconnect:
+
+```ts
+await queue.sync(); // pull state from Lavalink (default)
+await queue.sync("remote"); // push local state to Lavalink
+
+// Sync all queues on a node at once
+await player.queues.sync("us-east", "local");
+await player.queues.sync("us-east", "remote");
+```
+
+`autoSync: true` (the default) calls `queues.sync(node, 'remote')` automatically when a node reconnects without resuming its session.

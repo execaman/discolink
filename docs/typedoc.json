@@ -1,0 +1,35 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "plugin": [
+    "typedoc-plugin-dt-links",
+    "typedoc-plugin-mdn-links",
+    "typedoc-material-theme",
+    "./typedoc/events-plugin.mjs"
+  ],
+  "tsconfig": "../tsconfig.json",
+  "entryPoints": [
+    "../src/Typings",
+    "../src/Constants",
+    "../src/Functions",
+    "../src/Node",
+    "../src/Voice",
+    "../src/Queue",
+    "../src/Plugins",
+    "../src/Main"
+  ],
+  "sort": ["enum-member-source-order"],
+  "projectDocuments": ["../CHANGELOG.md"],
+  "excludeExternals": true,
+  "themeColor": "#9e6a03",
+  "out": "../site/api",
+  "name": "Discolink",
+  "readme": "none",
+  "defaultCategory": "Miscellaneous",
+  "favicon": "./src/assets/logo.png",
+  "customCss": "./src/styles/td-custom.css",
+  "navigationLinks": {
+    "GitHub": "https://github.com/execaman/discolink",
+    "Docs": "/"
+  },
+  "githubPages": false
+}

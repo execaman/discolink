@@ -1,0 +1,197 @@
+---
+title: Player
+description: About Player and how its three managers work, how to iterate them, and how the Player initializes.
+---
+
+import { Steps, Aside } from "@astrojs/starlight/components";
+
+`Player` owns three managers — `nodes`, `voices`, and `queues` — each responsible for one layer of the system. All three are immutable after construction and safe to destructure.
+
+```
+Player
+├── NodeManager   (player.nodes)   — Lavalink WebSocket + REST connections
+├── VoiceManager  (player.voices)  — Discord voice connections per guild
+└── QueueManager  (player.queues)  — playback queues per guild
+```
+
+## Player options reference
+
+| Option               | Default      | Description                                                                            |
+| -------------------- | ------------ | -------------------------------------------------------------------------------------- |
+| `nodes`              | required     | Array of node options                                                                  |
+| `forwardVoiceUpdate` | required     | Callback to send voice gateway payloads to Discord                                     |
+| `autoInit`           | `true`       | Call `init()` automatically on Discord `READY`                                         |
+| `autoSync`           | `true`       | Push local queue state to Lavalink when a node reconnects without resuming             |
+| `queryPrefix`        | `"ytsearch"` | Default search prefix for non-URL queries                                              |
+| `relocateQueues`     | `true`       | Migrate queues to another node when their node closes or disconnects                   |
+| `fetchRelatedTracks` | returns `[]` | Called by autoplay when the queue empties — return `Track[]` to continue, `[]` to stop |
+| `plugins`            | `[]`         | Plugins to initialize after nodes are created but before they connect                  |
+
+## Working with managers
+
+All three managers implement a partial `Map` interface. You get `get`, `has`, `size`, `keys`, `values`, `entries`, and `[Symbol.iterator]` — so every iteration pattern that works on a `Map` works here too.
+
+```ts
+// Size
+player.nodes.size; // number of registered nodes
+player.voices.size; // number of active voice connections
+player.queues.size; // number of active queues
+
+// Lookup
+player.nodes.get("us-east"); // Node | undefined
+player.voices.get(guildId); // VoiceState | undefined
+player.queues.get(guildId); // Queue | undefined
+
+// Existence check
+player.nodes.has("us-east"); // boolean
+player.voices.has(guildId); // boolean
+player.queues.has(guildId); // boolean
+
+// Explicit iteration
+for (const [name, node] of player.nodes.entries()) {
+  /* ... */
+}
+for (const [id, voice] of player.voices.entries()) {
+  /* ... */
+}
+for (const [id, queue] of player.queues.entries()) {
+  /* ... */
+}
+
+// Implicit iteration — managers are directly iterable
+for (const [name, node] of player.nodes) {
+  /* ... */
+}
+for (const [id, voice] of player.voices) {
+  /* ... */
+}
+for (const [id, queue] of player.queues) {
+  /* ... */
+}
+
+// Keys, values
+for (const name of player.nodes.keys()) {
+  /* ... */
+}
+for (const queue of player.queues.values()) {
+  /* ... */
+}
+
+// Spread / Array.from
+const allQueues = [...player.queues.values()];
+const nodeNames = Array.from(player.nodes.keys());
+```
+
+`NodeManager` also exposes two additional read-only maps:
+
+```ts
+player.nodes.info; // Map<string, LavalinkInfo>  — cached node info per node name
+player.nodes.metrics; // Map<string, NodeMetrics>   — live scoring metrics per node name
+```
+
+These are populated automatically — `info` on `nodeReady`, `metrics` on every stats dispatch.
+
+## All player events
+
+`Player` extends `EventEmitter`. Subscribe with `player.on(event, handler)`.
+
+**Node events**
+
+```ts
+player.on("nodeConnect", (node, reconnects) => {
+  // Socket opened. reconnects > 0 means this was a reconnect attempt.
+});
+
+player.on("nodeReady", (node, resumed, sessionId) => {
+  // Node has a session ID and is ready to use.
+  // resumed: true if Lavalink kept the previous session.
+});
+
+player.on("nodeClose", (node, code, reason) => {
+  // Unexpected close — reconnection will be attempted.
+  // Queue relocation may happen here if relocateQueues is true.
+});
+
+player.on("nodeDisconnect", (node, code, reason, byLocal) => {
+  // Final disconnect — no more reconnect attempts.
+  // byLocal: true if your code called disconnect().
+});
+
+player.on("nodeError", (node, error) => {
+  /* WebSocket error */
+});
+
+player.on("nodeDispatch", (node, payload) => {
+  // Every raw Lavalink WebSocket payload — useful for plugins and debugging.
+});
+```
+
+**Voice events**
+
+```ts
+player.on("voiceConnect", (voice) => {
+  // Received and forwarded voice server update to Lavalink.
+});
+
+player.on("voiceClose", (voice, code, reason, byRemote) => {
+  // Discord voice WebSocket closed.
+  // byRemote: true if Discord closed it (kick, server crash, etc.)
+  // Recoverable codes trigger automatic reconnection.
+});
+
+player.on("voiceChange", (voice, previousNode, wasPlaying) => {
+  // Queue migrated to a different node.
+  // wasPlaying: true if a track was playing when the migration happened.
+});
+
+player.on("voiceDestroy", (voice, reason) => {
+  // Voice connection torn down. Queue is also destroyed at this point.
+});
+```
+
+**Queue events**
+
+```ts
+player.on("queueCreate", (queue) => {
+  /* queue created */
+});
+
+player.on("queueUpdate", (queue, state) => {
+  // Fires on every Lavalink player state tick (every 5s by default).
+  // state: { time, position, connected, ping }
+  // Use queue.currentTime for an interpolated position between ticks.
+});
+
+player.on("queueFinish", (queue) => {
+  // Queue is empty and autoplay returned nothing.
+  player.voices.destroy(queue.guildId, "Queue finished");
+});
+
+player.on("queueDestroy", (queue, reason) => {
+  /* clean up UI state */
+});
+```
+
+**Track events**
+
+```ts
+player.on("trackStart", (queue, track, inQueue) => {
+  console.log(`▶ ${track.title} [${track.formattedDuration}]`);
+});
+
+player.on("trackFinish", (queue, track, reason, inQueue) => {
+  // reason: 'finished' | 'loadFailed' | 'stopped' | 'replaced' | 'cleanup'
+  if (reason === "loadFailed") console.error(`Failed: ${track.title}`);
+});
+
+player.on("trackError", (queue, track, exception, inQueue) => {
+  // exception.severity: 'common' | 'suspicious' | 'fault'
+  console.error(`[${exception.severity}] ${exception.message}`);
+});
+
+player.on("trackStuck", (queue, track, thresholdMs, inQueue) => {
+  queue.next(); // skip the stuck track
+});
+```
+
+The `inQueue` boolean indicates whether `track` is the exact object instance in `queue.tracks`. It's `false` only for the `replaced` end reason — in that case use `queue.track` for the currently playing track instead.

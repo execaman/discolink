@@ -1,0 +1,186 @@
+---
+title: Nodes
+description: Connecting to Lavalink servers and letting discolink manage them.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+A node is a connection to a single Lavalink server. `player.nodes` is a `NodeManager` that handles all of them — connecting, reconnecting, scoring, routing, and cleanup.
+
+## Declaring nodes
+
+Nodes are declared in the `Player` constructor. `clientId` is injected automatically from `player.init()` — you don't pass it yourself.
+
+```ts
+const player = new Player({
+  nodes: [
+    { name: "us-east", origin: "http://lavalink-us.example.com:2333", password: "secret" },
+    { name: "eu-west", origin: "http://lavalink-eu.example.com:2333", password: "secret" },
+  ],
+  // ...
+});
+```
+
+Adding a node at runtime (requires `player.init()` to have been called first):
+
+```ts
+const node = player.nodes.create({
+  name: "backup",
+  origin: "http://backup.example.com:2333",
+  password: "secret",
+});
+await player.nodes.connect("backup");
+```
+
+## Node states
+
+| State          | Meaning                                                |
+| -------------- | ------------------------------------------------------ |
+| `connecting`   | WebSocket handshake in progress                        |
+| `connected`    | Socket open, waiting for the Lavalink ready payload    |
+| `ready`        | Has a session ID — safe to use for queues and searches |
+| `reconnecting` | Unexpected close, retrying after `reconnectDelay` ms   |
+| `disconnected` | Not connected, no retry scheduled                      |
+
+Only `ready` nodes are eligible for new queues and searches.
+
+```ts
+const node = player.nodes.get("us-east")!;
+
+node.state; // NodeState string
+node.ready; // boolean shorthand for state === 'ready'
+node.connecting; // boolean
+node.connected; // boolean (socket open, may not be ready yet)
+node.reconnecting; // boolean
+node.disconnected; // boolean
+
+node.name; // 'us-east'
+node.clientId; // bot's user ID (set during init)
+node.sessionId; // Lavalink session ID, null until ready
+node.ping; // WebSocket round-trip in ms, null until first pong
+node.stats; // latest StatsPayload, null until first stats dispatch
+
+node.reconnectLimit; // max reconnect attempts (default 3, -1 = unlimited, 0 = none)
+node.reconnectAttempts; // current attempt count, resets on successful connect
+```
+
+Check state via the manager:
+
+```ts
+player.nodes.state("us-east"); // → NodeState string
+player.nodes.state("us-east", "ready"); // → boolean
+```
+
+## Reconnection behaviour
+
+When a node closes unexpectedly, discolink schedules a reconnect after `reconnectDelay` ms (default 10 000). It retries up to `reconnectLimit` times. Once the limit is reached, the node moves to `disconnected` and `nodeDisconnect` fires.
+
+Set `reconnectLimit: -1` for unlimited retries, `0` to disable reconnection entirely.
+
+The ping keep-alive timer fires every `statsInterval + highestLatency` ms (defaults: 60 000 + 2 000 = 62 000 ms). If no pong arrives within that window, the socket is terminated and reconnection begins.
+
+When a node reconnects **without** resuming its session and `autoSync: true` (the default), discolink pushes local queue state to Lavalink so playback can continue:
+
+```ts
+player.on("nodeReady", (node, resumed, sessionId) => {
+  // resumed: true  → Lavalink kept the session, queues are intact
+  // resumed: false → fresh session, autoSync pushed local state if enabled
+});
+```
+
+## Automatic node selection
+
+`NodeManager.relevant()` returns ready nodes sorted by a composite score. Three metrics are computed from each stats dispatch:
+
+| Metric      | Range         | How it's computed                                                                         |
+| ----------- | ------------- | ----------------------------------------------------------------------------------------- |
+| `memory`    | `0–1`         | Weighted blend of free/reservable (70%) and allocable/reservable (30%)                    |
+| `workload`  | `0–1`         | `1 - min(1, systemLoad×0.7 + lavalinkLoad×0.3)` — higher = less loaded                    |
+| `streaming` | `0–1` or `-1` | Frame pass rate minus weighted loss/deficit. `-1` when no active players (no frame stats) |
+
+The weight inputs you pass to `relevant()` are clamped to `[0, 1]`. Defaults: `{ memory: 0.3, workload: 0.2, streaming: 0.5 }`.
+
+```ts
+const [best] = player.nodes.relevant();
+
+// Tune for your workload — e.g. prioritise CPU headroom
+const [best] = player.nodes.relevant({ memory: 0.2, workload: 0.6, streaming: 0.2 });
+```
+
+Nodes with `streaming: -1` (no active players yet) sort after nodes with real data. Nodes with no metrics at all (never received a stats payload) sort last.
+
+## Feature detection
+
+Query which nodes support a given source, filter, or plugin before routing to them. Requires node info to be cached — fetched automatically on `nodeReady`.
+
+```ts
+// All nodes that have the 'soundcloud' source manager
+const nodes = player.nodes.supports("source", "soundcloud");
+
+// Check a specific node
+player.nodes.supports("source", "soundcloud", "us-east"); // boolean
+player.nodes.supports("filter", "timescale", "us-east"); // boolean
+player.nodes.supports("plugin", "LavaLyrics", "us-east"); // boolean
+```
+
+Feature types: `"source"` (source managers), `"filter"` (filter names), `"plugin"` (plugin names).
+
+## Info and stats
+
+```ts
+// Fetch and cache node info — cache-first, only hits REST once per node
+const info = await player.nodes.fetchInfo("us-east");
+info.version.semver; // e.g. '4.0.8'
+info.sourceManagers; // string[] — depends on your server config
+info.filters; // string[] — e.g. ['equalizer', 'timescale', 'rotation', ...]
+info.plugins; // [{ name: string, version: string }]
+info.jvm; // JVM version string
+info.lavaplayer; // Lavaplayer version string
+
+// Live stats from the last stats dispatch (~every 60s)
+const node = player.nodes.get("us-east")!;
+node.stats?.players; // total connected players
+node.stats?.playingPlayers; // players currently playing
+node.stats?.uptime; // node uptime in ms
+node.stats?.memory.used; // bytes
+node.stats?.memory.free; // bytes
+node.stats?.cpu.systemLoad; // 0.0–1.0
+node.stats?.cpu.lavalinkLoad; // 0.0–1.0
+node.stats?.frameStats; // null when no active players
+```
+
+The cached info is also available directly:
+
+```ts
+player.nodes.info.get("us-east"); // LavalinkInfo | undefined
+player.nodes.metrics.get("us-east"); // NodeMetrics | undefined
+```
+
+## Connecting and disconnecting
+
+```ts
+// Connect all nodes (called by player.init() automatically)
+await player.nodes.connect();
+
+// Connect a specific node
+await player.nodes.connect("backup"); // → boolean (true if connected)
+
+// Disconnect a specific node
+await player.nodes.disconnect("backup");
+
+// Disconnect all nodes
+await player.nodes.disconnect();
+```
+
+## Removing a node
+
+A node can only be deleted when it's `disconnected` and has no queues assigned to it. Attempting to delete an active node throws.
+
+```ts
+await player.nodes.disconnect("backup");
+const removed = player.nodes.delete("backup"); // → boolean
+```
+
+On deletion, the node's entry is removed from `info`, `metrics`, and all `VoiceRegion` ping stats.
+
+<Aside type="tip">Full option types: [NodeOptions](/api/interfaces/Typings.NodeOptions.html)</Aside>

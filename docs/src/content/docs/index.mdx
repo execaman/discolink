@@ -1,0 +1,39 @@
+---
+title: Discolink
+description: A Lavalink client for Discord bots in TypeScript
+template: splash
+hero:
+  tagline: A TypeScript client for Lavalink. Handles nodes, voice connections, queues, and filters so your bot handles music.
+  image:
+    file: ../../assets/logo.png
+  actions:
+    - text: Get started
+      link: /setup/introduction.html
+      icon: right-arrow
+      variant: primary
+    - text: API reference
+      link: /api/classes/Main.Player.html
+      icon: open-book
+      variant: secondary
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+<CardGrid stagger>
+  <Card title="Multi-node support" icon="random">
+    Connect to multiple Lavalink servers. discolink handles load balancing, automatic reconnection, and queue failover
+    when a node goes down.
+  </Card>
+  <Card title="Voice management" icon="setting">
+    The Discord voice handshake is handled for you. Connect, disconnect, move channels, and migrate between nodes — all
+    through a single API.
+  </Card>
+  <Card title="Queue and filter API" icon="list-format">
+    Per-guild queues with tracks, history, repeat modes, shuffle, and a full filter suite including equalizer,
+    timescale, rotation, and more.
+  </Card>
+  <Card title="Fully typed" icon="approve-check">
+    Augment four interfaces to attach your own context, user data, and plugin filters. The types propagate through every
+    method that touches them.
+  </Card>
+</CardGrid>

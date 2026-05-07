@@ -1,0 +1,22 @@
+{
+  "name": "docs",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build && typedoc",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.38.4",
+    "astro": "^6.1.9",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "typedoc": "^0.28.19",
+    "typedoc-material-theme": "^1.4.1",
+    "typedoc-plugin-dt-links": "^2.0.50",
+    "typedoc-plugin-mdn-links": "^5.1.1"
+  }
+}

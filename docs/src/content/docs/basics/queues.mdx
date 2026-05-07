@@ -1,0 +1,230 @@
+---
+title: Queues
+description: The queue model, creating queues, searching, track and playlist properties.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## The model
+
+A `Queue` is the playback state for a single guild. It maintains two arrays:
+
+- **`tracks`** — index 0 is the current track, everything after is upcoming
+- **`previousTracks`** — tracks that have already played, most recent last
+
+```
+previousTracks[0..n]  ←  previousTrack  |  track (current)  ·  tracks[1]  ·  tracks[2]  →
+```
+
+`next()` advances the cursor — the current track moves to `previousTracks` and the next one becomes current. `previous()` moves it back. `jump(n)` teleports to any index in either direction, including negative indices into `previousTracks`.
+
+Each `Queue` holds references to its `VoiceState` and `Node`:
+
+```ts
+queue.voice; // VoiceState — the voice connection for this guild
+queue.node; // Node — shorthand for queue.voice.node
+queue.rest; // REST — shorthand for queue.voice.node.rest
+queue.guildId; // string — shorthand for queue.voice.guildId
+```
+
+## Creating a queue
+
+`player.play()` is the fastest path — it searches, creates the queue if needed, and starts playback:
+
+```ts
+await player.play("lofi hip hop", { guildId, voiceId: voiceChannelId });
+```
+
+For more control, create the queue explicitly. If a voice connection doesn't exist yet, `queues.create()` establishes it first:
+
+```ts
+const queue = await player.queues.create({
+  guildId,
+  voiceId: voiceChannelId,
+  node: "us-east", // optional: pin to a node
+  context: { textChannelId }, // optional: attach your own data
+  volume: 80, // optional: initial volume (0–1000)
+  filters: { timescale: { speed: 1.2 } }, // optional: initial filters
+});
+```
+
+If a queue already exists for the guild, `create()` returns it immediately without creating a duplicate.
+
+## Searching
+
+```ts
+// Search via the player (uses the best available node)
+const result = await player.search("never gonna give you up");
+
+// Search via the queue (uses the queue's assigned node)
+const result = await queue.search("query", "scsearch");
+```
+
+The second argument is the search prefix. It defaults to `player.options.queryPrefix` (`"ytsearch"` by default). Common values:
+
+| Prefix      | Source            |
+| ----------- | ----------------- |
+| `ytsearch`  | YouTube (default) |
+| `ytmsearch` | YouTube Music     |
+| `scsearch`  | SoundCloud        |
+
+Direct URLs are detected automatically and bypass the prefix entirely.
+
+```ts
+switch (result.type) {
+  case "track":
+    queue.add(result.data);
+    break;
+  case "playlist":
+    queue.add(result.data);
+    break;
+  case "query":
+    queue.add(result.data[0]!);
+    break;
+  case "empty":
+    /* no results */ break;
+  case "error":
+    console.error(result.data.message);
+    break;
+}
+```
+
+## Adding tracks
+
+`queue.add()` accepts a `Track`, an array of `Track`s, or a `Playlist`. The optional second argument is shallow-merged into every track's `userData`:
+
+```ts
+queue.add(track);
+queue.add([track1, track2, track3]);
+queue.add(playlist);
+queue.add(tracks, { requestedBy: userId, requestedAt: Date.now() });
+```
+
+`add()` returns the queue itself, so it's chainable.
+
+## Queue state
+
+```ts
+queue.track; // current Track | null
+queue.previousTrack; // most recent previous Track | null
+queue.tracks; // Track[] — index 0 is current, rest are upcoming
+queue.previousTracks; // Track[] — most recent last
+
+queue.length; // number of current + upcoming tracks
+queue.totalLength; // all tracks including previous
+
+queue.playing; // true when unpaused AND Lavalink has a track loaded
+queue.paused; // true when the Lavalink player is paused
+queue.stopped; // true when queue has a current track but Lavalink doesn't
+// (track was stopped via stop() — resume() will restart it)
+queue.finished; // true when tracks[] is empty (no current or next)
+queue.empty; // true when both tracks[] and previousTracks[] are empty
+queue.hasNext; // true when tracks.length > 1
+queue.hasPrevious; // true when previousTracks.length > 0
+queue.destroyed; // true when this instance is no longer the active queue for the guild
+
+queue.volume; // current volume (0–1000)
+queue.repeatMode; // 'none' | 'track' | 'queue'
+queue.autoplay; // boolean
+
+queue.duration; // total ms of current + upcoming tracks (live tracks excluded)
+queue.formattedDuration; // e.g. "1:23:45"
+queue.currentTime; // estimated playback position in ms, interpolated between ticks
+queue.formattedCurrentTime; // e.g. "2:34"
+```
+
+The distinction between `stopped`, `paused`, and `finished` matters:
+
+- `paused` — Lavalink has the track loaded but is not advancing. `resume()` unpauses.
+- `stopped` — the queue has a track at index 0 but Lavalink has no track. `resume()` calls `jump(0)` to reload it.
+- `finished` — `tracks[]` is empty. There is no current track to resume.
+
+## Track properties
+
+```ts
+track.id; // source identifier (e.g. YouTube video ID)
+track.title; // track title (default: "Unknown Track")
+track.author; // track author (default: "Unknown Author")
+track.duration; // duration in ms (Infinity for live streams)
+track.formattedDuration; // e.g. "3:45" or "Live"
+track.isLive; // true for streams
+track.isSeekable; // true if seeking is supported
+track.uri; // source URI (may be null)
+track.url; // same as uri if it's a valid URL, otherwise null
+track.artworkUrl; // artwork image URL (may be null)
+track.isrc; // ISRC code (may be null)
+track.sourceName; // e.g. 'youtube', 'soundcloud', 'bandcamp'
+track.encoded; // base64 encoded track data (used by Lavalink)
+track.userData; // your attached data — typed via augmentation
+track.pluginInfo; // plugin-provided metadata — typed via augmentation
+```
+
+`track.toString()` returns `track.title`, so tracks can be used directly in template literals.
+
+## Playlist properties
+
+When a search returns `type: 'playlist'`, the data is a `Playlist`:
+
+```ts
+playlist.name; // playlist name (default: "Unknown Playlist")
+playlist.tracks; // Track[]
+playlist.selectedTrack; // index of the track the source URL pointed to, -1 if none
+playlist.duration; // total ms (live tracks excluded)
+playlist.formattedDuration; // e.g. "4:32:10"
+playlist.pluginInfo; // plugin-provided metadata — typed via augmentation
+```
+
+`playlist.toString()` returns `playlist.name`.
+
+## Syncing with Lavalink
+
+If local state drifts — most commonly after a node reconnect — you can sync in either direction:
+
+```ts
+await queue.sync(); // pull Lavalink's state into the local queue (default)
+await queue.sync("remote"); // push local queue state to Lavalink
+
+// Sync all queues on a node at once
+await player.queues.sync("us-east", "local");
+await player.queues.sync("us-east", "remote");
+```
+
+`autoSync: true` (the default) calls `queues.sync(node, 'remote')` automatically when a node reconnects without resuming its session, so local state is pushed to the fresh Lavalink session.
+
+## Autoplay
+
+When the queue empties and autoplay is on, discolink calls `fetchRelatedTracks`. You provide the implementation:
+
+```ts
+const player = new Player({
+  async fetchRelatedTracks(queue, track) {
+    // track is the one that just finished
+    // return Track[] to continue, [] to stop
+    return [];
+  },
+});
+
+queue.setAutoplay(true);
+```
+
+<Aside type="note">The default `fetchRelatedTracks` returns `[]`. Autoplay does nothing until you implement it.</Aside>
+
+Add related tracks manually without enabling autoplay:
+
+```ts
+await queue.addRelated(); // uses current or previous track as reference
+await queue.addRelated(specificTrack); // use a specific reference track
+```
+
+## Destroying a queue
+
+Always destroy queues when they're no longer needed:
+
+```ts
+await queue.destroy("Channel deleted");
+await player.queues.destroy(guildId, "reason"); // via manager
+```
+
+`destroy()` calls Lavalink's REST API to remove the player, emits `queueDestroy`, then delegates to `voices.destroy()` to tear down the voice connection.
+
+Full API: [Queue](/api/classes/Queue.Queue.html)

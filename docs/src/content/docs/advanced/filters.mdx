@@ -1,0 +1,166 @@
+---
+title: Filters & augmentation
+description: Audio filters, TypeScript augmentation, and extending discolink with plugins.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Filters
+
+Each queue has a `FilterManager` at `queue.filters`. Every method sends an update to Lavalink immediately and returns the resulting state — no separate apply step.
+
+### Common presets
+
+```ts
+// Nightcore — faster, higher pitch
+await queue.filters.set("timescale", { speed: 1.3, pitch: 1.3 });
+
+// Vaporwave — slower, lower pitch
+await queue.filters.set("timescale", { speed: 0.8, pitch: 0.8 });
+
+// 8D audio — rotating stereo field
+await queue.filters.set("rotation", { rotationHz: 0.2 });
+
+// Bass boost
+await queue.filters.set("equalizer", [
+  { band: 0, gain: 0.3 },
+  { band: 1, gain: 0.2 },
+  { band: 2, gain: 0.1 },
+]);
+
+// Karaoke — attenuate vocals
+await queue.filters.set("karaoke", { level: 1.0, monoLevel: 1.0, filterBand: 220, filterWidth: 100 });
+
+// Soft tremolo
+await queue.filters.set("tremolo", { frequency: 4, depth: 0.3 });
+```
+
+### Available filters
+
+| Key             | Effect                                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------------------- |
+| `volume`        | Output volume multiplier (0.0–5.0, where 1.0 = 100%). Separate from `queue.setVolume()` which uses 0–1000 |
+| `equalizer`     | 15-band EQ. Each band: `{ band: 0–14, gain: -0.25–1.0 }`                                                  |
+| `karaoke`       | Attenuates a frequency band — typically reduces vocals                                                    |
+| `timescale`     | Adjust `speed`, `pitch`, and `rate` independently (all default to 1.0, must be > 0)                       |
+| `tremolo`       | Rapidly oscillate volume (`frequency` > 0, `depth` > 0 and ≤ 1)                                           |
+| `vibrato`       | Rapidly oscillate pitch (`frequency` > 0 and ≤ 14, `depth` > 0 and ≤ 1)                                   |
+| `rotation`      | Rotate audio around the stereo field — the 8D effect (`rotationHz`)                                       |
+| `distortion`    | Wave-function distortion with sin/cos/tan offset and scale controls                                       |
+| `channelMix`    | Blend left and right channels (`leftToLeft`, `leftToRight`, `rightToLeft`, `rightToRight`, each 0–1)      |
+| `lowPass`       | Suppress high frequencies (`smoothing` > 1.0 — values ≤ 1.0 disable the filter)                           |
+| `pluginFilters` | Filters from Lavalink server plugins                                                                      |
+
+<Aside type="note">
+  Filter availability depends on your Lavalink server. Use `player.nodes.supports('filter', 'timescale', 'us-east')` to
+  check before applying.
+</Aside>
+
+### Reading and checking
+
+```ts
+queue.filters.get("timescale"); // TimescaleFilter | null
+queue.filters.has("rotation"); // boolean
+```
+
+### Removing and composing
+
+```ts
+// Remove specific filters — returns the updated Filters object
+await queue.filters.remove("timescale", "rotation");
+
+// Clear by type — returns the updated Filters object
+await queue.filters.clear(); // remove everything
+await queue.filters.clear("native"); // built-in filters only
+await queue.filters.clear("plugin"); // plugin filters only
+
+// Merge — shallow-merges into the current filter state, returns updated Filters
+await queue.filters.merge({ volume: 1.5 });
+
+// Override — replaces the entire filter state, returns updated Filters
+await queue.filters.override({ timescale: { speed: 1.2 } });
+```
+
+Use `merge` when you want to layer effects on top of what's already active. Use `override` when you want a clean slate.
+
+`set()` returns the value that was just applied:
+
+```ts
+const ts = await queue.filters.set("timescale", { speed: 1.3, pitch: 1.3 });
+// ts → { speed: 1.3, pitch: 1.3 }
+```
+
+### Plugin filters
+
+Plugin filters live under `pluginFilters` in the filter object. Pass `true` as the third argument to `set()`:
+
+```ts
+await queue.filters.set("myFilter", { intensity: 0.8 }, true); // isPlugin = true
+```
+
+Declare the type so it propagates everywhere:
+
+```ts
+declare module "discolink" {
+  interface CommonPluginFilters {
+    myFilter: { intensity: number };
+  }
+}
+```
+
+Full type definitions: [Filters](/api/interfaces/Typings.Filters.html)
+
+---
+
+## TypeScript augmentation
+
+Four interfaces can be augmented. Declare them once in a `.d.ts` file and the types appear everywhere — no casting, zero runtime cost.
+
+| Interface             | What it types                           | Where it appears                                     |
+| --------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `QueueContext`        | Data you attach to a queue              | `queue.context`, `CreateQueueOptions`, `PlayOptions` |
+| `CommonUserData`      | Data you attach to a track              | `track.userData`, `PlayOptions`, `queue.add()`       |
+| `CommonPluginInfo`    | Plugin-provided track/playlist metadata | `track.pluginInfo`, `playlist.pluginInfo`            |
+| `CommonPluginFilters` | Plugin-provided audio filters           | `queue.filters`, all `FilterManager` methods         |
+
+All augmented interfaces extend `JsonObject` — values must be JSON-serializable. Augmentations are compile-time only with no runtime cost.
+
+```ts
+// augment.d.ts — include this file in your tsconfig
+declare module "discolink" {
+  interface QueueContext {
+    textChannelId: string;
+    requestedBy: string;
+  }
+
+  interface CommonUserData {
+    userId: string;
+    username: string;
+  }
+
+  interface CommonPluginFilters {
+    customEcho: { delay: number; decay: number };
+  }
+}
+```
+
+The types flow through without any extra work:
+
+```ts
+const queue = await player.queues.create({
+  guildId,
+  voiceId,
+  context: { textChannelId: "123", requestedBy: "user1" }, // ✓ typed
+});
+
+queue.context.textChannelId; // ✓ string
+
+queue.add(track, { userId: "abc", username: "Alice" }); // ✓ typed
+
+await queue.filters.set("customEcho", { delay: 200, decay: 0.5 }); // ✓ typed
+
+player.on("trackStart", (queue, track) => {
+  console.log(track.userData.username); // ✓ string
+  console.log(queue.context.textChannelId); // ✓ string
+});
+```

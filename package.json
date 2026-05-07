@@ -42,7 +42,6 @@
     "lint": "prettier --check . && tsc --noEmit",
     "test": "vitest run",
     "build": "tsdown",
-    "docs": "typedoc",
     "format": "prettier --log-level error --write .",
     "deps": "ncu --format group --dep",
     "upgrade": "ncu -u && npm update",
@@ -64,10 +63,6 @@
     "npm-check-updates": "^21.0.2",
     "prettier": "^3.8.3",
     "tsdown": "^0.21.8",
-    "typedoc": "^0.28.19",
-    "typedoc-material-theme": "^1.4.1",
-    "typedoc-plugin-dt-links": "^2.0.50",
-    "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.4"
   }

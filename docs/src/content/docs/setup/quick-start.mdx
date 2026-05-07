@@ -1,0 +1,159 @@
+---
+title: Quick start
+description: Wire up the Player and get audio playing in your voice channel.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Create the Player
+
+`Player` is the main entry point. Give it a node and the `forwardVoiceUpdate` callback — It's the bridge between Discolink and your Discord gateway client.
+
+```ts
+import { Client, GatewayIntentBits, SlashCommandBuilder } from "discord.js";
+import { Player } from "discolink";
+
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+});
+
+const node = {
+  name: "main",
+  origin: "http://localhost:2333",
+  password: "youshallnotpass",
+};
+
+const player = new Player({
+  nodes: [node],
+  async forwardVoiceUpdate(guildId, payload) {
+    // Send the raw gateway payload (op 4) to Discord
+    client.guilds.cache.get(guildId)?.shard.send(payload);
+  },
+});
+
+client.login("YOUR_BOT_TOKEN");
+```
+
+The exact send method depends on your library — `shard.send()` for discord.js, `client.ws.send()` for eris, and so on.
+
+## Forward raw payloads
+
+Discord sends two events when a bot joins a voice channel: `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE`. Discolink needs to forward them to your node to establish a voice connection:
+
+```ts
+// discord.js
+// 'rawWS' for eris
+client.on("raw", (payload) => player.voices.handleDispatch(payload));
+```
+
+`handleDispatch` also processes the Discord `READY` event. With `autoInit: true` (the default), this calls `player.init()` automatically. If you prefer explicit control, turn it off and initialize manually:
+
+```ts
+client.once("ready", () => player.init(client.user!.id));
+```
+
+## Add play command
+
+```ts
+const command = new SlashCommandBuilder()
+  .setName("play")
+  .setDescription("Play a song")
+  .addStringOption((option) => option.setName("query").setDescription("The song to play").setRequired(true));
+
+// register the command globally
+client.on("ready", async () => {
+  await player.init(client.user!.id);
+  await client.application!.commands.set([command]);
+});
+```
+
+## Handle play request
+
+```ts
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+  if (interaction.commandName !== "play") return;
+
+  const query = interaction.options.getString("query");
+  const guildId = interaction.guildId;
+  const voiceId = interaction.member.voice.channelId;
+
+  await player.play(query, { guildId, voiceId });
+});
+```
+
+<Aside type="note">
+  This example assumes you've joined a voice channel and query is non-empty; you must check voice permissions,
+  interaction member (requester) in voice, and handle errors in your bot
+</Aside>
+
+## Handle events
+
+`Player` extends `EventEmitter`. At minimum, handle `trackStart` and `queueFinish`:
+
+```ts
+player.on("trackStart", (queue, track) => {
+  console.log(`▶ ${track.title} [${track.formattedDuration}]`);
+});
+
+player.on("queueFinish", (queue) => {
+  player.voices.destroy(queue.guildId, "Queue finished");
+});
+```
+
+## Complete example
+
+```ts
+import { Client, GatewayIntentBits, SlashCommandBuilder } from "discord.js";
+import { Player } from "discolink";
+
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+});
+
+const node = {
+  name: "main",
+  origin: "http://localhost:2333",
+  password: "youshallnotpass",
+};
+
+const player = new Player({
+  nodes: [node],
+  async forwardVoiceUpdate(guildId, payload) {
+    client.guilds.cache.get(guildId)?.shard.send(payload);
+  },
+});
+
+const command = new SlashCommandBuilder()
+  .setName("play")
+  .setDescription("Play a song")
+  .addStringOption((option) => option.setName("query").setDescription("The song to play").setRequired(true));
+
+player.on("trackStart", (queue, track) => {
+  console.log(`▶ ${track.title} [${track.formattedDuration}]`);
+});
+
+player.on("queueFinish", (queue) => {
+  player.voices.destroy(queue.guildId, "Queue finished");
+});
+
+client.on("raw", (payload) => player.voices.handleDispatch(payload));
+
+client.on("ready", async () => {
+  await player.init(client.user!.id);
+  await client.application!.commands.set([command]);
+});
+
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+  if (interaction.commandName !== "play") return;
+
+  const query = interaction.options.getString("query");
+  const guildId = interaction.guildId;
+  const voiceId = interaction.member.voice.channelId;
+
+  await player.play(query, { guildId, voiceId });
+});
+
+client.login("YOUR_BOT_TOKEN");
+```
