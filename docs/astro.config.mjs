@@ -26,34 +26,34 @@ export default defineConfig({
         {
           label: "Setup",
           items: [
-            { label: "Introduction", link: "/discolink/setup/introduction.html" },
-            { label: "Installation", link: "/discolink/setup/installation.html" },
-            { label: "Quick start", link: "/discolink/setup/quick-start.html" },
+            { label: "Introduction", link: "/setup/introduction.html" },
+            { label: "Installation", link: "/setup/installation.html" },
+            { label: "Quick start", link: "/setup/quick-start.html" },
           ],
         },
         {
           label: "Basics",
           items: [
-            { label: "Player", link: "/discolink/basics/player.html" },
-            { label: "Nodes", link: "/discolink/basics/nodes.html" },
-            { label: "Voice", link: "/discolink/basics/voice.html" },
-            { label: "Queues", link: "/discolink/basics/queues.html" },
+            { label: "Player", link: "/basics/player.html" },
+            { label: "Nodes", link: "/basics/nodes.html" },
+            { label: "Voice", link: "/basics/voice.html" },
+            { label: "Queues", link: "/basics/queues.html" },
           ],
         },
         {
           label: "Advanced",
           items: [
-            { label: "Playback", link: "/discolink/advanced/playback.html" },
-            { label: "Filters & augmentation", link: "/discolink/advanced/filters.html" },
-            { label: "Plugins", link: "/discolink/advanced/plugins.html" },
-            { label: "Session resumption", link: "/discolink/advanced/session-resumption.html" },
+            { label: "Playback", link: "/advanced/playback.html" },
+            { label: "Filters & augmentation", link: "/advanced/filters.html" },
+            { label: "Plugins", link: "/advanced/plugins.html" },
+            { label: "Session resumption", link: "/advanced/session-resumption.html" },
           ],
         },
         {
           label: "Miscellaneous",
           items: [
-            { label: "Changelog", link: "/discolink/misc/changelog.html" },
-            { label: "API reference", link: "/discolink/api/classes/Main.Player.html" },
+            { label: "Changelog", link: "/misc/changelog.html" },
+            { label: "API reference", link: "/api/classes/Main.Player.html" },
           ],
         },
       ],
