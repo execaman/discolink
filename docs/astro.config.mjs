@@ -4,7 +4,8 @@ import starlight from "@astrojs/starlight";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://execaman.github.io/discolink",
+  site: "https://execaman.github.io/",
+  base: "discolink",
   outDir: "./dist",
   build: { format: "file" },
   trailingSlash: "never",
