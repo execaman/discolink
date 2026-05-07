@@ -4,3 +4,5 @@ node_modules/
 /coverage
 /site
 /lib
+docs/.astro/
+docs/dist/

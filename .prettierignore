@@ -1,3 +1,8 @@
 CHANGELOG.md
 package-lock.json
 .github/CODE_OF_CONDUCT.md
+docs/dist/
+docs/.astro/
+site/
+lib/
+coverage/
