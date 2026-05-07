@@ -7,7 +7,6 @@ on:
     paths:
       - src/**
       - docs/**
-      - README.md
       - CHANGELOG.md
   workflow_dispatch:
 
