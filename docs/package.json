@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build && typedoc",
+    "clean": "rm -rf .astro ../site",
+    "build": "npm run clean && astro build && typedoc",
     "preview": "astro preview"
   },
   "dependencies": {
