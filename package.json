@@ -45,8 +45,6 @@
     "format": "prettier --log-level error --write .",
     "deps": "ncu --format group --dep",
     "upgrade": "ncu -u && npm update",
-    "docs:dev": "npm run dev --prefix docs",
-    "docs:build": "npm run build --prefix docs",
     "prepare": "husky || true"
   },
   "engines": {
