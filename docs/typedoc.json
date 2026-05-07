@@ -29,7 +29,7 @@
   "customCss": "./src/styles/td-custom.css",
   "navigationLinks": {
     "GitHub": "https://github.com/execaman/discolink",
-    "Docs": "/"
+    "Docs": "/discolink/"
   },
   "githubPages": false
 }
