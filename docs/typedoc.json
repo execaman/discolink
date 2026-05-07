@@ -21,7 +21,7 @@
   "projectDocuments": ["../CHANGELOG.md"],
   "excludeExternals": true,
   "themeColor": "#9e6a03",
-  "out": "../site/api",
+  "out": "./dist/api",
   "name": "Discolink",
   "readme": "none",
   "defaultCategory": "Miscellaneous",
