@@ -107,6 +107,24 @@
 }
 
 /* ─── Tables ──────────────────────────────────────────────────────────────── */
+
+/* Scrollable wrapper so tables don't overflow on small screens.
+   display:block + overflow-x:auto lets the table scroll horizontally
+   while width:max-content keeps columns from collapsing. */
+.sl-markdown-content table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  border: 1px solid var(--dl-table-border);
+  border-radius: 10px;
+}
+
+/* Fallback for any table rendered outside .sl-markdown-content */
 table {
   display: table;
   width: 100%;
@@ -284,4 +302,10 @@ blockquote p + p {
 .starlight-aside__content a {
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* ─── Code block: line number gutter tweaks ──────────────────────────────── */
+/* Active (hovered) line gets a slightly brighter number */
+.expressive-code .ec-line:hover .gutter {
+  color: rgba(245, 185, 69, 0.85);
 }

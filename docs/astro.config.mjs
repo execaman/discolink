@@ -7,13 +7,14 @@ export default defineConfig({
   site: "https://execaman.github.io/",
   base: "discolink",
   outDir: "./dist",
-  build: { format: "file" },
   trailingSlash: "never",
+  build: { format: "file" },
   integrations: [
     starlight({
       title: "Discolink",
       description: "A Lavalink client for Discord bots in TypeScript",
       favicon: "/favicon.png",
+      customCss: ["./src/styles/custom.css"],
       logo: {
         src: "./src/assets/logo.png",
         replacesTitle: false,
@@ -22,7 +23,6 @@ export default defineConfig({
         { icon: "github", label: "GitHub", href: "https://github.com/execaman/discolink" },
         { icon: "npm", label: "npm", href: "https://www.npmjs.com/package/discolink" },
       ],
-      customCss: ["./src/styles/custom.css"],
       sidebar: [
         {
           label: "Setup",
