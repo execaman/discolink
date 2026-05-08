@@ -10,10 +10,9 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 
-// Read from the workspace root (two levels up from docs/)
-const raw = readFileSync(resolve('..', 'CHANGELOG.md'), 'utf-8');
+// Read from the workspace root
+const raw = readFileSync('CHANGELOG.md', 'utf-8');
 
 interface Release {
   version: string;

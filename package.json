@@ -43,6 +43,9 @@
     "test": "vitest run",
     "build": "tsdown",
     "format": "prettier --log-level error --write .",
+    "docs:dev": "astro dev --root docs",
+    "docs:build": "astro build --root docs && typedoc --options docs/typedoc.json",
+    "docs:preview": "astro preview --root docs",
     "deps": "ncu --format group --dep",
     "upgrade": "ncu -u && npm update",
     "prepare": "husky || true"
@@ -54,15 +57,23 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
+    "@astrojs/starlight": "^0.39.1",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
+    "@expressive-code/plugin-line-numbers": "^0.42.0",
     "@types/node": "^25.6.0",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^4.1.4",
+    "astro": "^6.3.1",
     "husky": "^9.1.7",
     "npm-check-updates": "^21.0.2",
     "prettier": "^3.8.3",
+    "sharp": "^0.34.5",
     "tsdown": "^0.21.8",
+    "typedoc": "^0.28.19",
+    "typedoc-material-theme": "^1.4.1",
+    "typedoc-plugin-dt-links": "^2.0.53",
+    "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.4"
   }
