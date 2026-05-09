@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.2](https://github.com/execaman/discolink/compare/v4.6.1...v4.6.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* package metadata ([#61](https://github.com/execaman/discolink/issues/61)) ([eee5953](https://github.com/execaman/discolink/commit/eee59535c7333dca41adc99402d9fcf2cd043380))
+
 ## [4.6.1](https://github.com/execaman/discolink/compare/v4.6.0...v4.6.1) (2026-04-16)
 
 
