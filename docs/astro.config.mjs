@@ -7,8 +7,8 @@ export default defineConfig({
   site: "https://execaman.github.io/",
   base: "discolink",
   outDir: "./dist",
-  trailingSlash: "never",
-  build: { format: "file" },
+  trailingSlash: "ignore",
+  build: { format: "directory" },
   integrations: [
     starlight({
       title: "Discolink",
@@ -27,33 +27,33 @@ export default defineConfig({
         {
           label: "Setup",
           items: [
-            { label: "Introduction", link: "/setup/introduction.html" },
-            { label: "Installation", link: "/setup/installation.html" },
-            { label: "Quick start", link: "/setup/quick-start.html" },
+            { label: "Introduction", link: "/setup/introduction" },
+            { label: "Installation", link: "/setup/installation" },
+            { label: "Quick start", link: "/setup/quick-start" },
           ],
         },
         {
           label: "Basics",
           items: [
-            { label: "Player", link: "/basics/player.html" },
-            { label: "Nodes", link: "/basics/nodes.html" },
-            { label: "Voice", link: "/basics/voice.html" },
-            { label: "Queues", link: "/basics/queues.html" },
+            { label: "Player", link: "/basics/player" },
+            { label: "Nodes", link: "/basics/nodes" },
+            { label: "Voice", link: "/basics/voice" },
+            { label: "Queues", link: "/basics/queues" },
           ],
         },
         {
           label: "Advanced",
           items: [
-            { label: "Playback", link: "/advanced/playback.html" },
-            { label: "Filters & augmentation", link: "/advanced/filters.html" },
-            { label: "Plugins", link: "/advanced/plugins.html" },
-            { label: "Session resumption", link: "/advanced/session-resumption.html" },
+            { label: "Playback", link: "/advanced/playback" },
+            { label: "Filters & augmentation", link: "/advanced/filters" },
+            { label: "Plugins", link: "/advanced/plugins" },
+            { label: "Session resumption", link: "/advanced/session-resumption" },
           ],
         },
         {
           label: "Miscellaneous",
           items: [
-            { label: "Changelog", link: "/misc/changelog.html" },
+            { label: "Changelog", link: "/misc/changelog" },
             { label: "API reference", link: "/api/classes/Main.Player.html" },
           ],
         },
