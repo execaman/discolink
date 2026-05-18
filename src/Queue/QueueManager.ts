@@ -2,7 +2,6 @@ import { setImmediate } from "node:timers/promises";
 import { EventType, TrackEndReason } from "../Typings";
 import {
   LastTrackSymbol,
-  LookupSymbol,
   OnEventUpdateSymbol,
   OnPingUpdateSymbol,
   OnStateUpdateSymbol,
@@ -52,6 +51,14 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
 
   get size() {
     return this.#queues.size;
+  }
+
+  /**
+   * Raw lavalink player objects.
+   * For reference or advanced usage only, do not `set` or `delete`
+   */
+  get cache() {
+    return this.#cache as ReadonlyMap<string, APIPlayer>;
   }
 
   get(guildId: string) {
@@ -304,10 +311,6 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
         cache.state.connected = false;
         return this.player.voices[OnVoiceCloseSymbol](queue.voice, payload);
     }
-  }
-
-  [LookupSymbol](guildId: string) {
-    return this.#cache.get(guildId);
   }
 
   [UpdateSymbol](guildId: string, payload: Partial<APIPlayer>, partial = true) {

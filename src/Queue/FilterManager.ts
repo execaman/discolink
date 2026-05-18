@@ -1,4 +1,3 @@
-import { LookupSymbol } from "../Constants/Symbols";
 import type { APIPlayer, FilterNames, FilterValue, JsonObject, Filters, CommonPluginFilters } from "../Typings";
 import type { VoiceState } from "../Voice";
 import type { Player } from "../Main";
@@ -13,7 +12,7 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
   constructor(player: Player, guildId: string) {
     if (player.queues.has(guildId)) throw new Error(`A Queue already exists with its own FilterManager`);
 
-    const _player = player.queues[LookupSymbol](guildId);
+    const _player = player.queues.cache.get(guildId);
     if (!_player) throw new Error(`No player found for guild '${guildId}'`);
 
     const voice = player.voices.get(guildId);

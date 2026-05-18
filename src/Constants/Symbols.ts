@@ -1,6 +1,4 @@
-export const LookupSymbol = Symbol("lookup");
 export const UpdateSymbol = Symbol("update");
-
 export const LastTrackSymbol = Symbol("lastTrack");
 
 export const OnPingUpdateSymbol = Symbol("onPingUpdate");

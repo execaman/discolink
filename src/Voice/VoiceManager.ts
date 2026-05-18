@@ -1,7 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 import { VoiceCloseCodes } from "../Typings";
 import { SnowflakeRegex, VoiceRegionIdRegex } from "../Constants";
-import { LookupSymbol, OnVoiceCloseSymbol, UpdateSymbol } from "../Constants/Symbols";
+import { OnVoiceCloseSymbol, UpdateSymbol } from "../Constants/Symbols";
 import { isString, noop } from "../Functions";
 import { VoiceRegion, VoiceState } from "./index";
 import { Queue } from "../Queue";
@@ -54,6 +54,14 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     return this.#voices.size;
   }
 
+  /**
+   * Raw voice state objects.
+   * For reference or advanced usage only, do not `set` or `delete`
+   */
+  get cache() {
+    return this.#cache as ReadonlyMap<string, BotVoiceState>;
+  }
+
   get(guildId: string) {
     return this.#voices.get(guildId);
   }
@@ -89,7 +97,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     const resolver = Promise.withResolvers<void>();
     this.#destroys.set(guildId, resolver.promise);
 
-    if (this[LookupSymbol](guildId)?.connected) await voice.disconnect().catch(noop);
+    if (this.#cache.get(guildId)?.connected) await voice.disconnect().catch(noop);
 
     this.#cache.delete(guildId);
     this.#voices.delete(guildId);
@@ -339,10 +347,6 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     } finally {
       this[UpdateSymbol](payload.guildId, { reconnecting: false });
     }
-  }
-
-  [LookupSymbol](guildId: string) {
-    return this.#cache.get(guildId);
   }
 
   [UpdateSymbol](guildId: string, payload: Partial<BotVoiceState>, partial = true) {

@@ -1,5 +1,5 @@
 import { Severity } from "../Typings";
-import { LastTrackSymbol, LookupSymbol, UpdateSymbol } from "../Constants/Symbols";
+import { LastTrackSymbol, UpdateSymbol } from "../Constants/Symbols";
 import { formatDuration, isArray, isNumber } from "../Functions";
 import { Playlist, Track } from "../index";
 import { VoiceState } from "../Voice";
@@ -44,7 +44,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   constructor(player: Player, guildId: string, context?: Context) {
     if (player.queues.has(guildId)) throw new Error("An identical queue already exists");
 
-    const _player = player.queues[LookupSymbol](guildId);
+    const _player = player.queues.cache.get(guildId);
     if (!_player) throw new Error(`No player found for guild '${guildId}'`);
 
     const voice = player.voices.get(guildId);
@@ -266,7 +266,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
       return;
     }
     if (target !== "remote") throw new Error("Target must be 'local' or 'remote'");
-    const voice = this.player.voices[LookupSymbol](this.guildId);
+    const voice = this.player.voices.cache.get(this.guildId);
     if (!voice) return;
     const player = this.#player;
     const request: PlayerUpdateRequestBody = {
