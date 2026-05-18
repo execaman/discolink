@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.7.0](https://github.com/execaman/discolink/compare/v4.6.2...v4.7.0) (2026-05-18)
+
+
+### Features
+
+* **Managers:** expose queue and voice manager caches ([#65](https://github.com/execaman/discolink/issues/65)) ([8468a73](https://github.com/execaman/discolink/commit/8468a7395ff6fe7d5574e7e4bf457e91a6dad73e))
+* **Queue:** typed track user data param for 'add' methods ([#63](https://github.com/execaman/discolink/issues/63)) ([aa7bb18](https://github.com/execaman/discolink/commit/aa7bb188f06295a36616ec5301fde272e0a22378))
+
 ## [4.6.2](https://github.com/execaman/discolink/compare/v4.6.1...v4.6.2) (2026-05-09)
 
 
