@@ -6,6 +6,7 @@ import { VoiceState } from "../Voice";
 import { FilterManager } from "./index";
 import type {
   APIPlayer,
+  CommonUserData,
   Exception,
   JsonObject,
   PlayerUpdateQueryParams,
@@ -301,7 +302,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * @param source track, list of tracks, or playlist
    * @param userData Object to shallow merge in all track's user data
    */
-  add(source: Track | Track[] | Playlist, userData?: JsonObject) {
+  add<UserData extends JsonObject = CommonUserData>(source: Track | Track[] | Playlist, userData?: UserData) {
     if (source instanceof Track) {
       Object.assign(source.userData, userData);
       this.#tracks.push(source);
@@ -321,13 +322,14 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
 
   /**
    * Add related tracks to the queue
-   * @param refTrack Track to use as reference
+   * @param refTrack Track to use as reference, leave as `null` or `undefined` for default
+   * @param userData Object to shallow merge in all track's user data
    */
-  async addRelated(refTrack?: Track) {
+  async addRelated<UserData extends JsonObject = CommonUserData>(refTrack?: Track | null, userData?: UserData) {
     refTrack ??= this.track ?? this.previousTrack!;
     if (!refTrack) throw new Error("The queue is empty and there is no track to refer");
     const relatedTracks = await this.player.options.fetchRelatedTracks(this, refTrack);
-    this.add(relatedTracks);
+    this.add(relatedTracks, userData);
     return relatedTracks;
   }
 
