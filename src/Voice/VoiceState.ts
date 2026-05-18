@@ -1,4 +1,3 @@
-import { LookupSymbol } from "../Constants/Symbols";
 import { noop } from "../Functions";
 import type { APIPlayer, BotVoiceState, PlayerUpdateRequestBody } from "../Typings";
 import type { Node } from "../Node";
@@ -28,10 +27,10 @@ export class VoiceState {
     if (!_node) throw new Error(`Node '${node}' not found`);
     if (!_node.ready) throw new Error(`Node '${node}' not ready`);
 
-    const state = player.voices[LookupSymbol](guildId);
+    const state = player.voices.cache.get(guildId);
     if (!state) throw new Error(`No connection found for guild '${guildId}'`);
 
-    const _player = player.queues[LookupSymbol](guildId);
+    const _player = player.queues.cache.get(guildId);
     if (!_player) throw new Error(`No player found for guild '${guildId}'`);
 
     this.#node = _node;
