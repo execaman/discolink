@@ -194,4 +194,4 @@ player.on("trackStuck", (queue, track, thresholdMs, inQueue) => {
 });
 ```
 
-The `inQueue` boolean indicates whether `track` is the exact object instance in `queue.tracks`. It's `false` only for the `replaced` end reason — in that case use `queue.track` for the currently playing track instead.
+The `inQueue` boolean indicates whether `track` is the exact object found in queue. It's `false` only for the `replaced` end reason — in that case use `queue.track` for the currently playing track instead.

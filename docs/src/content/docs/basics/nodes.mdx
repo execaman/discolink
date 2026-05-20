@@ -7,7 +7,7 @@ A node is a connection to a single Lavalink server. `player.nodes` is a `NodeMan
 
 ## Declaring nodes
 
-Nodes are declared in the `Player` constructor. `clientId` is injected automatically from `player.init()` — you don't pass it yourself.
+Nodes are passed in options to the `Player` constructor. `clientId` is injected automatically from `player.init()` — you don't pass it yourself.
 
 ```ts
 const player = new Player({
@@ -48,7 +48,7 @@ const node = player.nodes.get("us-east")!;
 node.state; // NodeState string
 node.ready; // boolean shorthand for state === 'ready'
 node.connecting; // boolean
-node.connected; // boolean (socket open, may not be ready yet)
+node.connected; // boolean (socket open, not signaled ready by Lavalink yet)
 node.reconnecting; // boolean
 node.disconnected; // boolean
 
@@ -71,13 +71,13 @@ player.nodes.state("us-east", "ready"); // → boolean
 
 ## Reconnection behaviour
 
-When a node closes unexpectedly, discolink schedules a reconnect after `reconnectDelay` ms (default 10 000). It retries up to `reconnectLimit` times. Once the limit is reached, the node moves to `disconnected` and `nodeDisconnect` fires.
+When a node closes unexpectedly, Discolink schedules a reconnect after `reconnectDelay` ms (default 10 000). It retries up to `reconnectLimit` times. Once the limit is reached, the node moves to `disconnected` and `nodeDisconnect` fires.
 
 Set `reconnectLimit: -1` for unlimited retries, `0` to disable reconnection entirely.
 
 The ping keep-alive timer fires every `statsInterval + highestLatency` ms (defaults: 60 000 + 2 000 = 62 000 ms). If no pong arrives within that window, the socket is terminated and reconnection begins.
 
-When a node reconnects **without** resuming its session and `autoSync: true` (the default), discolink pushes local queue state to Lavalink so playback can continue:
+When a node reconnects **without** resuming its session and `autoSync: true` (the default), Discolink pushes local queue state to Lavalink so playback can continue:
 
 ```ts
 player.on("nodeReady", (node, resumed, sessionId) => {
@@ -118,7 +118,7 @@ const nodes = player.nodes.supports("source", "soundcloud");
 // Check a specific node
 player.nodes.supports("source", "soundcloud", "us-east"); // boolean
 player.nodes.supports("filter", "timescale", "us-east"); // boolean
-player.nodes.supports("plugin", "LavaLyrics", "us-east"); // boolean
+player.nodes.supports("plugin", "lavalyrics-plugin", "us-east"); // boolean
 ```
 
 Feature types: `"source"` (source managers), `"filter"` (filter names), `"plugin"` (plugin names).

@@ -7,7 +7,7 @@ import { Aside } from "@astrojs/starlight/components";
 
 ## Transport controls
 
-Every playback method exists on both `Player` (takes a `guildId`) and `Queue` (operates on itself). They're identical in behaviour — use whichever is more convenient.
+Every playback method exists on both `Player` (takes an additional `guildId`) and `Queue` (operates on itself). They're identical in behaviour — use whichever is more convenient.
 
 ```ts
 // Via Player
@@ -27,9 +27,9 @@ await queue.stop();
 await queue.seek(30_000);
 ```
 
-**`stop()` vs `destroy()`** — `stop()` sends `{ track: { encoded: null } }` to Lavalink, clearing the active track while keeping the queue intact. `queue.stopped` becomes `true`. `resume()` calls `jump(0)` to reload the track. `destroy()` tears down the entire queue and voice connection.
+**`stop()` vs `destroy()`** — `stop()` retains the current track of queue but removes it from Lavalink.
 
-**`resume()` behaviour** — if `queue.stopped` is `true`, `resume()` calls `jump(0)` to restart the current track. Otherwise it unpauses.
+**`resume()` behaviour** — if `queue.stopped` is `true`, `resume()` calls `jump(0)` to restart the current track. Otherwise the default is to unpause.
 
 **`seek()` behaviour** — seeks to the given position in ms. Also unpauses if paused. Throws if the current track is not seekable or if `ms` exceeds the track duration.
 

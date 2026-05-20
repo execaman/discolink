@@ -7,7 +7,7 @@ import { Aside } from "@astrojs/starlight/components";
 
 Lavalink can keep a session alive for a configurable window after your bot disconnects. If you reconnect within that window and present the original session ID, Lavalink resumes — queues keep playing, no interruption.
 
-discolink doesn't implement this automatically. The right approach depends on your scale and persistence layer.
+Discolink doesn't implement this automatically. The right approach depends on your scale and persistence layer.
 
 ## 1. Opt in and persist the session ID
 
@@ -26,7 +26,7 @@ player.on("nodeReady", async (node, resumed) => {
 
 ## 2. Pass the session ID on reconnect
 
-Pass the stored session ID via the node's `sessionId` option — discolink sends it as the `Session-Id` WebSocket header during the handshake:
+Pass the stored session ID via the node's `sessionId` option — Discolink sends it as the `Session-Id` WebSocket header during the handshake:
 
 ```ts
 const storedSessionId = await db.get("session:main");
@@ -40,7 +40,7 @@ const player = new Player({
       sessionId: storedSessionId ?? undefined,
     },
   ],
-  // Disable automatic recovery — must be set at construction, not after
+  // Disable automatic recovery
   autoSync: false,
   relocateQueues: false,
   // ...
@@ -48,11 +48,11 @@ const player = new Player({
 ```
 
 <Aside type="caution">
-  `autoSync` and `relocateQueues` must be set in the constructor. They are part of `player.options` which is immutable
-  after construction. Setting them after the fact has no effect.
+  `autoSync` and `relocateQueues` are part of `player.options`, if you've set them to `true` at construction, set them
+  to `false` before implementing your own behavior for them.
 </Aside>
 
-When resuming, you don't want discolink overwriting Lavalink's state (`autoSync: false`) or migrating queues to other nodes (`relocateQueues: false`).
+When resuming, you don't want Discolink overwriting Lavalink's state (`autoSync: false`) or migrating queues to other nodes (`relocateQueues: false`).
 
 ## 3. Sync local state after a successful resume
 

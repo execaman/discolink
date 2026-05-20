@@ -13,7 +13,7 @@ A `Queue` is the playback state for a single guild. It maintains two arrays:
 - **`previousTracks`** — tracks that have already played, most recent last
 
 ```
-previousTracks[0..n]  ←  previousTrack  |  track (current)  ·  tracks[1]  ·  tracks[2]  →
+←  previousTracks[-2]  ·  previousTracks[-1]  |  (current) track[0]  ·  tracks[1]  →
 ```
 
 `next()` advances the cursor — the current track moves to `previousTracks` and the next one becomes current. `previous()` moves it back. `jump(n)` teleports to any index in either direction, including negative indices into `previousTracks`.
@@ -102,7 +102,7 @@ queue.add(tracks, { requestedBy: userId, requestedAt: Date.now() });
 
 `add()` returns the queue itself, so it's chainable.
 
-## Queue state
+## Queue properties
 
 ```ts
 queue.track; // current Track | null
@@ -115,13 +115,12 @@ queue.totalLength; // all tracks including previous
 
 queue.playing; // true when unpaused AND Lavalink has a track loaded
 queue.paused; // true when the Lavalink player is paused
-queue.stopped; // true when queue has a current track but Lavalink doesn't
-// (track was stopped via stop() — resume() will restart it)
+queue.stopped; // true when queue has a current track but Lavalink doesn't (resume() will start it)
 queue.finished; // true when tracks[] is empty (no current or next)
 queue.empty; // true when both tracks[] and previousTracks[] are empty
 queue.hasNext; // true when tracks.length > 1
 queue.hasPrevious; // true when previousTracks.length > 0
-queue.destroyed; // true when this instance is no longer the active queue for the guild
+queue.destroyed; // true when this instance is no longer in QueueManager
 
 queue.volume; // current volume (0–1000)
 queue.repeatMode; // 'none' | 'track' | 'queue'
@@ -193,7 +192,7 @@ await player.queues.sync("us-east", "remote");
 
 ## Autoplay
 
-When the queue empties and autoplay is on, discolink calls `fetchRelatedTracks`. You provide the implementation:
+When the queue empties and autoplay is on, Discolink calls `fetchRelatedTracks`. You provide the implementation:
 
 ```ts
 const player = new Player({
@@ -207,13 +206,16 @@ const player = new Player({
 queue.setAutoplay(true);
 ```
 
-<Aside type="note">The default `fetchRelatedTracks` returns `[]`. Autoplay does nothing until you implement it.</Aside>
+<Aside type="note">
+  The default `fetchRelatedTracks` returns `[]`. Autoplay does nothing until you implement it. This function should
+  absolutely not throw an error and only communicate its result by returning an empty or populated array of tracks.
+</Aside>
 
 Add related tracks manually without enabling autoplay:
 
 ```ts
 await queue.addRelated(); // uses current or previous track as reference
-await queue.addRelated(specificTrack); // use a specific reference track
+await queue.addRelated(specificTrack); // use a specific track as reference
 ```
 
 ## Destroying a queue
@@ -222,7 +224,7 @@ Always destroy queues when they're no longer needed:
 
 ```ts
 await queue.destroy("Channel deleted");
-await player.queues.destroy(guildId, "reason"); // via manager
+await player.queues.destroy(guildId, "No human listeners"); // via manager
 ```
 
 `destroy()` calls Lavalink's REST API to remove the player, emits `queueDestroy`, then delegates to `voices.destroy()` to tear down the voice connection.

@@ -87,7 +87,7 @@
 /* Dark mode: code block is lighter than the #111 page background */
 .expressive-code pre,
 .expressive-code .frame .code {
-  background-color: #2b2b2b !important;
+  background-color: #212121 !important;
 }
 
 .expressive-code .frame .header {
