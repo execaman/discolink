@@ -6,19 +6,19 @@
   "description": "A Lavalink client for Discord bots in TypeScript",
   "exports": {
     "import": {
-      "types": "./lib/index.d.ts",
-      "default": "./lib/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "require": {
-      "types": "./lib/index.d.cts",
-      "default": "./lib/index.cjs"
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
     }
   },
-  "main": "./lib/index.cjs",
-  "module": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "./lib/",
+    "./dist/",
     "NOTICE"
   ],
   "author": "Aman (https://github.com/execaman)",
@@ -47,8 +47,8 @@
     "docs:build": "astro build --root docs && typedoc --options docs/typedoc.json",
     "docs:preview": "astro preview --root docs",
     "deps": "ncu --format group --dep",
-    "upgrade": "ncu -u && npm update",
-    "prepare": "husky || true"
+    "upgrade": "ncu -u --install always",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=22.22"

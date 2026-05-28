@@ -15,7 +15,7 @@ export default defineConfig({
   treeshake: true,
   nodeProtocol: true,
   fixedExtension: false,
-  outDir: "lib",
+  outDir: "dist",
   target: "esnext",
   platform: "node",
   entry: "src/index.ts",
