@@ -6,7 +6,7 @@ import type { DefaultPlayerOptions } from "../../Constants";
 import type { Node } from "../../Node";
 import type { VoiceState } from "../../Voice";
 import type { Playlist, Queue, Track } from "../../Queue";
-import type { PlayerPlugin } from "../../Main";
+import type { Player } from "../../Main";
 
 type ExcludeLast<T extends any[]> = T extends [...infer Items, any] ? Items : never;
 
@@ -34,6 +34,15 @@ export interface PlayerEventMap {
   trackStuck: [queue: Queue, track: Track, thresholdMs: number, inQueue: boolean];
   trackError: [queue: Queue, track: Track, exception: Exception, inQueue: boolean];
   trackFinish: [queue: Queue, track: Track, reason: TrackEndReason, inQueue: boolean];
+}
+
+/**
+ * Interface for plugins to implement
+ */
+export interface PlayerPlugin<EventMap extends Record<string, unknown[]> = {}> {
+  readonly _: EventMap;
+  readonly name: string;
+  init(player: Player): void;
 }
 
 /**

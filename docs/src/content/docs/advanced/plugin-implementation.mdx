@@ -1,0 +1,127 @@
+---
+title: Plugins
+description: How to implement a plugin for the Player.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Plugins extend `Player` with custom logic and typed events. They're the right tool when you need to tap into the node dispatch pipeline, react to payloads from a Lavalink server plugin, or add behaviour that spans multiple queues without cluttering your command handlers.
+
+## The structure
+
+A plugin is any object that satisfies the `PlayerPlugin` interface:
+
+```ts
+interface PlayerPlugin<EventMap extends Record<string, unknown[]> = {}> {
+  readonly _: EventMap;
+  readonly name: string;
+  init(player: Player): void;
+}
+```
+
+Three members to implement:
+
+- **`name`** — a `readonly` string literal. TypeScript uses the literal type to key `player.plugins`, so `readonly name = "myplugin"` gives you `player.plugins.myplugin`. A non-literal type (e.g. `name: string`) widens and breaks that inference.
+
+- **`init(player)`** — called once during `player.init()`, after all nodes are created but before they connect. This is where you register event listeners. Node REST calls should wait for `nodeReady` since nodes aren't connected yet.
+
+- **`_`** — a phantom type field. Declare it with `declare readonly _: YourEventMap` so TypeScript can extract your event map and surface it on the player's `on`/`emit`. It has no runtime existence — `declare` means no value is emitted. Without it, your events won't appear on the player.
+
+## Implementing a plugin
+
+### No events
+
+If your plugin only reacts to things without emitting its own events, pass `{}` as the event map and declare `_` accordingly:
+
+```ts
+import type { Player, PlayerPlugin } from "discolink";
+
+export class MyPlugin implements PlayerPlugin {
+  readonly name = "myplugin";
+  declare readonly _: {};
+
+  init(player: Player): void {
+    player.on("trackStart", (queue, track) => {
+      // your logic
+    });
+  }
+}
+```
+
+### With typed events
+
+Define your event map as a `type` where each key is an event name and each value is a tuple of argument types. Then pass it as the generic argument and declare `_` against it:
+
+```ts
+import type { Player, PlayerPlugin, Queue } from "discolink";
+
+type MyEventMap = {
+  myEvent: [queue: Queue, data: string];
+};
+
+export class MyPlugin implements PlayerPlugin<MyEventMap> {
+  readonly name = "myplugin";
+  declare readonly _: MyEventMap;
+
+  init(player: Player): void {
+    player.on("nodeDispatch", this.#onDispatch as any);
+  }
+
+  #onDispatch(this: Player<{}, MyPlugin[]>, _node: Node, payload: unknown) {
+    // narrow payload to what your Lavalink plugin emits
+    if (!isMyPayload(payload)) return;
+    const queue = this.getQueue(payload.guildId);
+    if (!queue) return;
+    this.emit("myEvent", queue, payload.data);
+  }
+}
+```
+
+Events are emitted on the `Player` instance, not the plugin itself. Consumers subscribe the usual way:
+
+```ts
+player.on("myEvent", (queue, data) => { ... });
+```
+
+<Aside type="note">
+  The `as any` cast on `player.on("nodeDispatch", this.#onDispatch as any)` is necessary because the explicit `this`
+  type on the handler doesn't match the generic `Player` signature. This is a known TypeScript limitation with bound
+  `this` parameters on event handler callbacks.
+</Aside>
+
+### Typing `this` in dispatch handlers
+
+When a handler needs to call player methods or access `this.plugins`, annotate `this` explicitly with the plugin in the tuple:
+
+```ts
+#onDispatch(this: Player<{}, MyPlugin[]>, _node: Node, payload: MyPayload) {
+  const queue = this.getQueue(payload.guildId);
+  if (!queue) return;
+  this.emit("myEvent", queue, payload.data);
+}
+```
+
+If you need to access your own plugin instance (e.g. to read options), `this.plugins.myplugin` gives you back the typed instance:
+
+```ts
+#onDispatch(this: Player<{}, MyPlugin[]>, _node: Node, payload: MyPayload) {
+  const { threshold } = this.plugins.myplugin;
+  // ...
+}
+```
+
+## Registering a plugin
+
+Pass plugin instances to the `plugins` option when constructing `Player`. TypeScript infers the tuple and merges all event maps automatically:
+
+```ts
+const player = new Player({
+  plugins: [new MyPlugin()],
+  nodes: [ /* ... */ ],
+  async forwardVoiceUpdate(guildId, payload) { /* ... */ },
+});
+
+// fully typed — plugins record and events both resolved from the tuple
+player.plugins.myplugin;
+player.on("myEvent", (queue, data) => { ... });
+```
