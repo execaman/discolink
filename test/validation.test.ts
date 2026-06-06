@@ -84,4 +84,17 @@ describe("Functions (validation)", () => {
       expect(val.isArray([1, 2, 3], "unknown" as any)).toBe(false);
     });
   });
+
+  describe("isPlugin", () => {
+    it("returns true for plugins", () => {
+      expect(val.isPlugin({ name: "test", init: () => {} })).toBe(true);
+    });
+
+    it("returns false for invalid inputs", () => {
+      expect(val.isPlugin(null)).toBe(false);
+      expect(val.isPlugin({ name: "test" })).toBe(false);
+      expect(val.isPlugin({ init: () => {} })).toBe(false);
+      expect(val.isPlugin({ name: 1, init: 2 })).toBe(false);
+    });
+  });
 });

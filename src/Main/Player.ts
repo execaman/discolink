@@ -1,15 +1,15 @@
 import { EventEmitter } from "node:events";
 import { LoadType } from "../Typings";
 import { DefaultPlayerOptions } from "../Constants";
-import { isString } from "../Functions";
+import { isPlugin, isString } from "../Functions";
 import { NodeManager } from "../Node";
 import { VoiceManager } from "../Voice";
 import { Playlist, Queue, QueueManager, Track } from "../Queue";
-import { PlayerPlugin } from "./index";
 import type {
   CreateQueueOptions,
   PlayerEventMap,
   PlayerOptions,
+  PlayerPlugin,
   PlayOptions,
   PluginRecord,
   RepeatMode,
@@ -62,7 +62,7 @@ export class Player<
 
     if (_options.plugins !== undefined) {
       for (const plugin of _options.plugins) {
-        if (!(plugin instanceof PlayerPlugin)) throw new Error("Invalid plugin(s)");
+        if (!isPlugin(plugin)) throw new Error("Invalid plugin(s)");
         (this.plugins as { [x: string]: PlayerPlugin })[plugin.name] = plugin;
       }
       delete _options.plugins;

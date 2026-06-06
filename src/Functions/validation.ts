@@ -1,4 +1,5 @@
 import { URL } from "node:url";
+import type { PlayerPlugin } from "../Typings";
 
 /**
  * Check if input is a finite number
@@ -57,4 +58,16 @@ export const isArray = <T extends any[]>(
   if (check === "non-empty") return input.length !== 0;
   if (typeof check === "function") return input.every(check);
   return false;
+};
+
+/**
+ * Check if input is a plugin
+ * @param input value
+ * @returns `true` if input is a valid plugin, `false` otherwise
+ */
+export const isPlugin = <T extends PlayerPlugin>(input: unknown): input is T => {
+  if (!input || typeof input !== "object") return false;
+  if (!("name" in input && "init" in input)) return false;
+  if (typeof input.name !== "string" || typeof input.init !== "function") return false;
+  return true;
 };
