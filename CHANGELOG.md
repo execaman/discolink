@@ -5,6 +5,7 @@
 
 ### ⚠ BREAKING CHANGES
 
+* **Plugins:** all built-in plugins have been removed
 * **Plugins:** enforce structure via interface instead of class ([#68](https://github.com/execaman/discolink/issues/68))
 
 ### Features
