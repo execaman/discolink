@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.0.0](https://github.com/execaman/discolink/compare/v4.7.0...v5.0.0) (2026-06-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **Plugins:** enforce structure via interface instead of class ([#68](https://github.com/execaman/discolink/issues/68))
+
+### Features
+
+* **Functions:** add isPlugin() for plugin validation ([e2e2718](https://github.com/execaman/discolink/commit/e2e271871b682b97879153a06bc3a5f71d01651b))
+* **Plugins:** enforce structure via interface instead of class ([#68](https://github.com/execaman/discolink/issues/68)) ([e2e2718](https://github.com/execaman/discolink/commit/e2e271871b682b97879153a06bc3a5f71d01651b))
+
 ## [4.7.0](https://github.com/execaman/discolink/compare/v4.6.2...v4.7.0) (2026-05-18)
 
 
