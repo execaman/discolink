@@ -14,7 +14,6 @@
     "../src/Node",
     "../src/Voice",
     "../src/Queue",
-    "../src/Plugins",
     "../src/Main"
   ],
   "sort": ["enum-member-source-order"],

@@ -44,9 +44,9 @@ export default defineConfig({
         {
           label: "Advanced",
           items: [
-            { label: "Playback", link: "/advanced/playback" },
-            { label: "Filters & augmentation", link: "/advanced/filters" },
-            { label: "Plugins", link: "/advanced/plugins" },
+            { label: "Playback & filters", link: "/advanced/playback-filters" },
+            { label: "Module augmentation", link: "/advanced/module-augmentation" },
+            { label: "Plugin implementation", link: "/advanced/plugin-implementation" },
             { label: "Session resumption", link: "/advanced/session-resumption" },
           ],
         },

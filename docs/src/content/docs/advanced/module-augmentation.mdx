@@ -1,0 +1,83 @@
+---
+title: Module augmentation
+description: Extending discolink's type system for consumers and third-party package authors.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## For consumers
+
+Four interfaces can be augmented. Declare them once in a `.d.ts` file and the types appear everywhere — no casting, zero runtime cost.
+
+| Interface             | What it types                           | Where it appears                                     |
+| --------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `QueueContext`        | Data you attach to a queue              | `queue.context`, `CreateQueueOptions`, `PlayOptions` |
+| `CommonUserData`      | Data you attach to a track              | `track.userData`, `PlayOptions`, `queue.add()`       |
+| `CommonPluginInfo`    | Plugin-provided track/playlist metadata | `track.pluginInfo`, `playlist.pluginInfo`            |
+| `CommonPluginFilters` | Plugin-provided audio filters           | `queue.filters`, all `FilterManager` methods         |
+
+All augmented interfaces extend `JsonObject` — values must be JSON-serializable. Augmentations are compile-time only with no runtime cost.
+
+```ts
+// augment.d.ts — include this file in your tsconfig
+declare module "discolink" {
+  interface QueueContext {
+    textChannelId: string;
+    requestedBy: string;
+  }
+
+  interface CommonUserData {
+    userId: string;
+    username: string;
+  }
+
+  interface CommonPluginFilters {
+    customEcho: { delay: number; decay: number };
+  }
+}
+```
+
+The types flow through without any extra work:
+
+```ts
+const queue = await player.queues.create({
+  guildId,
+  voiceId,
+  context: { textChannelId: "123", requestedBy: "user1" }, // ✓ typed
+});
+
+queue.context.textChannelId; // ✓ string
+
+queue.add(track, { userId: "abc", username: "Alice" }); // ✓ typed
+
+await queue.filters.set("customEcho", { delay: 200, decay: 0.5 }); // ✓ typed
+
+player.on("trackStart", (queue, track) => {
+  console.log(track.userData.username); // ✓ string
+  console.log(queue.context.textChannelId); // ✓ string
+});
+```
+
+---
+
+## For package authors
+
+If you're publishing a plugin package, distribute a `.d.ts` file alongside it that augments whichever interfaces your plugin touches.
+
+```ts
+// shared.d.ts — shipped with your package
+declare module "discolink" {
+  interface CommonPluginFilters {
+    myFilter: { intensity: number };
+  }
+
+  interface CommonPluginInfo {
+    myField: string;
+  }
+}
+```
+
+<Aside type="caution">
+  Augment only what your plugin genuinely needs to. Avoid adding fields to `QueueContext` or `CommonUserData` — those
+  belong to the user. If the plugin is well known and documented by the community its probably fair to do so otherwise.
+</Aside>
