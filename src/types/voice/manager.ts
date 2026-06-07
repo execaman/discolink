@@ -1,5 +1,4 @@
-import type { NonNullableProp } from "../Utility";
-import type { CreateQueueOptions } from "../Queue";
+import type { CreateQueueOptions, NonNullableProp } from "@/types";
 
 /**
  * Common info in Discord's 'dispatch' payload type

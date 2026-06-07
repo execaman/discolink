@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { Track } from "../src/Queue/Track";
-import type { APITrack } from "../src/Typings";
+import { Track } from "@/queue";
+
+import type { APITrack } from "@/types";
 
 describe("Track", () => {
   const info = {

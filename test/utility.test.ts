@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import * as util from "../src/Functions/utility";
+import * as util from "@/functions/utility";
 
 describe("Functions (utility)", () => {
   describe("noop", () => {

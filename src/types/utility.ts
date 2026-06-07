@@ -1,4 +1,4 @@
-import type { PlayerPlugin } from "./Main";
+import type { PlayerPlugin } from "@/types";
 
 /**
  * Represents an empty object

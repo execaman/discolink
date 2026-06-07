@@ -1,5 +1,6 @@
-import { formatDuration, isNumber, isRecord, isString } from "../Functions";
-import type { APITrack, CommonPluginInfo, CommonUserData, JsonObject } from "../Typings";
+import { formatDuration, isNumber, isRecord, isString } from "@/functions";
+
+import type { APITrack, CommonPluginInfo, CommonUserData, JsonObject } from "@/types";
 
 /**
  * Class representing a track

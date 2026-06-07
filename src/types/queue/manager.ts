@@ -1,5 +1,4 @@
-import type { QueueContext } from "../Utility";
-import type { PlayerUpdateRequestBody } from "../API";
+import type { PlayerUpdateRequestBody, QueueContext } from "@/types";
 
 /**
  * Options for creating a queue via manager

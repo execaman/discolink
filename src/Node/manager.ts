@@ -1,17 +1,18 @@
-import { OPType } from "../Typings";
-import { OnEventUpdateSymbol, OnStateUpdateSymbol } from "../Constants/Symbols";
-import { noop } from "../Functions";
-import { Node } from "../index";
+import { Node } from "@/node";
+import { OPType } from "@/types";
+import { noop } from "@/functions";
+import { OnEventUpdateSymbol, OnStateUpdateSymbol } from "@/constants/symbols";
+
+import type { Player } from "@/main";
 import type {
   CreateNodeOptions,
   FeatureTypes,
   LavalinkInfo,
-  NodeMetrics,
   NodeEventMap,
+  NodeMetrics,
   NodeState,
   StatsPayload,
-} from "../Typings";
-import type { Player } from "../Main";
+} from "@/types";
 
 /**
  * Utility class for managing nodes

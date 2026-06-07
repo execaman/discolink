@@ -1,5 +1,4 @@
-import type { CommonPluginFilters, JsonObject } from "../Utility";
-import type { Filters } from "../API";
+import type { CommonPluginFilters, Filters, JsonObject } from "@/types";
 
 /**
  * Yields a union type of filter names (plugins included)

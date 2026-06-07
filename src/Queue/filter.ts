@@ -1,6 +1,6 @@
-import type { APIPlayer, FilterNames, FilterValue, JsonObject, Filters, CommonPluginFilters } from "../Typings";
-import type { VoiceState } from "../Voice";
-import type { Player } from "../Main";
+import type { Player } from "@/main";
+import type { VoiceState } from "@/voice";
+import type { APIPlayer, CommonPluginFilters, FilterNames, FilterValue, Filters, JsonObject } from "@/types";
 
 /**
  * Utility class for managing filters

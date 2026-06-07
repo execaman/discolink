@@ -1,8 +1,8 @@
+import type { NodeOptions, PlayerOptions, RESTOptions } from "@/types";
+
 declare const $clientName: string;
 declare const $clientVersion: string;
 declare const $clientRepository: string;
-
-import type { NodeOptions, PlayerOptions, RESTOptions } from "../Typings";
 
 /**
  * Default REST constructor options

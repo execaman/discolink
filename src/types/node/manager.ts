@@ -1,4 +1,4 @@
-import type { NodeOptions } from "./Node";
+import type { NodeOptions } from "@/types";
 
 /**
  * Options for creating a node via manager

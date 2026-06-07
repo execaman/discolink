@@ -1,15 +1,16 @@
-declare const $clientName: string;
-declare const $clientVersion: string;
-
+import { WebSocket } from "ws";
+import { REST } from "@/node";
+import { CloseCodes, OPType } from "@/types";
+import { isNumber, isString, noop } from "@/functions";
+import { DefaultNodeOptions, Routes, SnowflakeRegex } from "@/constants";
 import { EventEmitter, once } from "node:events";
 import { clearImmediate, clearTimeout, setImmediate, setTimeout } from "node:timers";
-import { WebSocket } from "ws";
-import { CloseCodes, OPType } from "../Typings";
-import { DefaultNodeOptions, Routes, SnowflakeRegex } from "../Constants";
-import { isNumber, isString, noop } from "../Functions";
-import { REST } from "./index";
+
 import type { ClientOptions } from "ws";
-import type { ClientHeaders, MessagePayload, NodeEventMap, NodeOptions, NodeState, StatsPayload } from "../Typings";
+import type { ClientHeaders, MessagePayload, NodeEventMap, NodeOptions, NodeState, StatsPayload } from "@/types";
+
+declare const $clientName: string;
+declare const $clientVersion: string;
 
 /**
  * Class representing a lavalink node

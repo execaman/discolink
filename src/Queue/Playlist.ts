@@ -1,6 +1,7 @@
-import { formatDuration, isArray, isNumber, isRecord, isString } from "../Functions";
-import { Track } from "./index";
-import type { APIPlaylist, CommonPluginInfo, JsonObject } from "../Typings";
+import { Track } from "@/queue";
+import { formatDuration, isArray, isNumber, isRecord, isString } from "@/functions";
+
+import type { APIPlaylist, CommonPluginInfo, JsonObject } from "@/types";
 
 /**
  * Class representing a Playlist

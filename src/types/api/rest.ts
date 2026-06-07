@@ -3,10 +3,11 @@ import type {
   CommonPluginInfo,
   CommonUserData,
   EmptyObject,
+  Exception,
   JsonObject,
   NonNullableProp,
-} from "../Utility";
-import type { Exception, PlayerState } from "./Websocket";
+  PlayerState,
+} from "@/types";
 
 export const enum LoadType {
   /**

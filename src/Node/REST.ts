@@ -1,9 +1,10 @@
+import { HttpStatusCode } from "@/types";
+import { DefaultRestOptions, Routes } from "@/constants";
+import { isArray, isNumber, isRecord, isString } from "@/functions";
 import { URL } from "node:url";
 import { validateHeaderValue } from "node:http";
 import { clearTimeout, setTimeout } from "node:timers";
-import { HttpStatusCode } from "../Typings";
-import { DefaultRestOptions, Routes } from "../Constants";
-import { isArray, isNumber, isRecord, isString } from "../Functions";
+
 import type {
   APIPlayer,
   APITrack,
@@ -12,14 +13,14 @@ import type {
   NodeStats,
   PlayerUpdateQueryParams,
   PlayerUpdateRequestBody,
+  RESTOptions,
   RequestOptions,
   RestError,
   RestResponse,
-  RESTOptions,
   RoutePlannerStatus,
   SessionUpdateRequestBody,
   SessionUpdateResponseBody,
-} from "../Typings";
+} from "@/types";
 
 /**
  * Functional class for interacting with lavalink's REST API

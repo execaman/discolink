@@ -1,9 +1,10 @@
-import { Severity } from "../Typings";
-import { LastTrackSymbol, UpdateSymbol } from "../Constants/Symbols";
-import { formatDuration, isArray, isNumber } from "../Functions";
-import { Playlist, Track } from "../index";
-import { VoiceState } from "../Voice";
-import { FilterManager } from "./index";
+import { Severity } from "@/types";
+import { VoiceState } from "@/voice";
+import { FilterManager, Playlist, Track } from "@/queue";
+import { formatDuration, isArray, isNumber } from "@/functions";
+import { LastTrackSymbol, UpdateSymbol } from "@/constants/symbols";
+
+import type { Player } from "@/main";
 import type {
   APIPlayer,
   CommonUserData,
@@ -13,8 +14,7 @@ import type {
   PlayerUpdateRequestBody,
   QueueContext,
   RepeatMode,
-} from "../Typings";
-import type { Player } from "../Main";
+} from "@/types";
 
 /**
  * Class representing a guild's queue while wrapping it's lavalink player.

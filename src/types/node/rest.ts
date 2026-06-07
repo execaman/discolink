@@ -1,4 +1,4 @@
-import type { JsonLike } from "../Utility";
+import type { JsonLike } from "@/types";
 
 /**
  * Options to create a REST instance

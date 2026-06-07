@@ -1,7 +1,8 @@
-import { DefaultNodeOptions } from "../Constants";
-import { OnPingUpdateSymbol } from "../Constants/Symbols";
-import type { PlayerState } from "../Typings";
-import type { Player } from "../Main";
+import { DefaultNodeOptions } from "@/constants";
+import { OnPingUpdateSymbol } from "@/constants/symbols";
+
+import type { Player } from "@/main";
+import type { PlayerState } from "@/types";
 
 interface VoiceNodePingStats {
   pingCount: number;

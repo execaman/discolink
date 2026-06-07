@@ -1,4 +1,4 @@
-import type { APITrack } from "./Rest";
+import type { APITrack } from "@/types";
 
 export const enum Severity {
   /**

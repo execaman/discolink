@@ -1,12 +1,20 @@
-import type { CommonUserData, JsonObject, QueueContext, RequiredProp } from "../Utility";
-import type { Exception, PlayerState, TrackEndReason } from "../API";
-import type { CreateNodeOptions, NodeEventMap } from "../Node";
-import type { CreateQueueOptions } from "../Queue";
-import type { DefaultPlayerOptions } from "../../Constants";
-import type { Node } from "../../Node";
-import type { VoiceState } from "../../Voice";
-import type { Playlist, Queue, Track } from "../../Queue";
-import type { Player } from "../../Main";
+import type { Node } from "@/node";
+import type { Player } from "@/main";
+import type { VoiceState } from "@/voice";
+import type { Playlist, Queue, Track } from "@/queue";
+import type { DefaultPlayerOptions } from "@/constants";
+import type {
+  CommonUserData,
+  CreateNodeOptions,
+  CreateQueueOptions,
+  Exception,
+  JsonObject,
+  NodeEventMap,
+  PlayerState,
+  QueueContext,
+  RequiredProp,
+  TrackEndReason,
+} from "@/types";
 
 type ExcludeLast<T extends any[]> = T extends [...infer Items, any] ? Items : never;
 

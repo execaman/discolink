@@ -10,8 +10,8 @@ import { Aside } from "@astrojs/starlight/components";
 `Player` is the main entry point. Give it a node and the `forwardVoiceUpdate` callback — It's the bridge between Discolink and your Discord gateway client.
 
 ```ts
-import { Client, GatewayIntentBits, SlashCommandBuilder } from "discord.js";
 import { Player } from "discolink";
+import { Client, GatewayIntentBits, SlashCommandBuilder } from "discord.js";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -104,8 +104,8 @@ player.on("queueFinish", (queue) => {
 ## Complete example
 
 ```ts
-import { Client, GatewayIntentBits, SlashCommandBuilder } from "discord.js";
 import { Player } from "discolink";
+import { Client, GatewayIntentBits, SlashCommandBuilder } from "discord.js";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],

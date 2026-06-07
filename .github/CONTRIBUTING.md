@@ -23,12 +23,12 @@ These are only meant for bug reports and feature requests, blank issues have bee
 
 Only the following components need to be tested if your changes cover any:
 
-- [`utility`](/src/Functions/utility.ts)
-- [`validation`](/src/Functions/validation.ts)
-- [`REST`](/src/Node/REST.ts)
-- [`Node`](/src/Node/Node.ts)
-- [`Track`](/src/Queue/Track.ts)
-- [`Playlist`](/src/Queue/Playlist.ts)
+- [`utility`](/src/functions/utility.ts)
+- [`validation`](/src/functions/validation.ts)
+- [`REST`](/src/node/rest.ts)
+- [`Node`](/src/node/node.ts)
+- [`Track`](/src/queue/track.ts)
+- [`Playlist`](/src/queue/playlist.ts)
 
 Do NOT chase metrics (e.g. 100% coverage) focus on valid branch and line coverage, avoid ranges that simply cannot be covered (e.g. guards, v8 specific quirks).
 

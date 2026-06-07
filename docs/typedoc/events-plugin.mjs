@@ -5,27 +5,26 @@
  * and synthesises an "Events" section on the class page, documenting each event
  * as a method whose parameters are taken from the tuple values of the map.
  */
-
 import {
+  ArrayType,
+  Comment,
   Converter,
   DeclarationReflection,
-  SignatureReflection,
+  IntersectionType,
+  IntrinsicType,
+  LiteralType,
+  NamedTupleMember,
+  OptionalType,
   ParameterReflection,
+  ReferenceType,
+  ReflectionFlag,
   ReflectionGroup,
   ReflectionKind,
-  ReflectionFlag,
-  Comment,
-  IntrinsicType,
-  UnknownType,
-  ReferenceType,
-  UnionType,
-  IntersectionType,
-  ArrayType,
-  TupleType,
-  NamedTupleMember,
-  LiteralType,
-  OptionalType,
   RestType,
+  SignatureReflection,
+  TupleType,
+  UnionType,
+  UnknownType,
   TypeScript as ts,
 } from "typedoc";
 

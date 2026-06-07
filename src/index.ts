@@ -1,11 +1,11 @@
 declare const $clientVersion: string;
 
-export * from "./Typings";
-export * from "./Constants";
-export * from "./Functions";
-export * from "./Node";
-export * from "./Voice";
-export * from "./Queue";
-export * from "./Main";
+export * from "./types";
+export * from "./constants";
+export * from "./functions";
+export * from "./node";
+export * from "./voice";
+export * from "./queue";
+export * from "./main";
 
 export const version = $clientVersion;

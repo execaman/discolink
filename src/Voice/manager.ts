@@ -1,10 +1,12 @@
+import { Queue } from "@/queue";
+import { VoiceCloseCodes } from "@/types";
+import { isString, noop } from "@/functions";
+import { VoiceRegion, VoiceState } from "@/voice";
+import { SnowflakeRegex, VoiceRegionIdRegex } from "@/constants";
+import { OnVoiceCloseSymbol, UpdateSymbol } from "@/constants/symbols";
 import { setTimeout } from "node:timers/promises";
-import { VoiceCloseCodes } from "../Typings";
-import { SnowflakeRegex, VoiceRegionIdRegex } from "../Constants";
-import { OnVoiceCloseSymbol, UpdateSymbol } from "../Constants/Symbols";
-import { isString, noop } from "../Functions";
-import { VoiceRegion, VoiceState } from "./index";
-import { Queue } from "../Queue";
+
+import type { Player } from "@/main";
 import type {
   BotReadyPayload,
   BotVoiceState,
@@ -14,8 +16,7 @@ import type {
   VoiceServerUpdatePayload,
   VoiceStateUpdatePayload,
   WebSocketClosedEventPayload,
-} from "../Typings";
-import type { Player } from "../Main";
+} from "@/types";
 
 interface JoinRequest
   extends PromiseWithResolvers<VoiceState>, Pick<CreateQueueOptions, "context" | "node" | "voiceId"> {

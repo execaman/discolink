@@ -1,3 +1,6 @@
-export * from "./Defaults";
-export * from "./Regex";
-export * from "./Routes";
+/**
+ * @module Constants
+ */
+export * from "./defaults";
+export * from "./regex";
+export * from "./routes";

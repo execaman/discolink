@@ -1,5 +1,6 @@
 import { URL } from "node:url";
-import type { PlayerPlugin } from "../Typings";
+
+import type { PlayerPlugin } from "@/types";
 
 /**
  * Check if input is a finite number

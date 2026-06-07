@@ -1,7 +1,8 @@
-import { noop } from "../Functions";
-import type { APIPlayer, BotVoiceState, PlayerUpdateRequestBody } from "../Typings";
-import type { Node } from "../Node";
-import type { Player } from "../Main";
+import { noop } from "@/functions";
+
+import type { Node } from "@/node";
+import type { Player } from "@/main";
+import type { APIPlayer, BotVoiceState, PlayerUpdateRequestBody } from "@/types";
 
 /**
  * Class representing the state of a voice connection

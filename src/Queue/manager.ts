@@ -1,5 +1,6 @@
-import { setImmediate } from "node:timers/promises";
-import { EventType, TrackEndReason } from "../Typings";
+import { Queue, Track } from "@/queue";
+import { isRecord, noop } from "@/functions";
+import { EventType, TrackEndReason } from "@/types";
 import {
   LastTrackSymbol,
   OnEventUpdateSymbol,
@@ -7,22 +8,22 @@ import {
   OnStateUpdateSymbol,
   OnVoiceCloseSymbol,
   UpdateSymbol,
-} from "../Constants/Symbols";
-import { isRecord, noop } from "../Functions";
-import { Queue, Track } from "./index";
+} from "@/constants/symbols";
+import { setImmediate } from "node:timers/promises";
+
+import type { Player } from "@/main";
 import type {
   APIPlayer,
-  PlayerUpdatePayload,
-  EventPayload,
-  TrackEndEventPayload,
-  CreateQueueOptions,
-  TrackStartEventPayload,
-  TrackExceptionEventPayload,
-  TrackStuckEventPayload,
-  QueueContext,
   APITrack,
-} from "../Typings";
-import type { Player } from "../Main";
+  CreateQueueOptions,
+  EventPayload,
+  PlayerUpdatePayload,
+  QueueContext,
+  TrackEndEventPayload,
+  TrackExceptionEventPayload,
+  TrackStartEventPayload,
+  TrackStuckEventPayload,
+} from "@/types";
 
 /**
  * Utility class for managing queues

@@ -1,3 +1,6 @@
-export * from "./VoiceState";
-export * from "./VoiceManager";
-export * from "./VoiceRegion";
+/**
+ * @module Voice
+ */
+export * from "./state";
+export * from "./manager";
+export * from "./region";

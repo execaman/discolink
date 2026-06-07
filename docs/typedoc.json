@@ -8,13 +8,13 @@
   ],
   "tsconfig": "../tsconfig.json",
   "entryPoints": [
-    "../src/Typings",
-    "../src/Constants",
-    "../src/Functions",
-    "../src/Node",
-    "../src/Voice",
-    "../src/Queue",
-    "../src/Main"
+    "../src/types",
+    "../src/constants",
+    "../src/functions",
+    "../src/node",
+    "../src/voice",
+    "../src/queue",
+    "../src/main"
   ],
   "sort": ["enum-member-source-order"],
   "projectDocuments": ["../CHANGELOG.md"],

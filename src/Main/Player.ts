@@ -1,26 +1,27 @@
+import { LoadType } from "@/types";
+import { NodeManager } from "@/node";
+import { VoiceManager } from "@/voice";
+import { isPlugin, isString } from "@/functions";
+import { DefaultPlayerOptions } from "@/constants";
+import { Playlist, Queue, QueueManager, Track } from "@/queue";
 import { EventEmitter } from "node:events";
-import { LoadType } from "../Typings";
-import { DefaultPlayerOptions } from "../Constants";
-import { isPlugin, isString } from "../Functions";
-import { NodeManager } from "../Node";
-import { VoiceManager } from "../Voice";
-import { Playlist, Queue, QueueManager, Track } from "../Queue";
+
 import type {
+  CreateNodeOptions,
   CreateQueueOptions,
+  MergeUnionType,
+  PlayOptions,
   PlayerEventMap,
+  PlayerInstanceOptions,
   PlayerOptions,
   PlayerPlugin,
-  PlayOptions,
+  PluginEventMap,
   PluginRecord,
+  QueueContext,
   RepeatMode,
   SearchOptions,
   SearchResult,
-  CreateNodeOptions,
-  PlayerInstanceOptions,
-  QueueContext,
-  PluginEventMap,
-  MergeUnionType,
-} from "../Typings";
+} from "@/types";
 
 type ConstrainEventMap<T> = {
   [K in keyof T]: T[K] extends any[] ? T[K] : never;
