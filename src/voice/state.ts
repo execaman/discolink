@@ -1,0 +1,232 @@
+import { noop } from "@/functions";
+
+import type { Node } from "@/node";
+import type { Player } from "@/main";
+import type { APIPlayer, BotVoiceState, PlayerUpdateRequestBody } from "@/types";
+
+/**
+ * Class representing the state of a voice connection
+ */
+export class VoiceState {
+  #changePromise: Promise<void> | null = null;
+  #node: Node;
+
+  #state: BotVoiceState;
+  #player: APIPlayer;
+
+  /**
+   * Id of the guild
+   */
+  readonly guildId: string;
+  readonly player: Player;
+
+  constructor(player: Player, node: string, guildId: string) {
+    if (player.voices.has(guildId)) throw new Error(`An identical voice state already exists`);
+
+    const _node = player.nodes.get(node);
+
+    if (!_node) throw new Error(`Node '${node}' not found`);
+    if (!_node.ready) throw new Error(`Node '${node}' not ready`);
+
+    const state = player.voices.cache.get(guildId);
+    if (!state) throw new Error(`No connection found for guild '${guildId}'`);
+
+    const _player = player.queues.cache.get(guildId);
+    if (!_player) throw new Error(`No player found for guild '${guildId}'`);
+
+    this.#node = _node;
+
+    this.#state = state;
+    this.#player = _player;
+
+    this.guildId = guildId;
+    this.player = player;
+
+    const immutable: PropertyDescriptor = {
+      writable: false,
+      configurable: false,
+    };
+
+    Object.defineProperties(this, {
+      guildId: immutable,
+      player: { ...immutable, enumerable: false },
+    } satisfies { [K in keyof VoiceState]?: PropertyDescriptor });
+  }
+
+  /**
+   * Node of this voice connection
+   */
+  get node() {
+    return this.#node;
+  }
+
+  /**
+   * Live connection ping as per node
+   */
+  get ping() {
+    return this.#player.state.ping;
+  }
+
+  /**
+   * Id of the voice region
+   */
+  get regionId() {
+    return this.#state.region_id;
+  }
+
+  /**
+   * Id of the voice channel
+   */
+  get channelId() {
+    return this.#state.channel_id;
+  }
+
+  /**
+   * Whether the bot has deafened itself
+   */
+  get selfDeaf() {
+    return this.#state.self_deaf;
+  }
+
+  /**
+   * Whether the bot has muted itself
+   */
+  get selfMute() {
+    return this.#state.self_mute;
+  }
+
+  /**
+   * Whether the bot is deafened by the guild
+   */
+  get serverDeaf() {
+    return this.#state.deaf;
+  }
+
+  /**
+   * Whether the bot is muted by the guild
+   */
+  get serverMute() {
+    return this.#state.mute;
+  }
+
+  /**
+   * Whether the bot is suppressed
+   */
+  get suppressed() {
+    return this.#state.suppress;
+  }
+
+  /**
+   * Whether this voice state instance is destroyed
+   */
+  get destroyed() {
+    return this.player.voices.get(this.guildId) !== this;
+  }
+
+  /**
+   * Whether this voice connection is connected
+   */
+  get connected() {
+    if (!this.#player.state.connected) return false;
+    return this.#state.connected && this.#state.node_session_id === this.#node.sessionId;
+  }
+
+  /**
+   * Whether this voice connection is reconnecting
+   */
+  get reconnecting() {
+    return this.#state.reconnecting;
+  }
+
+  /**
+   * Whether this voice connection is disconnected
+   */
+  get disconnected() {
+    return !this.connected && !this.reconnecting;
+  }
+
+  /**
+   * Whether this voice connection is changing nodes
+   */
+  get changingNode() {
+    return this.#changePromise !== null;
+  }
+
+  /**
+   * Destroy this voice connection
+   * @param reason Reason for destroying
+   */
+  async destroy(reason?: string) {
+    return this.player.voices.destroy(this.guildId, reason);
+  }
+
+  /**
+   * Connect to a voice channel by Id (default if not specified)
+   * @param channelId Id of the voice channel
+   */
+  async connect(channelId = this.#state.channel_id) {
+    return this.player.voices.connect(this.guildId, channelId);
+  }
+
+  /**
+   * Disconnect from the voice channel
+   */
+  async disconnect() {
+    return this.player.voices.disconnect(this.guildId);
+  }
+
+  /**
+   * Change the node of this voice connection
+   * @param name Name of the node
+   */
+  async changeNode(name: string) {
+    const node = this.player.nodes.get(name);
+
+    if (!node) throw new Error(`Node '${name}' not found`);
+    if (!node.ready) throw new Error(`Node '${name}' not ready`);
+
+    if (this.#changePromise !== null) return this.#changePromise;
+    if (name === this.#node.name) throw new Error(`Already on node '${name}'`);
+
+    const resolver = Promise.withResolvers<void>();
+    this.#changePromise = resolver.promise;
+
+    const request: PlayerUpdateRequestBody = {
+      voice: {
+        channelId: this.#state.channel_id,
+        endpoint: this.#state.endpoint,
+        sessionId: this.#state.session_id,
+        token: this.#state.token,
+      },
+      filters: this.#player.filters,
+      paused: this.#player.paused,
+      volume: this.#player.volume,
+    };
+
+    const track = this.#player.track;
+    const wasPlaying = !this.#player.paused && track !== null;
+
+    if (wasPlaying && this.player.nodes.supports("source", track.info.sourceName, node.name)) {
+      request.track = { encoded: track.encoded, userData: track.userData };
+      request.position = this.#player.state.position;
+    }
+
+    await this.#node.rest.destroyPlayer(this.guildId).catch(noop);
+
+    const previousNode = this.#node;
+    this.#node = node;
+
+    try {
+      const player = await node.rest.updatePlayer(this.guildId, request);
+      this.#state.node_session_id = node.sessionId!;
+      Object.assign(this.#player, player);
+      this.player.emit("voiceChange", this, previousNode, wasPlaying);
+      resolver.resolve();
+    } catch (err) {
+      resolver.reject(err);
+      throw err;
+    } finally {
+      this.#changePromise = null;
+    }
+  }
+}
