@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
 import { defineConfig } from "vitest/config";
+import { readFileSync } from "node:fs";
 
 const packageJsonString = readFileSync("./package.json", "utf8");
 const { name, version, repository } = JSON.parse(packageJsonString);
@@ -10,6 +10,9 @@ export default defineConfig({
     $clientVersion: `"${version}"`,
     $clientRepository: `"${repository}"`,
   },
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     globals: false,
     environment: "node",
@@ -19,7 +22,7 @@ export default defineConfig({
       provider: "v8",
       reportsDirectory: "coverage",
       reporter: ["text", "lcov", "clover", "json"],
-      include: ["src/Functions/{utility,validation}.ts", "src/Node/{REST,Node}.ts", "src/Queue/{Track,Playlist}.ts"],
+      include: ["src/functions/{utility,validation}.ts", "src/node/{rest,node}.ts", "src/queue/{track,playlist}.ts"],
     },
   },
 });

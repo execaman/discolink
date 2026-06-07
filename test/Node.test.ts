@@ -1,7 +1,9 @@
 import { describe, expect, it, test, vi } from "vitest";
+import { OPType } from "@/types";
+import { Node, REST } from "@/node";
 import { setImmediate, setTimeout } from "node:timers/promises";
-import { OPType } from "../src/Typings";
-import type { NodeOptions, ReadyPayload, StatsPayload } from "../src/Typings";
+
+import type { NodeOptions, ReadyPayload, StatsPayload } from "@/types";
 
 let ws: InstanceType<typeof MockWebSocket>;
 
@@ -50,8 +52,6 @@ const MockWebSocket = await vi.hoisted(async () => {
 });
 
 vi.mock("ws", () => ({ WebSocket: MockWebSocket }));
-
-import { Node, REST } from "../src/Node";
 
 describe("Node", () => {
   const options = {

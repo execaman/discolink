@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
 import { defineConfig } from "tsdown";
+import { readFileSync } from "node:fs";
 
 const packageJsonString = readFileSync("./package.json", "utf8");
 const { name, version, repository } = JSON.parse(packageJsonString);

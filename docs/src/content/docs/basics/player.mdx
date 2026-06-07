@@ -3,7 +3,7 @@ title: Player
 description: About Player and how its three managers work, how to iterate them, and how the Player initializes.
 ---
 
-import { Steps, Aside } from "@astrojs/starlight/components";
+import { Aside, Steps } from "@astrojs/starlight/components";
 
 `Player` owns three managers — `nodes`, `voices`, and `queues` — each responsible for one layer of the system. All three are immutable after construction and safe to destructure.
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import * as val from "../src/Functions/validation";
+import * as val from "@/functions/validation";
 
 describe("Functions (validation)", () => {
   describe("isNumber", () => {

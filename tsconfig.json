@@ -22,6 +22,9 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "types": ["node"],
 
     // https://www.typescriptlang.org/tsconfig/#Emit_6246
