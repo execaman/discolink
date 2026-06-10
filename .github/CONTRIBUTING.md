@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for showing interest in contributing to this project. There are multiple ways for you to contribute explained below, please read them thoroughly as we must strictly follow a few things.
+Thank you for showing interest in contributing to this project. There are multiple ways to contribute, explained below. Please read them thoroughly as we must strictly follow a few things.
 
 ## Issues
 
@@ -8,16 +8,16 @@ These are only meant for bug reports and feature requests, blank issues have bee
 
 ## Pull Requests
 
-> [!WARNING]
-> This guide assumes you're familiar with [basics of git](https://git-scm.com/cheat-sheet)
+> [!NOTE]
+> We assume familiarity with [basics of git](https://git-scm.com/cheat-sheet) as a prerequisite
 
 ### General workflow
 
 1. Clone this repository
 2. Install dependencies via lockfile (e.g. `npm ci`)
-3. Never work on the `main` branch, [create a feature branch](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging)
-4. Follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) spec for commit messages
-5. Your branch name must follow the `{type}/{short-name}` format
+3. Create a [branch](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) named in `{type}/{short-name}` format
+4. Make your changes, if it's code, keep value and type imports separate
+5. Follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) spec for commit messages
 
 ### Testing Changes
 
@@ -30,12 +30,17 @@ Only the following components need to be tested if your changes cover any:
 - [`Track`](/src/queue/track.ts)
 - [`Playlist`](/src/queue/playlist.ts)
 
-Do NOT chase metrics (e.g. 100% coverage) focus on valid branch and line coverage, avoid ranges that simply cannot be covered (e.g. guards, v8 specific quirks).
+There's no direct need for 100% coverage but remaining close to it is preferable given how much we're testing.
 
-> [!NOTE]
-> Tests are not run automatically like code formatting and linting do everytime you commit or push to avoid unnecessary distraction, as such, if you do forget to test your code the CI will report them for you in your branch for that commit anyway.
+This is deliberate as we want to secure core functionality while leaving the rest of the codebase built upon it flexible and open to new features.
 
 ### Managing Dependencies
+
+**Update all**
+
+```sh
+npm run upgrade
+```
 
 **Check for updates**
 
@@ -44,13 +49,3 @@ npm run deps <type>
 ```
 
 **Types** `prod` `dev` `peer` `optional`
-
-**Update all**
-
-```sh
-npm run upgrade
-```
-
-### Code Ownership
-
-If you make certain additions that you will continue to maintain in the future for the most part (e.g. adding a plugin), you might want to edit the `CODEOWNERS` file.
