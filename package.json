@@ -18,12 +18,15 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "./dist/",
+    "./dist",
     "NOTICE"
   ],
   "author": "Aman (https://github.com/execaman)",
   "funding": "https://github.com/sponsors/execaman",
-  "repository": "https://github.com/execaman/discolink",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/execaman/discolink.git"
+  },
   "homepage": "https://execaman.github.io/discolink",
   "bugs": "https://github.com/execaman/discolink/issues",
   "keywords": [
@@ -47,35 +50,35 @@
     "docs:build": "astro build --root docs && typedoc --options docs/typedoc.json",
     "docs:preview": "astro preview --root docs",
     "deps": "ncu --format group --dep",
-    "upgrade": "ncu -u --install always",
+    "upgrade": "ncu -u && npm install",
     "prepare": "husky"
   },
   "engines": {
-    "node": ">=22.22"
+    "node": ">=24"
   },
   "dependencies": {
-    "ws": "^8.20.0"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
-    "@astrojs/starlight": "^0.39.1",
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
-    "@expressive-code/plugin-line-numbers": "^0.42.0",
+    "@astrojs/starlight": "^0.40.0",
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@expressive-code/plugin-line-numbers": "^0.43.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.3",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^4.1.4",
-    "astro": "^6.3.1",
+    "@vitest/coverage-v8": "^4.1.9",
+    "astro": "^6.4.8",
     "husky": "^9.1.7",
-    "npm-check-updates": "^21.0.2",
-    "prettier": "^3.8.3",
-    "sharp": "^0.34.5",
-    "tsdown": "^0.21.8",
+    "npm-check-updates": "^22.2.3",
+    "prettier": "^3.8.4",
+    "sharp": "^0.35.1",
+    "tsdown": "^0.22.3",
     "typedoc": "^0.28.19",
     "typedoc-material-theme": "^1.4.1",
-    "typedoc-plugin-dt-links": "^2.0.53",
+    "typedoc-plugin-dt-links": "^2.0.59",
     "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.9"
   }
 }
