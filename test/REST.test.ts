@@ -5,7 +5,7 @@ import type { RESTOptions, RequestOptions, RestResponse } from "@/types";
 
 declare const $clientName: string;
 declare const $clientVersion: string;
-declare const $clientRepository: string;
+declare const $clientHomepage: string;
 
 describe("REST", () => {
   const options = {
@@ -39,7 +39,7 @@ describe("REST", () => {
       expect(r.version).toBeGreaterThan(0);
       expect(r.timeout).toBeGreaterThan(0);
       expect(r.sessionId).toBeNull();
-      expect(r.userAgent).toBe($clientName + "/" + $clientVersion + " (" + $clientRepository + ")");
+      expect(r.userAgent).toBe($clientName + "/" + $clientVersion + " (" + $clientHomepage + ")");
     });
 
     it("behaves as expected for accessors", () => {

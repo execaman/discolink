@@ -2,13 +2,13 @@ import { defineConfig } from "vitest/config";
 import { readFileSync } from "node:fs";
 
 const packageJsonString = readFileSync("./package.json", "utf8");
-const { name, version, repository } = JSON.parse(packageJsonString);
+const { name, version, homepage } = JSON.parse(packageJsonString);
 
 export default defineConfig({
   define: {
     $clientName: `"${name}"`,
     $clientVersion: `"${version}"`,
-    $clientRepository: `"${repository}"`,
+    $clientHomepage: `"${homepage}"`,
   },
   resolve: {
     tsconfigPaths: true,

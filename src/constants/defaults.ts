@@ -2,14 +2,14 @@ import type { NodeOptions, PlayerOptions, RESTOptions } from "@/types";
 
 declare const $clientName: string;
 declare const $clientVersion: string;
-declare const $clientRepository: string;
+declare const $clientHomepage: string;
 
 /**
  * Default REST constructor options
  */
 export const DefaultRestOptions = Object.seal({
   version: 4,
-  userAgent: $clientName + "/" + $clientVersion + " (" + $clientRepository + ")",
+  userAgent: $clientName + "/" + $clientVersion + " (" + $clientHomepage + ")",
   stackTrace: false,
   requestTimeout: 10_000,
 } as const satisfies Partial<RESTOptions>);
