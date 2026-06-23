@@ -17,10 +17,6 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "./dist",
-    "NOTICE"
-  ],
   "author": "Aman (https://github.com/execaman)",
   "funding": "https://github.com/sponsors/execaman",
   "repository": {
@@ -41,14 +37,21 @@
     "access": "public",
     "provenance": true
   },
+  "files": [
+    "./dist",
+    "NOTICE"
+  ],
+  "workspaces": [
+    "./docs"
+  ],
   "scripts": {
     "lint": "prettier --check . && tsc --noEmit",
     "test": "vitest run",
     "build": "tsdown",
     "format": "prettier --log-level error --write .",
-    "docs:dev": "astro dev --root docs",
-    "docs:build": "astro build --root docs && typedoc --options docs/typedoc.json",
-    "docs:preview": "astro preview --root docs",
+    "docs:dev": "npm -w docs run dev",
+    "docs:build": "npm -w docs run build",
+    "docs:preview": "npm -w docs run preview",
     "deps": "ncu --format group --dep",
     "upgrade": "ncu -u && npm install",
     "prepare": "husky"
@@ -60,24 +63,16 @@
     "ws": "^8.21.0"
   },
   "devDependencies": {
-    "@astrojs/starlight": "^0.40.0",
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
-    "@expressive-code/plugin-line-numbers": "^0.43.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/node": "^25.9.3",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^4.1.9",
-    "astro": "^6.4.8",
     "husky": "^9.1.7",
     "npm-check-updates": "^22.2.3",
     "prettier": "^3.8.4",
-    "sharp": "^0.35.1",
     "tsdown": "^0.22.3",
-    "typedoc": "^0.28.19",
-    "typedoc-material-theme": "^1.4.1",
-    "typedoc-plugin-dt-links": "^2.0.59",
-    "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   }
