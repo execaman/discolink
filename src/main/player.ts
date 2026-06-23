@@ -89,7 +89,7 @@ export class Player<
     return this.#clientId;
   }
 
-  async init(clientId: string, nodes = this.options.nodes) {
+  async init(clientId: string, nodes = this.options.nodes!) {
     if (this.#initPromise !== null) return this.#initPromise;
     if (this.#initialized) return;
     const resolver = Promise.withResolvers<void>();
