@@ -56,7 +56,6 @@
   "engines": {
     "node": ">=22"
   },
-  "engineStrict": true,
   "dependencies": {
     "ws": "^8.21.0"
   },
