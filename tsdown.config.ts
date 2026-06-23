@@ -16,7 +16,7 @@ export default defineConfig({
   nodeProtocol: true,
   fixedExtension: false,
   outDir: "dist",
-  target: "esnext",
+  target: "es2025",
   platform: "node",
   entry: "src/index.ts",
   format: ["cjs", "esm"],
