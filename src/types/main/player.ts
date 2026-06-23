@@ -65,9 +65,9 @@ export type PluginRecord<Plugins extends PlayerPlugin[]> = {
  */
 export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> {
   /**
-   * Options for creating node(s)
+   * Options for creating nodes on init
    */
-  nodes: CreateNodeOptions[];
+  nodes?: CreateNodeOptions[];
 
   /**
    * Plugins to initialize after creating nodes
@@ -114,10 +114,7 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
   fetchRelatedTracks?: (queue: Queue, track: Track) => Promise<Track[]>;
 }
 
-export type PlayerInstanceOptions = Omit<
-  RequiredProp<PlayerOptions, keyof typeof DefaultPlayerOptions>,
-  "nodes" | "plugins"
->;
+export type PlayerInstanceOptions = Omit<RequiredProp<PlayerOptions, keyof typeof DefaultPlayerOptions>, "plugins">;
 
 /**
  * Voice state update payload

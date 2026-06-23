@@ -7,7 +7,6 @@ import { Playlist, Queue, QueueManager, Track } from "@/queue";
 import { EventEmitter } from "node:events";
 
 import type {
-  CreateNodeOptions,
   CreateQueueOptions,
   MergeUnionType,
   PlayOptions,
@@ -38,7 +37,6 @@ export class Player<
   #initPromise: Promise<void> | null = null;
 
   #clientId: string | null = null;
-  #nodes: CreateNodeOptions[] | null = null;
 
   readonly options: PlayerInstanceOptions;
   readonly plugins: PluginRecord<Plugins>;
@@ -52,11 +50,7 @@ export class Player<
 
     const _options = { ...DefaultPlayerOptions, ...options };
 
-    if (_options.nodes.length === 0) throw new Error("Missing node create options");
     if (typeof _options.forwardVoiceUpdate !== "function") throw new Error("Missing voice update function");
-
-    this.#nodes = _options.nodes;
-    delete (_options as Partial<typeof _options>).nodes;
 
     this.options = _options;
     this.plugins = {} as PluginRecord<Plugins>;
@@ -95,18 +89,17 @@ export class Player<
     return this.#clientId;
   }
 
-  async init(clientId: string) {
+  async init(clientId: string, nodes = this.options.nodes!) {
     if (this.#initPromise !== null) return this.#initPromise;
     if (this.#initialized) return;
     const resolver = Promise.withResolvers<void>();
     this.#initPromise = resolver.promise;
     this.#clientId = clientId;
     try {
-      for (const node of this.#nodes!) this.nodes.create(node);
+      nodes?.forEach((node) => this.nodes.create(node));
       for (const name in this.plugins) (this.plugins as { [x: string]: PlayerPlugin })[name]!.init(this);
       await this.nodes.connect();
       this.#initialized = true;
-      this.#nodes = null;
       (this as Player).emit("init");
       resolver.resolve();
     } catch (err) {
