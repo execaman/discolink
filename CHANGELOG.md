@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.0](https://github.com/execaman/discolink/compare/v5.0.0...v5.1.0) (2026-06-23)
+
+
+### Features
+
+* **Player:** make init nodes optional ([#72](https://github.com/execaman/discolink/issues/72)) ([a714371](https://github.com/execaman/discolink/commit/a714371acad469f7ffd71185e03875a8025be61f))
+* **Player:** optional 'nodes' param for init() ([a714371](https://github.com/execaman/discolink/commit/a714371acad469f7ffd71185e03875a8025be61f))
+
 ## [5.0.0](https://github.com/execaman/discolink/compare/v4.7.0...v5.0.0) (2026-06-06)
 
 
