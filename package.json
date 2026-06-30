@@ -4,6 +4,7 @@
   "type": "module",
   "version": "5.1.0",
   "description": "A Lavalink client for Discord bots in TypeScript",
+  "sideEffects": false,
   "exports": {
     "import": {
       "types": "./dist/index.d.ts",
