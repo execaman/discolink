@@ -22,7 +22,7 @@ export interface RESTOptions {
 
   /**
    * The value to set the `User-Agent` header to.
-   * Default: `$client/$version ($repository)`
+   * Default: `$client/$version ($homepage)`
    */
   userAgent?: string;
 

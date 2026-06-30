@@ -29,6 +29,10 @@ footer {
   margin-left: 1.5rem !important;
 }
 
+.col-content {
+  overflow-x: scroll !important;
+}
+
 .tsd-signatures .tsd-signature {
   border-width: thin !important;
 }
