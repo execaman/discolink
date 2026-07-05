@@ -1,0 +1,29 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    allow:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-patch
+    groups:
+      npm-deps:
+        patterns: ["*"]
+        applies-to: version-updates
+    commit-message:
+      prefix: deps(npm)
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: quarterly
+    groups:
+      ci-deps:
+        patterns: ["*"]
+        applies-to: version-updates
+    commit-message:
+      prefix: deps(ci)
