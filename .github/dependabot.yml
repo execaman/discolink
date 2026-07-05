@@ -11,7 +11,7 @@ updates:
           - version-update:semver-minor
           - version-update:semver-patch
     groups:
-      npm-deps:
+      npm:
         patterns: ["*"]
         applies-to: version-updates
     commit-message:
@@ -22,7 +22,7 @@ updates:
     schedule:
       interval: quarterly
     groups:
-      ci-deps:
+      actions:
         patterns: ["*"]
         applies-to: version-updates
     commit-message:
