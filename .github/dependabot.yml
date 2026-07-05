@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: weekly
     allow:
-      - dependency-name: "*"
+      - dependency-type: direct
         update-types:
           - version-update:semver-minor
           - version-update:semver-patch
@@ -15,7 +15,7 @@ updates:
         patterns: ["*"]
         applies-to: version-updates
     commit-message:
-      prefix: deps(npm)
+      prefix: deps
 
   - package-ecosystem: github-actions
     directory: /
@@ -26,4 +26,4 @@ updates:
         patterns: ["*"]
         applies-to: version-updates
     commit-message:
-      prefix: deps(ci)
+      prefix: deps
