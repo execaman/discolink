@@ -13,14 +13,14 @@
     "upgrade": "ncu -u && npm install"
   },
   "devDependencies": {
-    "@astrojs/starlight": "^0.41.3",
-    "@expressive-code/plugin-line-numbers": "^0.44.0",
+    "@astrojs/starlight": "^0.40.0",
+    "@expressive-code/plugin-line-numbers": "^0.43.1",
     "astro": "^6.4.8",
     "npm-check-updates": "^22.2.3",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.1",
     "typedoc": "^0.28.19",
     "typedoc-material-theme": "^1.4.1",
-    "typedoc-plugin-dt-links": "^2.0.62",
+    "typedoc-plugin-dt-links": "^2.0.59",
     "typedoc-plugin-mdn-links": "^5.1.1"
   }
 }
