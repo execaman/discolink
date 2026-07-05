@@ -192,8 +192,4 @@ export interface ErrorSearchResult {
  * Search result
  */
 export type SearchResult =
-  | TrackSearchResult
-  | PlaylistSearchResult
-  | QuerySearchResult
-  | EmptySearchResult
-  | ErrorSearchResult;
+  TrackSearchResult | PlaylistSearchResult | QuerySearchResult | EmptySearchResult | ErrorSearchResult;
