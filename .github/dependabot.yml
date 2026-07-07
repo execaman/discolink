@@ -4,14 +4,13 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     allow:
       - dependency-type: direct
-        update-types:
-          - version-update:semver-minor
-          - version-update:semver-patch
     ignore:
       - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
         versions: ["<1.0.0"]
     groups:
       npm:
@@ -23,7 +22,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: quarterly
+      interval: monthly
     groups:
       actions:
         patterns: ["*"]
