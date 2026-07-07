@@ -58,12 +58,16 @@ describe("Playlist", () => {
     });
 
     it("is defined with values for complete data", () => {
-      const p = new Playlist({ info, pluginInfo: { uri: "uri" }, tracks: [track, track] });
+      const p = new Playlist({
+        info,
+        pluginInfo: { uri: "uri" },
+        tracks: [track, { ...track, info: { ...track.info, isStream: true } }],
+      });
       expect(p.name).toBe("name");
       expect(p.selectedTrack).toBe(0);
       expect(p.tracks.length).toBe(2);
-      expect(p.duration).toBe(20_000);
-      expect(p.formattedDuration).toBe("00:20");
+      expect(p.duration).toBe(10_000);
+      expect(p.formattedDuration).toBe("00:10");
       expect(p.pluginInfo).toEqual({ uri: "uri" });
     });
   });

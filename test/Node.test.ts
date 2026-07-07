@@ -3,7 +3,7 @@ import { OPType } from "@/types";
 import { Node, REST } from "@/node";
 import { setImmediate, setTimeout } from "node:timers/promises";
 
-import type { NodeOptions, ReadyPayload, StatsPayload } from "@/types";
+import type { BaseMessagePayload, NodeOptions, ReadyPayload, StatsPayload } from "@/types";
 
 let ws: InstanceType<typeof MockWebSocket>;
 
@@ -114,6 +114,7 @@ describe("Node", () => {
     const payloads = {
       stats: { op: OPType.Stats, uptime: 123 } satisfies Partial<StatsPayload>,
       ready: { op: OPType.Ready, sessionId: "123" } satisfies Partial<ReadyPayload>,
+      unknown: { op: "unknown" } satisfies BaseMessagePayload,
     };
 
     test("connection state and lifecycle", async () => {
@@ -162,6 +163,11 @@ describe("Node", () => {
 
       expect(n.ping).toBeGreaterThanOrEqual(0);
       expect(n.stats).toMatchObject(payloads.stats);
+
+      n.once("dispatch", (p) => {
+        expect(p).toMatchObject(payloads.unknown);
+      });
+      ws.message(JSON.stringify(payloads.unknown));
 
       ws.close();
 
@@ -214,6 +220,34 @@ describe("Node", () => {
       expect(n.state).toBe("disconnected");
     });
 
+    test("disconnect on unexpected payload", async () => {
+      const n = new Node(options);
+
+      n.connect();
+      expect(n.state).toBe("connecting");
+
+      ws.open();
+      expect(n.state).toBe("connected");
+
+      ws.message("enough with the tests!");
+      expect(n.state).toBe("disconnected");
+    });
+
+    test("disconnect ignores closed socket", async () => {
+      const n = new Node(options);
+
+      n.connect();
+      expect(n.state).toBe("connecting");
+
+      ws.open();
+      expect(n.state).toBe("connected");
+
+      ws.readyState = MockWebSocket.CLOSED;
+
+      await n.disconnect();
+      expect(n.state).toBe("disconnected");
+    });
+
     test("disconnect always halts the node", async () => {
       const n = new Node({ ...options, reconnectDelay: 1, reconnectLimit: 1 });
 
@@ -239,19 +273,6 @@ describe("Node", () => {
       expect(n.state).toBe("disconnected");
     });
 
-    test("disconnect on unexpected payload", async () => {
-      const n = new Node(options);
-
-      n.connect();
-      expect(n.state).toBe("connecting");
-
-      ws.open();
-      expect(n.state).toBe("connected");
-
-      ws.message("enough with the tests!");
-      expect(n.state).toBe("disconnected");
-    });
-
     test("skip reconnect delay on explicit connect", async () => {
       const n = new Node(options);
 
@@ -268,6 +289,53 @@ describe("Node", () => {
       expect(n.state).toBe("connecting");
 
       await n.disconnect();
+      expect(n.state).toBe("disconnected");
+    });
+
+    test("normalize aggregate and non-standard errors", async () => {
+      const n = new Node(options);
+      let error: Error | undefined;
+
+      n.on("error", (err) => (error = err));
+
+      n.connect();
+      expect(n.state).toBe("connecting");
+
+      ws.open();
+      expect(n.state).toBe("connected");
+
+      ws.emit("error", new Error("one"));
+      expect(error?.constructor === Error).toBe(true);
+      expect(error?.message).toBe("one");
+
+      ws.emit("error", new AggregateError(["two", "three"]));
+      expect(error?.constructor === Error).toBe(true);
+      expect(error?.message).toBe("three");
+
+      await n.disconnect();
+      expect(n.state).toBe("disconnected");
+    });
+
+    test("tolerate untimely connect, pong, and disconnect", async () => {
+      const n = new Node(options);
+
+      const prom = n.connect();
+      expect(n.state).toBe("connecting");
+
+      ws.open();
+      expect(n.state).toBe("connected");
+
+      await prom;
+      await expect(n.connect()).resolves.toBe(true);
+
+      expect(n.ping).toBeNull();
+      ws.ping();
+      expect(n.ping).toBeNull();
+
+      const promise = n.disconnect();
+      await expect(n.disconnect()).resolves.toBeUndefined();
+
+      await promise;
       expect(n.state).toBe("disconnected");
     });
   });
