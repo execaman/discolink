@@ -35,7 +35,7 @@ export class Playlist<PluginInfo extends JsonObject = CommonPluginInfo> {
   /**
    * Formatted duration (live tracks excluded)
    */
-  formattedDuration = "00:00";
+  formattedDuration: string;
 
   constructor(data: APIPlaylist<PluginInfo>) {
     if (!isRecord(data)) throw new Error("Playlist data must be an object");
@@ -47,12 +47,11 @@ export class Playlist<PluginInfo extends JsonObject = CommonPluginInfo> {
       if (!track.isLive) this.duration += track.duration;
       this.tracks.push(track);
     }
+    this.formattedDuration = formatDuration(this.duration);
 
     if (isString(data.info.name, "non-empty")) this.name = data.info.name;
     if (isNumber(data.info.selectedTrack, "whole")) this.selectedTrack = data.info.selectedTrack;
-
     if (isRecord(data.pluginInfo, "non-empty")) this.pluginInfo = data.pluginInfo;
-    if (this.duration > 0) this.formattedDuration = formatDuration(this.duration);
   }
 
   /**
