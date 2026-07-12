@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.0](https://github.com/execaman/discolink/compare/v5.1.0...v5.2.0) (2026-07-12)
+
+
+### Features
+
+* export everything ([#81](https://github.com/execaman/discolink/issues/81)) ([a1e3e74](https://github.com/execaman/discolink/commit/a1e3e740077c9489e5e18b6a877e32a7d447240b))
+
 ## [5.1.0](https://github.com/execaman/discolink/compare/v5.0.0...v5.1.0) (2026-06-23)
 
 
