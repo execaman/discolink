@@ -14,19 +14,18 @@ import type {
   QueueContext,
   RequiredProp,
   TrackEndReason,
+  TuplePop,
 } from "@/types";
-
-type ExcludeLast<T extends any[]> = T extends [...infer Items, any] ? Items : never;
 
 export interface PlayerEventMap {
   init: [];
 
-  nodeConnect: [node: Node, ...ExcludeLast<NodeEventMap["connect"]>];
-  nodeReady: [node: Node, ...ExcludeLast<NodeEventMap["ready"]>];
-  nodeDispatch: [node: Node, ...ExcludeLast<NodeEventMap["dispatch"]>];
-  nodeError: [node: Node, ...ExcludeLast<NodeEventMap["error"]>];
-  nodeClose: [node: Node, ...ExcludeLast<NodeEventMap["close"]>];
-  nodeDisconnect: [node: Node, ...ExcludeLast<NodeEventMap["disconnect"]>];
+  nodeConnect: [node: Node, ...TuplePop<NodeEventMap["connect"]>];
+  nodeReady: [node: Node, ...TuplePop<NodeEventMap["ready"]>];
+  nodeDispatch: [node: Node, ...TuplePop<NodeEventMap["dispatch"]>];
+  nodeError: [node: Node, ...TuplePop<NodeEventMap["error"]>];
+  nodeClose: [node: Node, ...TuplePop<NodeEventMap["close"]>];
+  nodeDisconnect: [node: Node, ...TuplePop<NodeEventMap["disconnect"]>];
 
   voiceConnect: [voice: VoiceState];
   voiceClose: [voice: VoiceState, code: number, reason: string, byRemote: boolean];

@@ -1,7 +1,7 @@
 import { Node } from "@/node";
 import { OPType } from "@/types";
 import { noop } from "@/functions";
-import { OnEventUpdateSymbol, OnStateUpdateSymbol } from "@/constants/symbols";
+import { OnEventUpdateSymbol, OnStateUpdateSymbol } from "@/constants";
 
 import type { Player } from "@/main";
 import type {

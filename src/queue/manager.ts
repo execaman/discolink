@@ -8,7 +8,7 @@ import {
   OnStateUpdateSymbol,
   OnVoiceCloseSymbol,
   UpdateSymbol,
-} from "@/constants/symbols";
+} from "@/constants";
 import { setImmediate } from "node:timers/promises";
 
 import type { Player } from "@/main";

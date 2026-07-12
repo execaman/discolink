@@ -2,8 +2,7 @@ import { Queue } from "@/queue";
 import { VoiceCloseCodes } from "@/types";
 import { isString, noop } from "@/functions";
 import { VoiceRegion, VoiceState } from "@/voice";
-import { SnowflakeRegex, VoiceRegionIdRegex } from "@/constants";
-import { OnVoiceCloseSymbol, UpdateSymbol } from "@/constants/symbols";
+import { OnVoiceCloseSymbol, SnowflakeRegex, UpdateSymbol, VoiceRegionIdRegex } from "@/constants";
 import { setTimeout } from "node:timers/promises";
 
 import type { Player } from "@/main";
@@ -13,15 +12,11 @@ import type {
   ConnectOptions,
   CreateQueueOptions,
   DiscordDispatchPayload,
+  JoinRequest,
   VoiceServerUpdatePayload,
   VoiceStateUpdatePayload,
   WebSocketClosedEventPayload,
 } from "@/types";
-
-interface JoinRequest
-  extends PromiseWithResolvers<VoiceState>, Pick<CreateQueueOptions, "context" | "node" | "voiceId"> {
-  config?: Pick<CreateQueueOptions, "filters" | "volume">;
-}
 
 /**
  * Utility class for managing voice connections

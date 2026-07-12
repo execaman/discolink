@@ -1,14 +1,7 @@
-import { DefaultNodeOptions } from "@/constants";
-import { OnPingUpdateSymbol } from "@/constants/symbols";
+import { DefaultNodeOptions, OnPingUpdateSymbol } from "@/constants";
 
 import type { Player } from "@/main";
-import type { PlayerState } from "@/types";
-
-interface VoiceNodePingStats {
-  pingCount: number;
-  pingTotal: number;
-  startTime: number;
-}
+import type { PlayerState, VoiceNodePingStats } from "@/types";
 
 /**
  * Class representing a voice region and evaluating performing nodes
