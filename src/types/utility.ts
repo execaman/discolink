@@ -33,6 +33,18 @@ export type NonNullableProp<T, P extends keyof T> = {
 };
 
 /**
+ * Exclude the last item of a tuple
+ */
+export type TuplePop<T extends readonly unknown[]> = T extends readonly [...infer Items, unknown] ? Items : [];
+
+/**
+ * Constrains an event map to a type node's EventEmitter accepts
+ */
+export type ConstrainEventMap<T> = {
+  [K in keyof T]: T[K] extends any[] ? T[K] : never;
+};
+
+/**
  * Merges a union type into one
  */
 export type MergeUnionType<U> = (U extends any ? (i: U) => void : never) extends (i: infer I) => void ? I : never;

@@ -7,6 +7,7 @@ import { Playlist, Queue, QueueManager, Track } from "@/queue";
 import { EventEmitter } from "node:events";
 
 import type {
+  ConstrainEventMap,
   CreateQueueOptions,
   MergeUnionType,
   PlayOptions,
@@ -21,10 +22,6 @@ import type {
   SearchOptions,
   SearchResult,
 } from "@/types";
-
-type ConstrainEventMap<T> = {
-  [K in keyof T]: T[K] extends any[] ? T[K] : never;
-};
 
 /**
  * Main class putting together all essential managers, also the entry point to get you started

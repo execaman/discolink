@@ -1,8 +1,8 @@
 import { Severity } from "@/types";
 import { VoiceState } from "@/voice";
 import { FilterManager, Playlist, Track } from "@/queue";
+import { LastTrackSymbol, UpdateSymbol } from "@/constants";
 import { formatDuration, isArray, isNumber } from "@/functions";
-import { LastTrackSymbol, UpdateSymbol } from "@/constants/symbols";
 
 import type { Player } from "@/main";
 import type {

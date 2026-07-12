@@ -1,77 +1,5 @@
+import type { VoiceState } from "@/voice";
 import type { CreateQueueOptions, NonNullableProp } from "@/types";
-
-/**
- * Common info in Discord's 'dispatch' payload type
- */
-export interface CommonDispatchPayloadInfo {
-  op: 0;
-  s: number;
-}
-
-/**
- * Discord bot ready payload (partial, essential only)
- */
-export interface BotReadyPayload extends CommonDispatchPayloadInfo {
-  t: "READY";
-  d: {
-    user: {
-      id: string;
-    };
-  };
-}
-
-/**
- * Discord voice state update payload
- */
-export interface VoiceStateUpdatePayload extends CommonDispatchPayloadInfo {
-  t: "VOICE_STATE_UPDATE";
-  d: {
-    guild_id?: string;
-    channel_id: string | null;
-    user_id: string;
-    session_id: string;
-    deaf: boolean;
-    mute: boolean;
-    self_deaf: boolean;
-    self_mute: boolean;
-    suppress: boolean;
-  };
-}
-
-/**
- * Discord voice server update payload
- */
-export interface VoiceServerUpdatePayload extends CommonDispatchPayloadInfo {
-  t: "VOICE_SERVER_UPDATE";
-  d: {
-    token: string;
-    guild_id: string;
-    endpoint: string | null;
-  };
-}
-
-/**
- * Discord dispatch payload
- */
-export type DiscordDispatchPayload = BotReadyPayload | VoiceStateUpdatePayload | VoiceServerUpdatePayload;
-
-/**
- * Internal ref representing client-side voice state
- */
-export interface BotVoiceState
-  extends
-    Required<NonNullableProp<Omit<VoiceStateUpdatePayload["d"], "guild_id" | "user_id">, "channel_id">>,
-    NonNullableProp<Omit<VoiceServerUpdatePayload["d"], "guild_id">, "endpoint"> {
-  connected: boolean;
-  node_session_id: string;
-  reconnecting: boolean;
-  region_id: string;
-}
-
-/**
- * Options for the queue while connecting to a voice channel
- */
-export interface ConnectOptions extends Pick<CreateQueueOptions, "context" | "filters" | "node" | "volume"> {}
 
 /**
  * https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes
@@ -157,3 +85,86 @@ export const enum VoiceCloseCodes {
    */
   DisconnectedCallTerminated,
 }
+
+/**
+ * Client-side voice state
+ * @internal
+ */
+export interface BotVoiceState
+  extends
+    Required<NonNullableProp<Omit<VoiceStateUpdatePayload["d"], "guild_id" | "user_id">, "channel_id">>,
+    NonNullableProp<Omit<VoiceServerUpdatePayload["d"], "guild_id">, "endpoint"> {
+  connected: boolean;
+  node_session_id: string;
+  reconnecting: boolean;
+  region_id: string;
+}
+
+/**
+ * Join request for a voice connection
+ * @internal
+ */
+export interface JoinRequest
+  extends PromiseWithResolvers<VoiceState>, Pick<CreateQueueOptions, "context" | "node" | "voiceId"> {
+  config?: Pick<CreateQueueOptions, "filters" | "volume">;
+}
+
+/**
+ * Options for the queue while connecting to a voice channel
+ */
+export interface ConnectOptions extends Pick<CreateQueueOptions, "context" | "filters" | "node" | "volume"> {}
+
+/**
+ * Common info in Discord's 'dispatch' payload type
+ */
+export interface CommonDispatchPayloadInfo {
+  op: 0;
+  s: number;
+}
+
+/**
+ * Discord bot ready payload (partial, essential only)
+ */
+export interface BotReadyPayload extends CommonDispatchPayloadInfo {
+  t: "READY";
+  d: {
+    user: {
+      id: string;
+    };
+  };
+}
+
+/**
+ * Discord voice state update payload
+ */
+export interface VoiceStateUpdatePayload extends CommonDispatchPayloadInfo {
+  t: "VOICE_STATE_UPDATE";
+  d: {
+    guild_id?: string;
+    channel_id: string | null;
+    user_id: string;
+    session_id: string;
+    deaf: boolean;
+    mute: boolean;
+    self_deaf: boolean;
+    self_mute: boolean;
+    suppress: boolean;
+  };
+}
+
+/**
+ * Discord voice server update payload
+ */
+export interface VoiceServerUpdatePayload extends CommonDispatchPayloadInfo {
+  t: "VOICE_SERVER_UPDATE";
+  d: {
+    token: string;
+    guild_id: string;
+    endpoint: string | null;
+  };
+}
+
+/**
+ * Discord dispatch payload
+ */
+export type DiscordDispatchPayload = BotReadyPayload | VoiceStateUpdatePayload | VoiceServerUpdatePayload;
