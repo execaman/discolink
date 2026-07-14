@@ -21,6 +21,7 @@
     "typedoc": "^0.28.19",
     "typedoc-material-theme": "^1.4.1",
     "typedoc-plugin-dt-links": "^2.0.63",
-    "typedoc-plugin-mdn-links": "^5.1.1"
+    "typedoc-plugin-mdn-links": "^5.1.1",
+    "typescript": "^6.0.3"
   }
 }
