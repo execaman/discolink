@@ -3,84 +3,64 @@ title: Session resumption
 description: Keeping audio alive across bot restarts.
 ---
 
-import { Aside } from "@astrojs/starlight/components";
+import { Aside, Steps } from "@astrojs/starlight/components";
 
 Lavalink can keep a session alive for a configurable window after your bot disconnects. If you reconnect within that window and present the original session ID, Lavalink resumes — queues keep playing, no interruption.
 
 Discolink doesn't implement this automatically. The right approach depends on your scale and persistence layer.
 
-## 1. Opt in and persist the session ID
+<Steps>
 
-On a fresh connection, tell Lavalink to keep the session alive and store the session ID:
+1. **Opt in and persist the session ID**
 
-```ts
-player.on("nodeReady", async (node, resumed) => {
-  if (!resumed) {
-    // Enable resumption with a 60-second window
-    await node.rest.updateSession({ resuming: true, timeout: 60 });
-    // Persist the session ID — use your preferred storage
-    await db.set(`session:${node.name}`, node.sessionId);
-  }
-});
-```
+   On a fresh connection, tell Lavalink to keep the session alive and store the session ID:
 
-## 2. Pass the session ID on reconnect
+   ```ts
+   player.on("nodeReady", async (node, resumed) => {
+     if (!resumed) {
+       // Enable resumption with a 60-second window
+       await node.rest.updateSession({ resuming: true, timeout: 60 });
+       // Persist the session ID — use your preferred storage
+       await db.set(`session:${node.name}`, node.sessionId);
+     }
+   });
+   ```
 
-Pass the stored session ID via the node's `sessionId` option — Discolink sends it as the `Session-Id` WebSocket header during the handshake:
+2. **Pass the session ID on reconnect**
 
-```ts
-const storedSessionId = await db.get("session:main");
+   Disable auto init and initialize nodes with their session IDs:
 
-const player = new Player({
-  nodes: [
-    {
-      name: "main",
-      origin: "http://localhost:2333",
-      password: "youshallnotpass",
-      sessionId: storedSessionId ?? undefined,
-    },
-  ],
-  // Disable automatic recovery
-  autoSync: false,
-  relocateQueues: false,
-  // ...
-});
-```
+   ```ts
+   const player = new Player({
+     autoInit: false,
+     // don't pass your nodes here anymore
+     // ...
+   });
 
-<Aside type="caution">
-  `autoSync` and `relocateQueues` are part of `player.options`, if you've set them to `true` at construction, set them
-  to `false` before implementing your own behavior for them.
-</Aside>
+   // Retrieve the stored session ID, then initialize
+   const storedSessionId = await db.get("session:main");
 
-When resuming, you don't want Discolink overwriting Lavalink's state (`autoSync: false`) or migrating queues to other nodes (`relocateQueues: false`).
+   await player.init(clientId, [
+     {
+       name: "main",
+       origin: "http://localhost:2333",
+       password: "youshallnotpass",
+       sessionId: storedSessionId ?? undefined,
+     },
+   ]);
+   ```
 
-## 3. Sync local state after a successful resume
+3. **Sync local state after a successful resume**
 
-After a successful resume, pull Lavalink's player state into your local queues:
+   After a successful resume, pull Lavalink's player state back into your local queues:
 
-```ts
-player.on("nodeReady", async (node, resumed) => {
-  if (resumed) {
-    // Pull Lavalink's player state into local queues
-    await player.queues.sync(node.name, "local");
-  }
-});
-```
+   ```ts
+   player.on("nodeReady", async (node, resumed) => {
+     if (resumed) {
+       // Sync individually if you have too many queues instead
+       await player.queues.sync(node.name, "local");
+     }
+   });
+   ```
 
-<Aside type="caution">
-  Sessions expire. If your bot is down longer than the configured timeout, Lavalink creates a new session instead of
-  resuming. Always handle the `resumed: false` case — store the new session ID and continue normally.
-</Aside>
-
-## Complete pattern
-
-```ts
-player.on("nodeReady", async (node, resumed) => {
-  if (resumed) {
-    await player.queues.sync(node.name, "local");
-  } else {
-    await node.rest.updateSession({ resuming: true, timeout: 60 });
-    await db.set(`session:${node.name}`, node.sessionId);
-  }
-});
-```
+</Steps>
