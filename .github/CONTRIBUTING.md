@@ -34,15 +34,7 @@ There's no direct need for 100% coverage but remaining close to it is preferable
 
 This is deliberate as we want to secure core functionality while leaving the rest of the codebase built upon it flexible and open to new features.
 
-### Managing Dependencies
-
-**Update all**
-
-```sh
-npm run upgrade
-```
-
-**Check for updates**
+### Check for updates
 
 ```sh
 npm run deps <type>
