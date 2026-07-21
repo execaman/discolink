@@ -16,6 +16,9 @@ updates:
       npm:
         patterns: ["*"]
         applies-to: version-updates
+      npm_security:
+        patterns: ["*"]
+        applies-to: security-updates
     commit-message:
       prefix: deps
 
@@ -27,5 +30,8 @@ updates:
       actions:
         patterns: ["*"]
         applies-to: version-updates
+      actions_security:
+        patterns: ["*"]
+        applies-to: security-updates
     commit-message:
       prefix: deps
