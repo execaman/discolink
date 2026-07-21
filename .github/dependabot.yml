@@ -16,7 +16,7 @@ updates:
       npm:
         patterns: ["*"]
         applies-to: version-updates
-      npm_security:
+      npm-security:
         patterns: ["*"]
         applies-to: security-updates
     commit-message:
@@ -25,12 +25,12 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     groups:
       actions:
         patterns: ["*"]
         applies-to: version-updates
-      actions_security:
+      actions-security:
         patterns: ["*"]
         applies-to: security-updates
     commit-message:
