@@ -23,6 +23,14 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
   }
 
   /**
+   * Raw player filters object.
+   * For reference or advanced usage only, deep/shallow copy before mutating
+   */
+  get current() {
+    return this.#player.filters as Filters<PluginFilters>;
+  }
+
+  /**
    * Get the value of a filter
    * @param name Name of the filter
    */
