@@ -57,8 +57,8 @@ Discolink doesn't implement this automatically. The right approach depends on yo
    ```ts
    player.on("nodeReady", async (node, resumed) => {
      if (resumed) {
-       // Sync individually if you have too many queues instead
-       await player.queues.sync(node.name, "local");
+       // Sync individually if you have too many queues
+       await player.queues.sync(node.name);
      }
    });
    ```
