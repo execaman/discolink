@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.3.0](https://github.com/execaman/discolink/compare/v5.2.0...v5.3.0) (2026-07-26)
+
+
+### Features
+
+* **FilterManager:** add 'current' prop for active filters ([#93](https://github.com/execaman/discolink/issues/93)) ([82cd748](https://github.com/execaman/discolink/commit/82cd748ab3c04ab1b05b4e7f3113a300583595a3))
+
+
+### Bug Fixes
+
+* **NodeManager:** sort nodes without stats last in relevant() ([#92](https://github.com/execaman/discolink/issues/92)) ([78900aa](https://github.com/execaman/discolink/commit/78900aa54be943faf1c4c6713230358ba3c525c3))
+
 ## [5.2.0](https://github.com/execaman/discolink/compare/v5.1.0...v5.2.0) (2026-07-12)
 
 
