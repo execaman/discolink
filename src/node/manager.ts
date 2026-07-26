@@ -155,12 +155,11 @@ export class NodeManager implements Partial<Map<string, Node>> {
       const metricA = this.metrics.get(a.name);
       const metricB = this.metrics.get(b.name);
 
-      if (metricA && !metricB) return 1;
-      if (metricB && !metricA) return -1;
-      if (!metricA || !metricB) return 0;
+      if (!metricA) return !metricB ? 0 : 1;
+      if (!metricB) return -1;
 
-      if (metricA.streaming !== -1 && metricB.streaming === -1) return 1;
-      if (metricB.streaming !== -1 && metricA.streaming === -1) return -1;
+      if (metricA.streaming === -1 && metricB.streaming !== -1) return -1;
+      if (metricB.streaming === -1 && metricA.streaming !== -1) return 1;
 
       return (
         (metricB.memory - metricA.memory) * weights.memory!
