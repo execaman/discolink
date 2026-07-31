@@ -52,14 +52,24 @@ Discolink doesn't implement this automatically. The right approach depends on yo
 
 3. **Sync local state after a successful resume**
 
-   After a successful resume, pull Lavalink's player state back into your local queues:
+   After a node reconnects, update your queues:
 
    ```ts
    player.on("nodeReady", async (node, resumed) => {
-     if (resumed) {
-       // Sync individually if you have too many queues
-       await player.queues.sync(node.name);
+     if (!resumed) {
+       // Clear data associated with the node
+       await db.del(`session:${node.name}`);
+       await db.del(`queues:${node.name}`);
+       return;
      }
+
+     // Re-create queues from saved data
+     const queues = await db.get(`queues:${node.name}`);
+     for (const q of unpackQueues(queues)) await player.queues.create(q);
+
+     // Note: syncing does not add a (current) track
+     // Note: if there are too many queues, sync them individually not in bulk
+     await player.queues.sync(node);
    });
    ```
 
