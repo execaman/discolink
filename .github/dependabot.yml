@@ -20,7 +20,8 @@ updates:
         patterns: ["*"]
         applies-to: security-updates
     commit-message:
-      prefix: deps
+      prefix: chore(deps)
+      prefix-development: chore(deps-dev)
 
   - package-ecosystem: github-actions
     directory: /
@@ -34,4 +35,4 @@ updates:
         patterns: ["*"]
         applies-to: security-updates
     commit-message:
-      prefix: deps
+      prefix: chore(deps-ci)
