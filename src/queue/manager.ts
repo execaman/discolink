@@ -1,6 +1,6 @@
 import { Queue, Track } from "@/queue";
 import { isRecord, noop } from "@/functions";
-import { EventType, TrackEndReason } from "@/types";
+import { EventType, QueueEndReason, TrackEndReason } from "@/types";
 import {
   LastTrackSymbol,
   OnEventUpdateSymbol,
@@ -270,10 +270,14 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
         if (queue.hasPrevious && queue.repeatMode === "queue") queue.tracks.push(queue.previousTracks.shift()!);
         else if (queue.autoplay) await queue.addRelated(track);
       }
-      if (queue.finished) this.player.emit("queueFinish", queue);
-      else await queue.resume();
+      if (!queue.finished) {
+        await queue.resume();
+        return;
+      }
+      const reason = queue.autoplay ? QueueEndReason.NoRelated : QueueEndReason.Finished;
+      this.player.emit("queueFinish", queue, reason);
     } catch (err) {
-      return this.destroy(queue.guildId, `${err.message ?? err}`);
+      this.player.emit("queueFinish", queue, QueueEndReason.RequestFailed, err);
     }
   }
 
