@@ -1,10 +1,10 @@
-import { Queue } from "@/queue";
 import { VoiceCloseCodes } from "@/types";
 import { isString, noop } from "@/functions";
 import { VoiceRegion, VoiceState } from "@/voice";
 import { OnVoiceCloseSymbol, SnowflakeRegex, UpdateSymbol, VoiceRegionIdRegex } from "@/constants";
-import { setTimeout } from "node:timers/promises";
+import { clearTimeout, setTimeout } from "node:timers";
 
+import type { Node } from "@/node";
 import type { Player } from "@/main";
 import type {
   BotReadyPayload,
@@ -13,8 +13,11 @@ import type {
   CreateQueueOptions,
   DiscordDispatchPayload,
   JoinRequest,
+  PlayerUpdateRequestBody,
   VoiceServerUpdatePayload,
   VoiceStateUpdatePayload,
+  VoiceUpdatePayloads,
+  VoiceUpdateResolver,
   WebSocketClosedEventPayload,
 } from "@/types";
 
@@ -26,7 +29,10 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   #voices = new Map<string, VoiceState>();
 
   #joins = new Map<string, JoinRequest>();
+  #leaves = new Map<string, PromiseWithResolvers<void>>();
+
   #destroys = new Map<string, Promise<void>>();
+  #resolvers = new Map<string, VoiceUpdateResolver>();
 
   readonly regions = new Map<string, VoiceRegion>();
   readonly player: Player;
@@ -93,7 +99,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     const resolver = Promise.withResolvers<void>();
     this.#destroys.set(guildId, resolver.promise);
 
-    if (this.#cache.get(guildId)?.connected) await voice.disconnect().catch(noop);
+    if (voice.joined) await voice.disconnect();
 
     this.#cache.delete(guildId);
     this.#voices.delete(guildId);
@@ -120,49 +126,23 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
       throw new Error("Another connection to the same guild is in progress");
     }
 
-    const voice = this.#voices.get(guildId);
-    const joined = voice?.channelId === voiceId;
-
-    if (joined && voice.connected) return voice;
-
     const request = Promise.withResolvers<VoiceState>() as JoinRequest;
     request.voiceId = voiceId;
 
-    if (!voice && options !== undefined) {
-      if (options.node !== undefined) {
-        if (this.player.nodes.state(options.node, "ready")) request.node = options.node;
-        else throw new Error(`Node '${options.node}' not ready`);
-      }
-      if (options.filters !== undefined) request.config = { filters: options.filters };
-
-      if (options.volume !== undefined) {
-        request.config ??= {};
-        request.config.volume = options.volume;
-      }
-      if (options.context !== undefined) request.context = options.context;
-    }
-
     this.#joins.set(guildId, request);
 
-    const controller = new AbortController();
-
+    let voice = this.#voices.get(guildId);
     try {
-      if (joined) {
-        this[UpdateSymbol](guildId, { reconnecting: true });
-        await this.#sendVoiceUpdate(guildId, null);
-      }
-      await this.#sendVoiceUpdate(guildId, voiceId);
-      const state = await Promise.race([request.promise, setTimeout(30_000, null, { signal: controller.signal })]);
-      if (state === null) throw new Error(`Connection timed out - Guild[${guildId}] Voice[${voiceId}]`);
-      return state;
+      const updates = await this.#awaitVoiceUpdates(guildId, voiceId, options?.timeout);
+      if (!voice) voice = await this.#handleNew(updates, options);
+      else await this.#handleExisting(voice, updates);
+      request.resolve(voice);
+      return voice;
     } catch (err) {
-      if (!voice) this.#cache.delete(guildId);
-      await this.#sendVoiceUpdate(guildId, null).catch(noop);
+      if (!voice) await this.disconnect(guildId);
       request.reject(err);
       throw err;
     } finally {
-      controller.abort();
-      if (joined) this[UpdateSymbol](guildId, { reconnecting: false });
       this.#joins.delete(guildId);
     }
   }
@@ -170,10 +150,169 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   /**
    * Disconnect from a voice channel
    * @param guildId Id of the guild
+   * @param timeout Timeout for state update in ms
    */
-  async disconnect(guildId: string) {
-    if (this.#voices.has(guildId)) return this.#sendVoiceUpdate(guildId, null);
-    throw new Error(`No connection found for guild '${guildId}'`);
+  async disconnect(guildId: string, timeout = this.player.options.voiceTimeout) {
+    if (this.#leaves.has(guildId)) return this.#leaves.get(guildId)!.promise;
+    if (this.#voices.get(guildId)?.joined === false) return;
+
+    const resolver = Promise.withResolvers<void>();
+    this.#leaves.set(guildId, resolver);
+
+    await this.#sendVoiceUpdate(guildId, null);
+    const timer = setTimeout(resolver.resolve, timeout);
+
+    await resolver.promise;
+    clearTimeout(timer);
+
+    this.#leaves.delete(guildId);
+  }
+
+  #getOrCreateRegion(regionId: string) {
+    if (this.regions.has(regionId)) return this.regions.get(regionId)!;
+    const region = new VoiceRegion(this.player, regionId);
+    this.regions.set(regionId, region);
+    return region;
+  }
+
+  async #updatePlayer(node: Node, guildId: string, options: PlayerUpdateRequestBody) {
+    const player = await node.rest.updatePlayer(guildId, options);
+    this.player.queues[UpdateSymbol](guildId, player, false);
+  }
+
+  async #handleNew({ state, server }: VoiceUpdatePayloads, options?: ConnectOptions) {
+    if (!state && !server) throw new Error("No voice updates received");
+
+    if (!state) throw new Error("No voice state received");
+    if (!state.channel_id) throw new Error("No channel id received");
+
+    if (!server) throw new Error("No voice server received");
+    if (!server.endpoint) throw new Error("No server endpoint received");
+
+    const regionId = server.endpoint.match(VoiceRegionIdRegex)?.[0] ?? "unknown";
+    const region = this.#getOrCreateRegion(regionId);
+
+    const node = options?.node === undefined ? region.getRelevantNode() : this.player.nodes.get(options.node);
+
+    if (!node?.ready) {
+      if (node !== undefined) throw new Error(`Node '${node.name}' not ready`);
+      else if (options?.node === undefined) throw new Error("No nodes available");
+      throw new Error(`Node '${options.node}' not found`);
+    }
+
+    const config: PlayerUpdateRequestBody = {};
+
+    if (options?.filters !== undefined) config.filters = options.filters;
+    if (options?.volume !== undefined) config.volume = options.volume;
+
+    await this.#updatePlayer(node, server.guild_id, {
+      ...config,
+      voice: {
+        channelId: state.channel_id,
+        endpoint: server.endpoint,
+        sessionId: state.session_id,
+        token: server.token,
+      },
+    });
+
+    this.#cache.set(server.guild_id, {
+      channel_id: state.channel_id,
+      deaf: state.deaf,
+      endpoint: server.endpoint,
+      in_channel: true,
+      mute: state.mute,
+      reconnecting: false,
+      region_id: regionId,
+      self_deaf: state.self_deaf,
+      self_mute: state.self_mute,
+      session_id: state.session_id,
+      suppress: state.suppress,
+      token: server.token,
+    });
+
+    const voice = new VoiceState(this.player, node.name, server.guild_id);
+    this.#voices.set(server.guild_id, voice);
+
+    this.player.emit("voiceConnect", voice);
+
+    const opts: CreateQueueOptions = { guildId: server.guild_id, voiceId: state.channel_id };
+    if (options?.context !== undefined) opts.context = options.context;
+
+    await this.player.queues.create(opts);
+    return voice;
+  }
+
+  async #handleExisting(voice: VoiceState, { state, server }: VoiceUpdatePayloads) {
+    if (!state && !server) return;
+
+    const cache = this.#cache.get(voice.guildId);
+    if (!cache) return;
+
+    if (state !== undefined) {
+      if (state.channel_id === null) cache.in_channel = false;
+      else {
+        cache.in_channel = true;
+        cache.channel_id = state.channel_id;
+      }
+      cache.deaf = state.deaf;
+      cache.mute = state.mute;
+      cache.self_deaf = state.self_deaf;
+      cache.self_mute = state.self_mute;
+      cache.session_id = state.session_id;
+      cache.suppress = state.suppress;
+    }
+
+    if (!server) return;
+    cache.token = server.token;
+
+    if (!cache.in_channel || !server.endpoint) return;
+    cache.endpoint = server.endpoint;
+
+    cache.region_id = server.endpoint.match(VoiceRegionIdRegex)?.[0] ?? "unknown";
+    this.#getOrCreateRegion(cache.region_id);
+
+    const connected = voice.connected;
+
+    await this.#updatePlayer(voice.node, voice.guildId, {
+      voice: {
+        channelId: cache.channel_id,
+        endpoint: cache.endpoint,
+        sessionId: cache.session_id,
+        token: cache.token,
+      },
+    });
+    if (!connected && voice.connected) this.player.emit("voiceConnect", voice);
+  }
+
+  async #sendVoiceUpdate(guildId: string, channelId: string | null) {
+    return this.player.options.forwardVoiceUpdate(guildId, {
+      op: 4,
+      d: {
+        guild_id: guildId,
+        channel_id: channelId,
+        self_deaf: channelId !== null,
+        self_mute: false,
+      },
+    });
+  }
+
+  async #awaitVoiceUpdates(guildId: string, voiceId: string, timeout = this.player.options.voiceTimeout) {
+    if (this.#resolvers.has(guildId)) return this.#resolvers.get(guildId)!.promise;
+    const resolver = Promise.withResolvers<VoiceUpdatePayloads>() as VoiceUpdateResolver;
+    resolver.updates = {};
+    this.#resolvers.set(guildId, resolver);
+    try {
+      await this.#sendVoiceUpdate(guildId, voiceId);
+      resolver.timeout = setTimeout(resolver.resolve, timeout, resolver.updates);
+      await resolver.promise;
+      return resolver.updates;
+    } catch (err) {
+      resolver.reject(err);
+      throw err;
+    } finally {
+      clearTimeout(resolver.timeout);
+      this.#resolvers.delete(guildId);
+    }
   }
 
   /**
@@ -193,155 +332,59 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     }
   }
 
-  #getVoiceRegion(id: string) {
-    if (this.regions.has(id)) return this.regions.get(id)!;
-    const region = new VoiceRegion(this.player, id);
-    this.regions.set(id, region);
-    return region;
-  }
-
-  async #sendVoiceUpdate(guildId: string, channelId: string | null) {
-    return this.player.options.forwardVoiceUpdate(guildId, {
-      op: 4,
-      d: {
-        guild_id: guildId,
-        channel_id: channelId,
-        self_deaf: channelId !== null,
-        self_mute: false,
-      },
-    });
-  }
-
   async #onClientReady(data: BotReadyPayload["d"]) {
     if (this.player.ready) return;
     if (!this.player.options.autoInit) return;
     return this.player.init(data.user.id);
   }
 
-  async #onStateUpdate(data: VoiceStateUpdatePayload["d"]) {
-    if (!data.guild_id || data.user_id !== this.player.clientId) return;
-
-    const state = this.#cache.get(data.guild_id);
-
-    if (state !== undefined) {
-      if (data.channel_id === null) state.connected = false;
-      else state.channel_id = data.channel_id;
-      state.deaf = data.deaf;
-      state.mute = data.mute;
-      state.self_deaf = data.self_deaf;
-      state.self_mute = data.self_mute;
-      state.session_id = data.session_id;
-      state.suppress = data.suppress;
+  async #onStateUpdate(state: VoiceStateUpdatePayload["d"]) {
+    if (!state.guild_id || state.user_id !== this.player.clientId) return;
+    const resolver = this.#resolvers.get(state.guild_id);
+    if (resolver !== undefined) {
+      resolver.updates.state = state;
+      if (!resolver.updates.server) resolver.timeout.refresh();
+      else resolver.resolve(resolver.updates);
       return;
     }
-
-    if (data.channel_id === null || !this.#joins.has(data.guild_id)) return;
-
-    this.#cache.set(data.guild_id, {
-      channel_id: data.channel_id,
-      connected: false,
-      deaf: data.deaf,
-      endpoint: "",
-      mute: data.mute,
-      node_session_id: "",
-      reconnecting: false,
-      region_id: "unknown",
-      self_deaf: data.self_deaf,
-      self_mute: data.self_mute,
-      session_id: data.session_id,
-      suppress: data.suppress,
-      token: "",
-    });
+    if (!state.channel_id) this.#leaves.get(state.guild_id)?.resolve();
+    const voice = this.#voices.get(state.guild_id);
+    if (!voice) return;
+    return this.#handleExisting(voice, { state }).catch(noop);
   }
 
-  async #onServerUpdate(data: VoiceServerUpdatePayload["d"]) {
-    const state = this.#cache.get(data.guild_id);
-    const request = this.#joins.get(data.guild_id);
-
-    if (!state) {
-      request?.reject(new Error("No voice state received"));
+  async #onServerUpdate(server: VoiceServerUpdatePayload["d"]) {
+    const resolver = this.#resolvers.get(server.guild_id);
+    if (resolver !== undefined) {
+      resolver.updates.server = server;
+      if (!resolver.updates.state) resolver.timeout.refresh();
+      else resolver.resolve(resolver.updates);
       return;
     }
-
-    if (data.endpoint === null) {
-      state.connected = false;
-      return;
-    }
-
-    state.token = data.token;
-    state.endpoint = data.endpoint;
-    state.region_id = data.endpoint.match(VoiceRegionIdRegex)?.[0] ?? "unknown";
-
-    const region = this.#getVoiceRegion(state.region_id);
-
-    let voice = this.#voices.get(data.guild_id);
-    let node = voice?.node;
-
-    if (node === undefined) {
-      if (request?.node === undefined) node = region.getRelevantNode();
-      else node = this.player.nodes.get(request.node);
-    }
-
-    if (!node?.ready) {
-      if (node !== undefined) request?.reject(new Error(`Node '${node.name}' not ready`));
-      else if (request?.node === undefined) request?.reject(new Error("No nodes available"));
-      else request.reject(new Error(`Node '${request.node}' not found`));
-      return;
-    }
-
-    try {
-      const player = await node.rest.updatePlayer(data.guild_id, {
-        ...request?.config,
-        voice: {
-          channelId: state.channel_id,
-          endpoint: data.endpoint,
-          sessionId: state.session_id,
-          token: data.token,
-        },
-      });
-
-      state.connected = true;
-      state.node_session_id = node.sessionId!;
-
-      this.player.queues[UpdateSymbol](data.guild_id, player, false);
-
-      if (!voice) {
-        voice = new VoiceState(this.player, node.name, data.guild_id);
-        this.#voices.set(data.guild_id, voice);
-      }
-
-      this.player.emit("voiceConnect", voice);
-
-      if (!this.player.queues.has(data.guild_id)) {
-        const options: CreateQueueOptions = { guildId: data.guild_id, voiceId: state.channel_id };
-        if (request?.context !== undefined) options.context = request.context;
-        await this.player.queues.create(options);
-      }
-
-      request?.resolve(voice);
-    } catch (err) {
-      request?.reject(err);
-    }
+    const voice = this.#voices.get(server.guild_id);
+    if (!voice) return;
+    return this.#handleExisting(voice, { server }).catch(noop);
   }
 
-  async [OnVoiceCloseSymbol](voice: Queue["voice"], payload: WebSocketClosedEventPayload) {
+  async [OnVoiceCloseSymbol](voice: VoiceState, payload: WebSocketClosedEventPayload) {
+    let shouldReconnect = false;
     switch (payload.code) {
       case VoiceCloseCodes.AuthenticationFailed:
       case VoiceCloseCodes.ServerNotFound:
       case VoiceCloseCodes.SessionNoLongerValid:
+        if (!this.player.options.voiceReconnect) break;
+        shouldReconnect = true;
         this[UpdateSymbol](payload.guildId, { reconnecting: true });
         break;
     }
     this.player.emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
-    if (!voice.reconnecting) return;
+    if (!shouldReconnect) return;
     try {
-      await voice.connect();
+      await voice.reconnect();
       if (voice.connected) return;
-      return this.destroy(voice.guildId, payload.reason);
+      this.player.emit("voiceDisconnect", voice, payload);
     } catch (err) {
-      return this.destroy(voice.guildId, err.message);
-    } finally {
-      this[UpdateSymbol](payload.guildId, { reconnecting: false });
+      this.player.emit("voiceDisconnect", voice, { ...payload, error: err });
     }
   }
 

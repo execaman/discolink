@@ -1,5 +1,5 @@
 import type { VoiceState } from "@/voice";
-import type { CreateQueueOptions, NonNullableProp } from "@/types";
+import type { CreateQueueOptions, NonNullableProp, WebSocketClosedEventPayload } from "@/types";
 
 /**
  * https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes
@@ -94,8 +94,7 @@ export interface BotVoiceState
   extends
     Required<NonNullableProp<Omit<VoiceStateUpdatePayload["d"], "guild_id" | "user_id">, "channel_id">>,
     NonNullableProp<Omit<VoiceServerUpdatePayload["d"], "guild_id">, "endpoint"> {
-  connected: boolean;
-  node_session_id: string;
+  in_channel: boolean;
   reconnecting: boolean;
   region_id: string;
 }
@@ -104,18 +103,45 @@ export interface BotVoiceState
  * Join request for a voice connection
  * @internal
  */
-export interface JoinRequest
-  extends PromiseWithResolvers<VoiceState>, Pick<CreateQueueOptions, "context" | "node" | "voiceId"> {
-  config?: Pick<CreateQueueOptions, "filters" | "volume">;
+export interface JoinRequest extends PromiseWithResolvers<VoiceState> {
+  voiceId: string;
+}
+
+/**
+ * Voice updates received from Discord
+ * @internal
+ */
+export interface VoiceUpdatePayloads {
+  state?: VoiceStateUpdatePayload["d"];
+  server?: VoiceServerUpdatePayload["d"];
+}
+
+/**
+ * Resolver for awaiting voice updates
+ * @internal
+ */
+export interface VoiceUpdateResolver extends PromiseWithResolvers<VoiceUpdatePayloads> {
+  timeout: NodeJS.Timeout;
+  updates: VoiceUpdatePayloads;
 }
 
 /**
  * Options for the queue while connecting to a voice channel
  */
-export interface ConnectOptions extends Pick<CreateQueueOptions, "context" | "filters" | "node" | "volume"> {}
+export interface ConnectOptions extends Pick<CreateQueueOptions, "context" | "filters" | "node" | "volume"> {
+  timeout?: number;
+}
+
+/**
+ * Details of a voice disconnect after failure to auto-reconnect on close
+ */
+export interface VoiceDisconnectDetails extends WebSocketClosedEventPayload {
+  error?: Error;
+}
 
 /**
  * Common info in Discord's 'dispatch' payload type
+ * @internal
  */
 export interface CommonDispatchPayloadInfo {
   op: 0;
@@ -124,6 +150,7 @@ export interface CommonDispatchPayloadInfo {
 
 /**
  * Discord bot ready payload (partial, essential only)
+ * @internal
  */
 export interface BotReadyPayload extends CommonDispatchPayloadInfo {
   t: "READY";
@@ -136,6 +163,7 @@ export interface BotReadyPayload extends CommonDispatchPayloadInfo {
 
 /**
  * Discord voice state update payload
+ * @internal
  */
 export interface VoiceStateUpdatePayload extends CommonDispatchPayloadInfo {
   t: "VOICE_STATE_UPDATE";
@@ -154,6 +182,7 @@ export interface VoiceStateUpdatePayload extends CommonDispatchPayloadInfo {
 
 /**
  * Discord voice server update payload
+ * @internal
  */
 export interface VoiceServerUpdatePayload extends CommonDispatchPayloadInfo {
   t: "VOICE_SERVER_UPDATE";

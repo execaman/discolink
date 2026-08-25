@@ -32,6 +32,8 @@ export const DefaultPlayerOptions = Object.seal({
   autoInit: true,
   autoSync: true,
   queryPrefix: "ytsearch",
+  voiceTimeout: 10_000,
+  voiceReconnect: true,
   relocateQueues: true,
   async fetchRelatedTracks() {
     return [];

@@ -1,7 +1,7 @@
 import { Severity } from "@/types";
 import { VoiceState } from "@/voice";
+import { LastTrackSymbol } from "@/constants";
 import { FilterManager, Playlist, Track } from "@/queue";
-import { LastTrackSymbol, UpdateSymbol } from "@/constants";
 import { formatDuration, isArray, isNumber } from "@/functions";
 
 import type { Player } from "@/main";
@@ -285,7 +285,6 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
       request.position = player.state.position;
     }
     await this.#update(request);
-    this.player.voices[UpdateSymbol](this.guildId, { node_session_id: this.node.sessionId! });
   }
 
   /**
