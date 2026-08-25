@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.4.0](https://github.com/execaman/discolink/compare/v5.3.0...v5.4.0) (2026-08-25)
+
+
+### Features
+
+* **VoiceManager:** rework voice update handling ([#106](https://github.com/execaman/discolink/issues/106)) ([d5ef0a0](https://github.com/execaman/discolink/commit/d5ef0a0d4a7fdce1bc6362084eb940337921e144))
+* **VoiceManager:** emit disconnect event instead of destroying ([d5ef0a0](https://github.com/execaman/discolink/commit/d5ef0a0d4a7fdce1bc6362084eb940337921e144))
+* **VoiceState:** add 'joined' prop and reconnect() method ([d5ef0a0](https://github.com/execaman/discolink/commit/d5ef0a0d4a7fdce1bc6362084eb940337921e144))
+* **QueueManager:** finish queue with reason instead of destroying ([d5ef0a0](https://github.com/execaman/discolink/commit/d5ef0a0d4a7fdce1bc6362084eb940337921e144))
+* **Typings:** add 'QueueEndReason' enum and missing complementary types ([d5ef0a0](https://github.com/execaman/discolink/commit/d5ef0a0d4a7fdce1bc6362084eb940337921e144))
+
 ## [5.3.0](https://github.com/execaman/discolink/compare/v5.2.0...v5.3.0) (2026-07-26)
 
 
