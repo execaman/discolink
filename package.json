@@ -48,7 +48,7 @@
   "scripts": {
     "lint": "prettier --check . && tsc --noEmit",
     "test": "vitest run",
-    "build": "tsdown",
+    "build": "tsc --noEmit && tsdown",
     "format": "prettier --log-level error --write .",
     "docs:dev": "npm -w docs run dev",
     "docs:build": "npm -w docs run build",
