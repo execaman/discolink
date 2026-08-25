@@ -12,9 +12,11 @@ import type {
   NodeEventMap,
   PlayerState,
   QueueContext,
+  QueueEndReason,
   RequiredProp,
   TrackEndReason,
   TuplePop,
+  VoiceDisconnectDetails,
 } from "@/types";
 
 export interface PlayerEventMap {
@@ -31,10 +33,11 @@ export interface PlayerEventMap {
   voiceClose: [voice: VoiceState, code: number, reason: string, byRemote: boolean];
   voiceChange: [voice: VoiceState, previousNode: Node, wasPlaying: boolean];
   voiceDestroy: [voice: VoiceState, reason: string];
+  voiceDisconnect: [voice: VoiceState, details: VoiceDisconnectDetails];
 
   queueCreate: [queue: Queue];
   queueUpdate: [queue: Queue, state: PlayerState];
-  queueFinish: [queue: Queue];
+  queueFinish: [queue: Queue, reason: QueueEndReason, error?: Error];
   queueDestroy: [queue: Queue, reason: string];
 
   trackStart: [queue: Queue, track: Track, inQueue: boolean];
@@ -90,6 +93,23 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
    * @default "ytsearch"
    */
   queryPrefix?: string;
+
+  /**
+   * Timeout for voice updates from Discord in ms.
+   * @default 10_000
+   */
+  voiceTimeout?: number;
+
+  /**
+   * Whether to reconnect (=> rejoin) for these voice close codes:
+   * - `4004` - incorrect token
+   * - `4011` - server not found
+   * - `4006` - session invalid
+   *
+   * You might want to turn this off for handling edge cases like being dragged into a private voice channel, etc.
+   * @default true
+   */
+  voiceReconnect?: boolean;
 
   /**
    * Whether to relocate queues when a node closes/disconnects.

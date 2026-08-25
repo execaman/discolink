@@ -9,10 +9,12 @@ import type { APIPlayer, BotVoiceState, PlayerUpdateRequestBody } from "@/types"
  */
 export class VoiceState {
   #changePromise: Promise<void> | null = null;
-  #node: Node;
+  #reconnectPromise: Promise<VoiceState> | null = null;
 
   #state: BotVoiceState;
   #player: APIPlayer;
+
+  #node: Node;
 
   /**
    * Id of the guild
@@ -61,7 +63,7 @@ export class VoiceState {
   }
 
   /**
-   * Live connection ping as per node
+   * Ping of the node with the voice server
    */
   get ping() {
     return this.#player.state.ping;
@@ -110,6 +112,13 @@ export class VoiceState {
   }
 
   /**
+   * Whether the bot is in voice channel
+   */
+  get joined() {
+    return this.#state.in_channel;
+  }
+
+  /**
    * Whether the bot is suppressed
    */
   get suppressed() {
@@ -124,29 +133,28 @@ export class VoiceState {
   }
 
   /**
-   * Whether this voice connection is connected
+   * Whether the node is connected to the voice server
    */
   get connected() {
-    if (!this.#player.state.connected) return false;
-    return this.#state.connected && this.#state.node_session_id === this.#node.sessionId;
+    return this.#player.state.connected;
   }
 
   /**
-   * Whether this voice connection is reconnecting
+   * Whether a reconnect is in progress
    */
   get reconnecting() {
     return this.#state.reconnecting;
   }
 
   /**
-   * Whether this voice connection is disconnected
+   * Whether the node has disconnected from the voice server and no attempts are being made to reconnect
    */
   get disconnected() {
     return !this.connected && !this.reconnecting;
   }
 
   /**
-   * Whether this voice connection is changing nodes
+   * Whether the node for this connection is being changed
    */
   get changingNode() {
     return this.#changePromise !== null;
@@ -166,6 +174,28 @@ export class VoiceState {
    */
   async connect(channelId = this.#state.channel_id) {
     return this.player.voices.connect(this.guildId, channelId);
+  }
+
+  /**
+   * Rejoin the voice channel
+   */
+  async reconnect() {
+    if (this.#reconnectPromise !== null) return this.#reconnectPromise;
+    const resolver = Promise.withResolvers<VoiceState>();
+    this.#reconnectPromise = resolver.promise;
+    this.#state.reconnecting = true;
+    try {
+      await this.disconnect();
+      await this.connect();
+      resolver.resolve(this);
+      return this;
+    } catch (err) {
+      resolver.reject(err);
+      throw err;
+    } finally {
+      this.#reconnectPromise = null;
+      this.#state.reconnecting = false;
+    }
   }
 
   /**
@@ -218,7 +248,6 @@ export class VoiceState {
 
     try {
       const player = await node.rest.updatePlayer(this.guildId, request);
-      this.#state.node_session_id = node.sessionId!;
       Object.assign(this.#player, player);
       this.player.emit("voiceChange", this, previousNode, wasPlaying);
       resolver.resolve();
