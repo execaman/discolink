@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.4.1](https://github.com/execaman/discolink/compare/v5.4.0...v5.4.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* **VoiceManager:** correct when voice connect/disconnect events should emit ([9ec8a47](https://github.com/execaman/discolink/commit/9ec8a47e3662528981b5897fc1f040f8693527da))
+
 ## [5.4.0](https://github.com/execaman/discolink/compare/v5.3.0...v5.4.0) (2026-08-25)
 
 
