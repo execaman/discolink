@@ -281,7 +281,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
         token: cache.token,
       },
     });
-    if (!connected && voice.connected) this.player.emit("voiceConnect", voice);
+    if (!connected) this.player.emit("voiceConnect", voice);
   }
 
   async #sendVoiceUpdate(guildId: string, channelId: string | null) {
@@ -372,16 +372,16 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
       case VoiceCloseCodes.AuthenticationFailed:
       case VoiceCloseCodes.ServerNotFound:
       case VoiceCloseCodes.SessionNoLongerValid:
-        if (!this.player.options.voiceReconnect) break;
-        shouldReconnect = true;
+        if (voice.reconnecting || !this.player.options.voiceReconnect) break;
         this[UpdateSymbol](payload.guildId, { reconnecting: true });
+        shouldReconnect = true;
         break;
     }
     this.player.emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
     if (!shouldReconnect) return;
     try {
       await voice.reconnect();
-      if (voice.connected) return;
+      if (voice.joined) return;
       this.player.emit("voiceDisconnect", voice, payload);
     } catch (err) {
       this.player.emit("voiceDisconnect", voice, { ...payload, error: err });
