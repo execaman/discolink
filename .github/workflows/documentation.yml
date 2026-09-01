@@ -22,6 +22,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.lookup.outputs.cache-hit != 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -38,16 +40,32 @@ jobs:
       - name: Build documentation
         run: npm run docs:build
 
+      - name: Lookup build hash
+        id: lookup
+        uses: actions/cache@v6
+        with:
+          path: ./docs/.cache
+          key: documentation-${{ hashFiles('docs/dist/**/*') }}
+
       - name: Setup Pages
+        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/configure-pages@v6
 
       - name: Upload artifact
+        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs/dist
 
+      - name: Create cache directory
+        if: steps.lookup.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ./docs/.cache
+          touch ./docs/.cache/.keep
+
   deploy:
     needs: build
+    if: needs.build.outputs.changed
     runs-on: ubuntu-latest
     environment:
       name: github-pages
