@@ -65,7 +65,7 @@ jobs:
 
   deploy:
     needs: build
-    if: needs.build.outputs.changed
+    if: needs.build.outputs.changed == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
