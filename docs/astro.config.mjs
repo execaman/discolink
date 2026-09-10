@@ -8,7 +8,7 @@ export default defineConfig({
   base: "discolink",
   outDir: "./dist",
   trailingSlash: "ignore",
-  build: { format: "directory" },
+  build: { format: "file" },
   integrations: [
     starlight({
       title: "Discolink",

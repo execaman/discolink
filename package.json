@@ -53,27 +53,28 @@
     "docs:dev": "npm -w docs run dev",
     "docs:build": "npm -w docs run build",
     "docs:preview": "npm -w docs run preview",
-    "deps": "ncu --format group --dep",
+    "deps": "ncu",
+    "deps:update": "ncu -u -t semver && npm install",
     "prepare": "husky"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
-    "ws": "^8.21.0"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.0.2",
-    "@commitlint/config-conventional": "^21.0.2",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/node": "^25.9.3",
+    "@types/node": "^25.9.6",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^4.1.9",
+    "@vitest/coverage-v8": "^4.1.11",
     "husky": "^9.1.7",
     "npm-check-updates": "^22.2.9",
-    "prettier": "^3.8.4",
-    "tsdown": "^0.22.3",
+    "prettier": "^3.9.6",
+    "tsdown": "^0.22.14",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.11"
   }
 }

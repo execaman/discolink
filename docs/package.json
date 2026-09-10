@@ -9,17 +9,18 @@
     "dev": "astro dev",
     "build": "astro build && typedoc",
     "preview": "astro preview",
-    "deps": "ncu --format group --dep"
+    "deps": "ncu",
+    "deps:update": "ncu -u -t semver && npm install"
   },
   "devDependencies": {
-    "@astrojs/starlight": "^0.41.3",
-    "@expressive-code/plugin-line-numbers": "^0.44.1",
-    "astro": "^7.3.1",
+    "@astrojs/starlight": "^0.41.11",
+    "@expressive-code/plugin-line-numbers": "^0.44.2",
+    "astro": "^7.3.2",
     "npm-check-updates": "^22.2.9",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.4",
     "typedoc": "^0.28.20",
     "typedoc-material-theme": "^1.4.1",
-    "typedoc-plugin-dt-links": "^2.0.70",
+    "typedoc-plugin-dt-links": "^2.0.71",
     "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^6.0.3"
   }

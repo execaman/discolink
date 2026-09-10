@@ -21,5 +21,5 @@ export default defineConfig({
   entry: "src/index.ts",
   format: ["cjs", "esm"],
   outputOptions: { comments: false },
-  deps: { skipNodeModulesBundle: true },
+  deps: { neverBundle: true },
 });
