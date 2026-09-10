@@ -14,30 +14,23 @@ These are only meant for bug reports and feature requests, blank issues have bee
 ### General workflow
 
 1. Clone this repository
-2. Install dependencies via lockfile (e.g. `npm ci`)
+2. Install dependencies via lockfile (i.e. `npm ci`)
 3. Create a [branch](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) named in `{type}/{short-name}` format
-4. Make your changes, if it's code, keep value and type imports separate
-5. Follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) spec for commit messages
+4. Make your changes; for code, keep value and type imports separate
+5. Follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification for commit messages
 
-### Testing Changes
+### Testing changes
 
-Only the following components need to be tested if your changes cover any:
+You can run `npm run test` at will locally, upon making a PR changes are tested automatically through CI and reported for failures.
 
-- [`utility`](/src/functions/utility.ts)
-- [`validation`](/src/functions/validation.ts)
-- [`REST`](/src/node/rest.ts)
-- [`Node`](/src/node/node.ts)
-- [`Track`](/src/queue/track.ts)
-- [`Playlist`](/src/queue/playlist.ts)
+### Managing dependencies
 
-There's no direct need for 100% coverage but remaining close to it is preferable given how much we're testing.
-
-This is deliberate as we want to secure core functionality while leaving the rest of the codebase built upon it flexible and open to new features.
-
-### Check for updates
+The following scripts are also available in the documentation workspace:
 
 ```sh
-npm run deps <type>
-```
+# view latest versions
+npm run deps
 
-**Types** `prod` `dev` `peer` `optional`
+# update those in range by semver
+npm run deps:update
+```
