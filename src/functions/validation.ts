@@ -1,6 +1,6 @@
 import { URL } from "node:url";
 
-import type { PlayerPlugin } from "@/types";
+import type { PlayerPlugin, RESTError } from "@/types";
 
 /**
  * Check if input is a finite number
@@ -70,5 +70,23 @@ export const isPlugin = <T extends PlayerPlugin>(input: unknown): input is T => 
   if (!input || typeof input !== "object") return false;
   if (!("name" in input && "init" in input)) return false;
   if (typeof input.name !== "string" || typeof input.init !== "function") return false;
+  return true;
+};
+
+/**
+ * Check if input is a REST error object
+ * @param input value
+ * @returns `true` if input is a REST error object, `false` otherwise
+ */
+export const isRestError = (input: unknown): input is RESTError => {
+  if (!input || typeof input !== "object") return false;
+  if ("node" in input && typeof input.node !== "string") return false;
+  if ("trace" in input && typeof input.trace !== "string") return false;
+  if (!("name" in input && typeof input.name === "string")) return false;
+  if (!("message" in input && typeof input.message === "string")) return false;
+  if (!("error" in input && typeof input.error === "string")) return false;
+  if (!("path" in input && typeof input.path === "string")) return false;
+  if (!("status" in input && typeof input.status === "number")) return false;
+  if (!("timestamp" in input && typeof input.timestamp === "number")) return false;
   return true;
 };

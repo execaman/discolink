@@ -13,6 +13,7 @@ import type {
   NodeStats,
   PlayerUpdateQueryParams,
   PlayerUpdateRequestBody,
+  RESTError,
   RESTOptions,
   RequestOptions,
   RestError,
@@ -35,6 +36,7 @@ export class REST {
   };
 
   #stackTrace = false;
+  #node: string | null = null;
   #sessionId: string | null = null;
 
   readonly origin: string;
@@ -43,7 +45,7 @@ export class REST {
   readonly timeout: number;
   readonly baseUrl: string;
 
-  constructor(options: RESTOptions) {
+  constructor(options: RESTOptions, node?: string) {
     const _options = { ...DefaultRestOptions, ...options };
 
     validateHeaderValue("User-Agent", _options.userAgent);
@@ -63,6 +65,7 @@ export class REST {
       throw new Error("Request timeout must be a natural number");
     }
 
+    if (typeof node === "string") this.#node = node;
     if (_options.stackTrace === true) this.#stackTrace = true;
     if (_options.sessionId !== undefined) this.sessionId = _options.sessionId;
 
@@ -100,17 +103,20 @@ export class REST {
     if (id === null || isString(id, "non-empty")) this.#sessionId = id;
   }
 
-  #error(err: RestResponse<RestError> | DOMException | Error, message: string, path: string) {
+  #error(err: RestResponse<RestError> | DOMException, message: string, path: string) {
     const res = err as Partial<RestResponse<RestError>>;
-    const error = new Error(message) as Error & RestError;
+    const error = new Error(message) as RESTError;
 
     error.name = `Error [${this.constructor.name}]`;
+    if (this.#node) error.node = this.#node;
+
     error.error = res.data?.error ?? res.statusText ?? "Processing";
     error.path = res.data?.path ?? path;
     error.status = res.data?.status ?? res.status ?? HttpStatusCode.Processing;
     error.timestamp = res.data?.timestamp ?? Date.now();
-
     if (res.data?.trace !== undefined) error.trace = res.data.trace;
+
+    Error.captureStackTrace(error, this.#error);
     return error;
   }
 

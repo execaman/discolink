@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import * as val from "@/functions/validation";
 
+import type { RESTError } from "@/types";
+
 describe("Functions (validation)", () => {
   describe("isNumber", () => {
     it("returns true for finite numbers", () => {
@@ -95,6 +97,35 @@ describe("Functions (validation)", () => {
       expect(val.isPlugin({ name: "test" })).toBe(false);
       expect(val.isPlugin({ init: () => {} })).toBe(false);
       expect(val.isPlugin({ name: 1, init: 2 })).toBe(false);
+    });
+  });
+
+  describe("isRestError", () => {
+    const error: RESTError = {
+      name: "Error [REST]",
+      message: "test",
+      node: "test",
+      error: "test",
+      path: "/test",
+      status: 400,
+      timestamp: Date.now(),
+      trace: "test",
+    };
+
+    it("returns true for REST errors", () => {
+      expect(val.isRestError(error)).toBe(true);
+    });
+
+    it("returns false for invalid inputs", () => {
+      expect(val.isRestError(null)).toBe(false);
+      expect(val.isRestError({ ...error, name: 1 })).toBe(false);
+      expect(val.isRestError({ ...error, message: 1 })).toBe(false);
+      expect(val.isRestError({ ...error, node: 1 })).toBe(false);
+      expect(val.isRestError({ ...error, error: 1 })).toBe(false);
+      expect(val.isRestError({ ...error, path: 1 })).toBe(false);
+      expect(val.isRestError({ ...error, status: "400" })).toBe(false);
+      expect(val.isRestError({ ...error, timestamp: "100" })).toBe(false);
+      expect(val.isRestError({ ...error, trace: 1 })).toBe(false);
     });
   });
 });
