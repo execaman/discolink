@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.5.0](https://github.com/execaman/discolink/compare/v5.4.1...v5.5.0) (2026-09-19)
+
+
+### Features
+
+* **REST:** add 'node' prop on errors ([#116](https://github.com/execaman/discolink/issues/116)) ([b35c3eb](https://github.com/execaman/discolink/commit/b35c3eb77605de50f52da6b9b2057e66ec23a646))
+
+
+### Bug Fixes
+
+* **VoiceManager:** add early return condition in connect() ([#118](https://github.com/execaman/discolink/issues/118)) ([ec8ec4a](https://github.com/execaman/discolink/commit/ec8ec4ad2ff7e44d1f003cb79da9c86059f04d84))
+
 ## [5.4.1](https://github.com/execaman/discolink/compare/v5.4.0...v5.4.1) (2026-08-28)
 
 
