@@ -1,4 +1,3 @@
-import { Severity } from "@/types";
 import { VoiceState } from "@/voice";
 import { LastTrackSymbol } from "@/constants";
 import { FilterManager, Playlist, Track } from "@/queue";
@@ -8,7 +7,6 @@ import type { Player } from "@/main";
 import type {
   APIPlayer,
   CommonUserData,
-  Exception,
   JsonObject,
   PlayerUpdateQueryParams,
   PlayerUpdateRequestBody,
@@ -240,16 +238,6 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
     return formatDuration(this.currentTime);
   }
 
-  #error(data: string | Exception) {
-    const explicit = typeof data === "string";
-    const message = explicit ? data : (data.message ?? data.cause);
-    const error = new Error(message) as Error & Exception;
-    error.name = `Error [${this.constructor.name}]`;
-    error.cause = message;
-    error.severity = explicit ? Severity.Common : data.severity;
-    return error;
-  }
-
   async #update(data: PlayerUpdateRequestBody, params?: PlayerUpdateQueryParams) {
     const player = await this.rest.updatePlayer(this.guildId, data, params);
     Object.assign(this.#player, player);
@@ -390,10 +378,10 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * @remarks this will absolutely play and trigger corresponding track events
    */
   async jump(index: number) {
-    if (this.empty) throw this.#error("The queue is empty at the moment");
-    if (!isNumber(index, "integer")) throw this.#error("Index must be a integer");
+    if (this.empty) throw new Error("The queue is empty at the moment");
+    if (!isNumber(index, "integer")) throw new Error("Index must be a integer");
     const track = index < 0 ? this.#previousTracks[this.#previousTracks.length + index] : this.#tracks[index];
-    if (!track) throw this.#error("Specified index is out of range");
+    if (!track) throw new Error("Specified index is out of range");
     this[LastTrackSymbol] = this.track;
     if (index < 0) this.#tracks.unshift(...this.#previousTracks.splice(index));
     else this.#previousTracks.push(...this.#tracks.splice(0, index));
@@ -426,10 +414,10 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * @param ms Position in milliseconds
    */
   async seek(ms: number) {
-    if (this.track === null) throw this.#error("No track's playing at the moment");
-    if (!this.track.isSeekable) throw this.#error("Current track is not seekable");
-    if (!isNumber(ms, "whole")) throw this.#error("Seek time must be a whole number");
-    if (ms > this.track.duration) throw this.#error("Specified time to seek is out of range");
+    if (this.track === null) throw new Error("No track's playing at the moment");
+    if (!this.track.isSeekable) throw new Error("Current track is not seekable");
+    if (!isNumber(ms, "whole")) throw new Error("Seek time must be a whole number");
+    if (ms > this.track.duration) throw new Error("Specified time to seek is out of range");
     const _body: PlayerUpdateRequestBody = { paused: false, position: ms };
     if (this.#player.track?.info.identifier !== this.track.id) {
       _body.track = { encoded: this.track.encoded, userData: this.track.userData };
@@ -486,8 +474,8 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * @param volume Numeric value between 0 and 1000
    */
   async setVolume(volume: number) {
-    if (!isNumber(volume, "whole")) throw this.#error("Volume must be a whole number");
-    if (volume > 1000) throw this.#error("Volume cannot be more than 1000");
+    if (!isNumber(volume, "whole")) throw new Error("Volume must be a whole number");
+    if (volume > 1000) throw new Error("Volume cannot be more than 1000");
     await this.#update({ volume });
     return this.#player.volume;
   }
@@ -498,7 +486,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    */
   setAutoplay(autoplay = false) {
     if (typeof autoplay === "boolean") this.#autoplay = autoplay;
-    else throw this.#error("Autoplay must be a boolean value");
+    else throw new Error("Autoplay must be a boolean value");
     return this.#autoplay;
   }
 
@@ -508,7 +496,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    */
   setRepeatMode(repeatMode: RepeatMode = "none") {
     if (repeatMode === "track" || repeatMode === "queue" || repeatMode === "none") this.#repeatMode = repeatMode;
-    else throw this.#error("Repeat mode can only be set to track, queue, or none");
+    else throw new Error("Repeat mode can only be set to track, queue, or none");
     return this.#repeatMode;
   }
 
