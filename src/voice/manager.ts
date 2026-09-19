@@ -126,12 +126,13 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
       throw new Error("Another connection to the same guild is in progress");
     }
 
+    let voice = this.#voices.get(guildId);
+    if (voice?.channelId === voiceId && voice.joined && voice.connected) return voice;
+
     const request = Promise.withResolvers<VoiceState>() as JoinRequest;
     request.voiceId = voiceId;
 
     this.#joins.set(guildId, request);
-
-    let voice = this.#voices.get(guildId);
     try {
       const updates = await this.#awaitVoiceUpdates(guildId, voiceId, options?.timeout);
       if (!voice) voice = await this.#handleNew(updates, options);
