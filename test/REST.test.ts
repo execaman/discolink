@@ -23,7 +23,7 @@ describe("REST", () => {
     });
 
     it("constructs for proper input", () => {
-      const r = new REST({ ...options, sessionId: "123", userAgent: "bot/1.0.0" });
+      const r = new REST({ ...options, sessionId: "123", userAgent: "bot/1.0.0" }, "test");
       expect(r.origin).toBe(options.origin);
       expect(r.version).toBeGreaterThan(0);
       expect(r.baseUrl).toBe(options.origin + "/v" + r.version);
@@ -169,7 +169,7 @@ describe("REST", () => {
     });
 
     test("request() - error formatting", async () => {
-      const r = new REST(options);
+      const r = new REST(options, "test");
 
       mockResponse({ status: 500, ok: false });
       await expect(r.request("/")).rejects.toMatchObject({ message: expect.stringMatching(/failed|500/i) });
@@ -178,7 +178,7 @@ describe("REST", () => {
       await expect(r.request("/")).rejects.toMatchObject({ message: expect.stringContaining("unexpected") });
 
       mockResponse({ ok: false, data: { trace: "ln1,col1" } });
-      await expect(r.request("/")).rejects.toMatchObject({ trace: "ln1,col1" });
+      await expect(r.request("/")).rejects.toMatchObject({ node: "test", trace: "ln1,col1" });
     });
 
     test("common http methods", async () => {
