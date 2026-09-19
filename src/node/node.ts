@@ -82,7 +82,7 @@ export class Node extends EventEmitter<NodeEventMap> {
       throw new Error("Handshake timeout must be a natural number");
     }
 
-    const rest = new REST(options);
+    const rest = new REST(options, options.name);
 
     if (rest.sessionId !== null) {
       this.#socketConfig.headers["Session-Id"] = rest.sessionId;
@@ -175,6 +175,7 @@ export class Node extends EventEmitter<NodeEventMap> {
     const data = "errors" in err ? err.errors[err.errors.length - 1] : err;
     const error = data instanceof Error ? data : new Error(`${data.message ?? data}`);
     error.name = `Error [${this.constructor.name}]`;
+    Error.captureStackTrace(error, this.#error);
     return error;
   }
 
