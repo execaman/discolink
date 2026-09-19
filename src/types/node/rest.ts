@@ -1,4 +1,4 @@
-import type { JsonLike } from "@/types";
+import type { JsonLike, RestError } from "@/types";
 
 /**
  * Options to create a REST instance
@@ -88,6 +88,13 @@ export interface RequestOptions {
 export interface RestResponse<Data> extends Pick<Response, "status" | "statusText" | "ok" | "redirected" | "url"> {
   headers: Record<string, string>;
   data: Data;
+}
+
+export interface RESTError extends Error, RestError {
+  /**
+   * Name of the associated node
+   */
+  node?: string;
 }
 
 export const enum HttpStatusCode {
