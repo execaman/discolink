@@ -69,7 +69,7 @@ Discolink doesn't implement this automatically. The right approach depends on yo
 
      // Note: syncing does not add a (current) track
      // Note: if there are too many queues, sync them individually not in bulk
-     await player.queues.sync(node);
+     await player.queues.sync(node.name);
    });
    ```
 

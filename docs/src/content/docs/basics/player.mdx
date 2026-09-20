@@ -23,6 +23,8 @@ Player
 | `autoInit`           | `true`       | Call `init()` automatically on Discord `READY`                                         |
 | `autoSync`           | `true`       | Push local queue state to Lavalink when a node reconnects without resuming             |
 | `queryPrefix`        | `"ytsearch"` | Default search prefix for non-URL queries                                              |
+| `voiceTimeout`       | `10_000`     | Milliseconds to wait for Discord voice gateway events before timing out                |
+| `voiceReconnect`     | `true`       | Auto-reconnect on recoverable voice close codes (4004, 4006, 4011)                     |
 | `relocateQueues`     | `true`       | Migrate queues to another node when their node closes or disconnects                   |
 | `fetchRelatedTracks` | returns `[]` | Called by autoplay when the queue empties — return `Track[]` to continue, `[]` to stop |
 | `plugins`            | `[]`         | Plugins to initialize after nodes are created but before they connect                  |
@@ -147,6 +149,11 @@ player.on("voiceChange", (voice, previousNode, wasPlaying) => {
 player.on("voiceDestroy", (voice, reason) => {
   // Voice connection torn down. Queue is also destroyed at this point.
 });
+
+player.on("voiceDisconnect", (voice, details) => {
+  // Fires when auto-reconnect fails after a voice close.
+  // details: { code, reason, byRemote, error? }
+});
 ```
 
 **Queue events**
@@ -162,8 +169,10 @@ player.on("queueUpdate", (queue, state) => {
   // Use queue.currentTime for an interpolated position between ticks.
 });
 
-player.on("queueFinish", (queue) => {
+player.on("queueFinish", (queue, reason, error) => {
   // Queue is empty and autoplay returned nothing.
+  // reason: 'finished' | 'noRelated' | 'requestFailed'
+  // error: present when reason is 'requestFailed'
   player.voices.destroy(queue.guildId, "Queue finished");
 });
 

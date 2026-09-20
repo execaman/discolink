@@ -96,7 +96,7 @@ player.on("trackStart", (queue, track) => {
   console.log(`▶ ${track.title} [${track.formattedDuration}]`);
 });
 
-player.on("queueFinish", (queue) => {
+player.on("queueFinish", (queue, reason) => {
   player.voices.destroy(queue.guildId, "Queue finished");
 });
 ```
@@ -133,7 +133,7 @@ player.on("trackStart", (queue, track) => {
   console.log(`▶ ${track.title} [${track.formattedDuration}]`);
 });
 
-player.on("queueFinish", (queue) => {
+player.on("queueFinish", (queue, reason) => {
   player.voices.destroy(queue.guildId, "Queue finished");
 });
 
