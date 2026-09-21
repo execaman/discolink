@@ -15,12 +15,12 @@
   "devDependencies": {
     "@astrojs/starlight": "^0.41.11",
     "@expressive-code/plugin-line-numbers": "^0.44.2",
-    "astro": "^7.3.2",
+    "astro": "^7.3.3",
     "npm-check-updates": "^22.2.9",
     "sharp": "^0.35.4",
     "typedoc": "^0.28.20",
     "typedoc-material-theme": "^1.4.1",
-    "typedoc-plugin-dt-links": "^2.0.71",
+    "typedoc-plugin-dt-links": "^2.0.72",
     "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^6.0.3"
   }
