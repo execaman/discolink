@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.6.0](https://github.com/execaman/discolink/compare/v5.5.0...v5.6.0) (2026-10-04)
+
+
+### Features
+
+* **Player:** add 'node' prop on search results ([#122](https://github.com/execaman/discolink/issues/122)) ([df794c2](https://github.com/execaman/discolink/commit/df794c25cfc0f661f13821819192e60f4c0f232e))
+* **Player:** add getQueue(guildId, error) overload ([df794c2](https://github.com/execaman/discolink/commit/df794c25cfc0f661f13821819192e60f4c0f232e))
+
+
+### Bug Fixes
+
+* **Player:** throw early on invalid clientId arg for init() ([df794c2](https://github.com/execaman/discolink/commit/df794c25cfc0f661f13821819192e60f4c0f232e))
+* **validation:** refactor certain checks based on context ([#125](https://github.com/execaman/discolink/issues/125)) ([3a4811b](https://github.com/execaman/discolink/commit/3a4811bc8868d3846e15e5ca1ac3a38c1f070644))
+* **VoiceManager:** connect node without waiting ([#124](https://github.com/execaman/discolink/issues/124)) ([c59cb0e](https://github.com/execaman/discolink/commit/c59cb0ecfda5fc3367d39d088069e79afb8dc76d))
+
 ## [5.5.0](https://github.com/execaman/discolink/compare/v5.4.1...v5.5.0) (2026-09-19)
 
 
