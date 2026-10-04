@@ -240,7 +240,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
   }
 
   #streaming(frames: StatsPayload["frameStats"]) {
-    if (frames === null) return -1;
+    if (frames == null) return -1;
     const expected = frames.sent + frames.nulled + frames.deficit;
     const passRate = frames.sent / expected;
     const lossRate = frames.nulled / expected;

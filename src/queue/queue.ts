@@ -107,7 +107,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * Whether the queue has a track but the lavalink player doesn't
    */
   get stopped() {
-    return this.track !== null && this.#player.track === null;
+    return this.track !== null && this.#player.track == null;
   }
 
   /**
@@ -121,7 +121,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * Whether a track is present and also playing in the lavalink player
    */
   get playing() {
-    return !this.paused && this.track !== null && this.#player.track !== null;
+    return !this.paused && this.track !== null && this.#player.track != null;
   }
 
   /**
@@ -268,11 +268,11 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
       paused: player.paused,
       volume: player.volume,
     };
-    if (player.track !== null) {
+    if (player.track != null) {
       request.track = { encoded: player.track.encoded, userData: player.track.userData };
       request.position = player.state.position;
     }
-    await this.#update(request);
+    return this.#update(request);
   }
 
   /**

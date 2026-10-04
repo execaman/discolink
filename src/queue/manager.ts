@@ -186,7 +186,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
 
     const queues = this.#queues.values().reduce<{ load: number; value: Queue }[]>((t, q) => {
       if (!isEligible(q)) return t;
-      const load = this.#cache.get(q.guildId)!.track === null ? 1 : 2;
+      const load = this.#cache.get(q.guildId)?.track == null ? 1 : 2;
       totalLoad += load;
       t.push({ load, value: q });
       return t;
