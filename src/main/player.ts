@@ -2,8 +2,8 @@ import { LoadType } from "@/types";
 import { NodeManager } from "@/node";
 import { VoiceManager } from "@/voice";
 import { isPlugin, isString } from "@/functions";
-import { DefaultPlayerOptions } from "@/constants";
 import { Playlist, Queue, QueueManager, Track } from "@/queue";
+import { DefaultPlayerOptions, SnowflakeRegex } from "@/constants";
 import { EventEmitter } from "node:events";
 
 import type {
@@ -54,7 +54,7 @@ export class Player<
 
     if (_options.plugins !== undefined) {
       for (const plugin of _options.plugins) {
-        if (!isPlugin(plugin)) throw new Error("Invalid plugin(s)");
+        if (!isPlugin(plugin)) throw new Error("Invalid set of plugin(s)");
         (this.plugins as { [x: string]: PlayerPlugin })[plugin.name] = plugin;
       }
       delete _options.plugins;
@@ -87,10 +87,13 @@ export class Player<
   }
 
   async init(clientId: string, nodes = this.options.nodes!) {
+    if (!isString(clientId, SnowflakeRegex)) throw new Error("Client Id is not a valid Discord Id");
     if (this.#initPromise !== null) return this.#initPromise;
     if (this.#initialized) return;
+
     const resolver = Promise.withResolvers<void>();
     this.#initPromise = resolver.promise;
+
     this.#clientId = clientId;
     try {
       nodes?.forEach((node) => this.nodes.create(node));
@@ -110,9 +113,14 @@ export class Player<
   /**
    * Returns the queue of a guild
    * @param guildId Id of the guild
+   * @param error Whether to throw an error if queue is not found
    */
-  getQueue(guildId: string) {
-    return this.queues.get(guildId);
+  getQueue(guildId: string): Queue<Context> | undefined;
+  getQueue(guildId: string, error: true): Queue<Context>;
+  getQueue(guildId: string, error?: true) {
+    const queue = this.queues.get(guildId);
+    if (error && !queue) throw new Error(`No queue found for guild '${guildId}'`);
+    return queue;
   }
 
   /**
@@ -139,24 +147,24 @@ export class Player<
    */
   async search(query: string, options?: SearchOptions): Promise<SearchResult> {
     if (!isString(query, "non-empty")) throw new Error("Query must be a non-empty string");
-    const node = options?.node !== undefined ? this.nodes.get(options.node) : this.nodes.relevant()[0];
-    if (!node) {
-      if (options?.node === undefined) throw new Error("No nodes available");
-      throw new Error(`Node '${options.node}' not found`);
-    }
+
+    const node = options?.node === undefined ? this.nodes.relevant()[0] : this.nodes.get(options.node);
+    if (!node) throw new Error(options?.node === undefined ? "No nodes available" : `Node '${options.node}' not found`);
+
     query = isString(query, "url") ? query : `${options?.prefix ?? this.options.queryPrefix}:${query}`;
     const result = await node.rest.loadTracks(query);
+
     switch (result.loadType) {
       case LoadType.Empty:
-        return { type: "empty", data: [] };
+        return { node: node.name, type: "empty", data: [] };
       case LoadType.Error:
-        return { type: "error", data: result.data };
+        return { node: node.name, type: "error", data: result.data };
       case LoadType.Playlist:
-        return { type: "playlist", data: new Playlist(result.data) };
+        return { node: node.name, type: "playlist", data: new Playlist(result.data) };
       case LoadType.Search:
-        return { type: "query", data: result.data.map((t) => new Track(t)) };
+        return { node: node.name, type: "query", data: result.data.map((t) => new Track(t)) };
       case LoadType.Track:
-        return { type: "track", data: new Track(result.data) };
+        return { node: node.name, type: "track", data: new Track(result.data) };
       default:
         throw new Error(`Unexpected load result type from node '${node.name}'`);
     }
@@ -190,9 +198,7 @@ export class Player<
    * @param index Index to jump to
    */
   async jump(guildId: string, index: number) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.jump(index);
+    return this.getQueue(guildId, true).jump(index);
   }
 
   /**
@@ -200,9 +206,7 @@ export class Player<
    * @param guildId Id of the guild
    */
   async pause(guildId: string) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.pause();
+    return this.getQueue(guildId, true).pause();
   }
 
   /**
@@ -210,9 +214,7 @@ export class Player<
    * @param guildId Id of the guild
    */
   async previous(guildId: string) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.previous();
+    return this.getQueue(guildId, true).previous();
   }
 
   /**
@@ -220,9 +222,7 @@ export class Player<
    * @param guildId Id of the guild
    */
   async resume(guildId: string) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.resume();
+    return this.getQueue(guildId, true).resume();
   }
 
   /**
@@ -231,9 +231,7 @@ export class Player<
    * @param ms Position in milliseconds
    */
   async seek(guildId: string, ms: number) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.seek(ms);
+    return this.getQueue(guildId, true).seek(ms);
   }
 
   /**
@@ -242,9 +240,7 @@ export class Player<
    * @param autoplay Whether to enable autoplay
    */
   setAutoplay(guildId: string, autoplay?: boolean) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.setAutoplay(autoplay);
+    return this.getQueue(guildId, true).setAutoplay(autoplay);
   }
 
   /**
@@ -253,9 +249,7 @@ export class Player<
    * @param repeatMode The repeat mode
    */
   setRepeatMode(guildId: string, repeatMode: RepeatMode) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.setRepeatMode(repeatMode);
+    return this.getQueue(guildId, true).setRepeatMode(repeatMode);
   }
 
   /**
@@ -264,9 +258,7 @@ export class Player<
    * @param volume The volume to set
    */
   async setVolume(guildId: string, volume: number) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.setVolume(volume);
+    return this.getQueue(guildId, true).setVolume(volume);
   }
 
   /**
@@ -275,9 +267,7 @@ export class Player<
    * @param includePrevious Whether to pull previous tracks to current
    */
   shuffle(guildId: string, includePrevious?: boolean) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.shuffle(includePrevious);
+    return this.getQueue(guildId, true).shuffle(includePrevious);
   }
 
   /**
@@ -285,9 +275,7 @@ export class Player<
    * @param guildId Id of the guild
    */
   async next(guildId: string) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.next();
+    return this.getQueue(guildId, true).next();
   }
 
   /**
@@ -295,8 +283,6 @@ export class Player<
    * @param guildId Id of the guild
    */
   async stop(guildId: string) {
-    const queue = this.queues.get(guildId);
-    if (!queue) throw new Error(`No queue found for guild '${guildId}'`);
-    return queue.stop();
+    return this.getQueue(guildId, true).stop();
   }
 }
