@@ -66,10 +66,9 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
    * @param name Name of the filter
    */
   has<Name extends FilterNames<PluginFilters>>(name: Name) {
-    return (
-      Object.hasOwn(this.#player.filters, name)
-      || (this.#player.filters.pluginFilters !== undefined && Object.hasOwn(this.#player.filters.pluginFilters, name))
-    );
+    if (Object.hasOwn(this.#player.filters, name)) return true;
+    if (this.#player.filters.pluginFilters === undefined) return false;
+    return Object.hasOwn(this.#player.filters.pluginFilters, name);
   }
 
   /**
@@ -93,11 +92,14 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
    * @param type Type of filters to clear (`native` for built-in, `plugin` for plugins)
    */
   async clear(type?: "native" | "plugin") {
-    if (type === "plugin") return this.remove("pluginFilters");
-    if (type === "native" && this.#player.filters.pluginFilters !== undefined) {
-      return this.override({ pluginFilters: this.#player.filters.pluginFilters as PluginFilters });
+    switch (type) {
+      case "plugin":
+        return this.remove("pluginFilters");
+      case "native":
+        return this.override({ pluginFilters: this.#player.filters.pluginFilters as PluginFilters });
+      default:
+        return this.override({});
     }
-    return this.override({});
   }
 
   /**

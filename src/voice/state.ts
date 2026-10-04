@@ -234,7 +234,7 @@ export class VoiceState {
     };
 
     const track = this.#player.track;
-    const wasPlaying = !this.#player.paused && track !== null;
+    const wasPlaying = !this.#player.paused && track != null;
 
     if (wasPlaying && this.player.nodes.supports("source", track.info.sourceName, node.name)) {
       request.track = { encoded: track.encoded, userData: track.userData };

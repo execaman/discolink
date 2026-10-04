@@ -80,7 +80,7 @@ export class VoiceRegion {
 
   [OnPingUpdateSymbol](node: string, state: PlayerState) {
     if (!state.connected) return;
-    if (state.ping <= 0 || state.time <= 0) return;
+    if (state.ping < 0 || state.time <= 0) return;
     const stats = this.#stats.get(node);
     if (!stats) {
       this.#stats.set(node, {
@@ -90,7 +90,7 @@ export class VoiceRegion {
       });
       return;
     }
-    if (state.time - stats.startTime <= DefaultNodeOptions.statsInterval) {
+    if (state.time - stats.startTime < DefaultNodeOptions.statsInterval) {
       stats.pingTotal += state.ping;
       stats.pingCount++;
       return;

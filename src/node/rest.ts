@@ -65,7 +65,7 @@ export class REST {
       throw new Error("Request timeout must be a natural number");
     }
 
-    if (typeof node === "string") this.#node = node;
+    if (isString(node, "non-empty")) this.#node = node;
     if (_options.stackTrace === true) this.#stackTrace = true;
     if (_options.sessionId !== undefined) this.sessionId = _options.sessionId;
 
