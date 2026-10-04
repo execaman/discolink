@@ -148,8 +148,8 @@ export class Player<
   async search(query: string, options?: SearchOptions): Promise<SearchResult> {
     if (!isString(query, "non-empty")) throw new Error("Query must be a non-empty string");
 
-    const node = options?.node !== undefined ? this.nodes.get(options.node) : this.nodes.relevant()[0];
-    if (!node) throw new Error(!options?.node ? "No nodes available" : `Node '${options.node}' not found`);
+    const node = options?.node === undefined ? this.nodes.relevant()[0] : this.nodes.get(options.node);
+    if (!node) throw new Error(options?.node === undefined ? "No nodes available" : `Node '${options.node}' not found`);
 
     query = isString(query, "url") ? query : `${options?.prefix ?? this.options.queryPrefix}:${query}`;
     const result = await node.rest.loadTracks(query);
