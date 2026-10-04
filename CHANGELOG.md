@@ -6,8 +6,6 @@
 ### Features
 
 * **Player:** add 'node' prop on search results ([#122](https://github.com/execaman/discolink/issues/122)) ([df794c2](https://github.com/execaman/discolink/commit/df794c25cfc0f661f13821819192e60f4c0f232e))
-* **Player:** add getQueue(guildId, error) overload ([c59cb0e](https://github.com/execaman/discolink/commit/c59cb0ecfda5fc3367d39d088069e79afb8dc76d))
-* **Player:** add getQueue(guildId, error) overload ([3a4811b](https://github.com/execaman/discolink/commit/3a4811bc8868d3846e15e5ca1ac3a38c1f070644))
 * **Player:** add getQueue(guildId, error) overload ([df794c2](https://github.com/execaman/discolink/commit/df794c25cfc0f661f13821819192e60f4c0f232e))
 
 
