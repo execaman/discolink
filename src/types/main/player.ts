@@ -167,10 +167,17 @@ export interface PlayOptions<
   userData?: UserData;
 }
 
+export interface BaseSearchResult {
+  /**
+   * Name of the node this result came from
+   */
+  node: string;
+}
+
 /**
  * Track search result
  */
-export interface TrackSearchResult {
+export interface TrackSearchResult extends BaseSearchResult {
   type: "track";
   data: Track;
 }
@@ -178,7 +185,7 @@ export interface TrackSearchResult {
 /**
  * Playlist search result
  */
-export interface PlaylistSearchResult {
+export interface PlaylistSearchResult extends BaseSearchResult {
   type: "playlist";
   data: Playlist;
 }
@@ -186,7 +193,7 @@ export interface PlaylistSearchResult {
 /**
  * Query search result
  */
-export interface QuerySearchResult {
+export interface QuerySearchResult extends BaseSearchResult {
   type: "query";
   data: Track[];
 }
@@ -194,7 +201,7 @@ export interface QuerySearchResult {
 /**
  * Empty search result
  */
-export interface EmptySearchResult {
+export interface EmptySearchResult extends BaseSearchResult {
   type: "empty";
   data: [];
 }
@@ -202,7 +209,7 @@ export interface EmptySearchResult {
 /**
  * Error search result
  */
-export interface ErrorSearchResult {
+export interface ErrorSearchResult extends BaseSearchResult {
   type: "error";
   data: Exception;
 }
