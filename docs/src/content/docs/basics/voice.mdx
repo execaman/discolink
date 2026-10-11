@@ -69,6 +69,7 @@ voice.reconnecting; // true during a voice reconnect
 voice.disconnected; // true when not connected and not reconnecting
 voice.changingNode; // true while changeNode() is in progress
 voice.destroyed; // true if this instance is no longer in VoiceManager
+voice.unusable; // true if destroyed or its queue is being destroyed
 
 voice.channelId; // current voice channel ID
 voice.regionId; // voice region extracted from the endpoint (e.g. 'us-east')
@@ -97,25 +98,29 @@ When a voice connection is severed, Discolink emits `voiceClose` after having re
 // Leave the channel but keep the VoiceState and queue alive
 await player.voices.disconnect(guildId);
 
-// Tear everything down — destroys the queue first, then the VoiceState
-await player.voices.destroy(guildId, "User left the channel");
+// Tear everything down — destroys the queue and voice connection
+await player.queues.destroy(guildId, "User left the channel");
 ```
 
-`destroy()` is the right call when you're done with a guild — on channel delete, bot kick, or the last user leaving. If a queue exists for the guild, `voices.destroy()` delegates to `queues.destroy()` and vice versa.
+`queues.destroy()` is the right call when you're done with a guild — on channel delete, bot kick, or the last user leaving. It removes the Lavalink player, tears down the voice connection, and emits `queueDestroy`.
+
+`disconnect()` only leaves the voice channel; it leaves both the `VoiceState` and its queue fully intact.
 
 <Aside type="note">
   `disconnect()` does not permanently sever the connection. If a `VOICE_SERVER_UPDATE` arrives from Discord while the
   `VoiceState` is still alive (i.e. not destroyed), Discolink will process it and the bot may reconnect automatically.
 </Aside>
 
-You can also call these directly on a `VoiceState` instance:
+You can also call these directly on a `VoiceState` or `Queue` instance:
 
 ```ts
 const voice = player.voices.get(guildId)!;
 await voice.connect(); // connect to the same channel
 await voice.connect(otherChannelId); // move to a different channel
 await voice.disconnect(); // disconnect from the channel
-await voice.destroy("reason"); // destroy with reason
+
+const queue = player.queues.get(guildId)!;
+await queue.destroy("reason"); // tear down queue and voice connection
 ```
 
 ## Moving to a different node
