@@ -97,7 +97,7 @@ player.on("trackStart", (queue, track) => {
 });
 
 player.on("queueFinish", (queue, reason) => {
-  player.voices.destroy(queue.guildId, "Queue finished");
+  player.queues.destroy(queue.guildId, "Queue finished");
 });
 ```
 
@@ -134,7 +134,7 @@ player.on("trackStart", (queue, track) => {
 });
 
 player.on("queueFinish", (queue, reason) => {
-  player.voices.destroy(queue.guildId, "Queue finished");
+  player.queues.destroy(queue.guildId, "Queue finished");
 });
 
 client.on("raw", (payload) => player.voices.handleDispatch(payload));

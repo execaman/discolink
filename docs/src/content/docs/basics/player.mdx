@@ -146,10 +146,6 @@ player.on("voiceChange", (voice, previousNode, wasPlaying) => {
   // wasPlaying: true if a track was playing when the migration happened.
 });
 
-player.on("voiceDestroy", (voice, reason) => {
-  // Voice connection torn down. Queue is also destroyed at this point.
-});
-
 player.on("voiceDisconnect", (voice, details) => {
   // Fires when auto-reconnect fails after a voice close.
   // details: { code, reason, byRemote, error? }
@@ -173,7 +169,7 @@ player.on("queueFinish", (queue, reason, error) => {
   // Queue is empty and autoplay returned nothing.
   // reason: 'finished' | 'noRelated' | 'requestFailed'
   // error: present when reason is 'requestFailed'
-  player.voices.destroy(queue.guildId, "Queue finished");
+  player.queues.destroy(queue.guildId, "Queue finished");
 });
 
 player.on("queueDestroy", (queue, reason) => {
@@ -184,23 +180,21 @@ player.on("queueDestroy", (queue, reason) => {
 **Track events**
 
 ```ts
-player.on("trackStart", (queue, track, inQueue) => {
+player.on("trackStart", (queue, track) => {
   console.log(`▶ ${track.title} [${track.formattedDuration}]`);
 });
 
-player.on("trackFinish", (queue, track, reason, inQueue) => {
+player.on("trackFinish", (queue, track, reason) => {
   // reason: 'finished' | 'loadFailed' | 'stopped' | 'replaced' | 'cleanup'
   if (reason === "loadFailed") console.error(`Failed: ${track.title}`);
 });
 
-player.on("trackError", (queue, track, exception, inQueue) => {
+player.on("trackError", (queue, track, exception) => {
   // exception.severity: 'common' | 'suspicious' | 'fault'
   console.error(`[${exception.severity}] ${exception.message}`);
 });
 
-player.on("trackStuck", (queue, track, thresholdMs, inQueue) => {
+player.on("trackStuck", (queue, track, thresholdMs) => {
   queue.next(); // skip the stuck track
 });
 ```
-
-The `inQueue` boolean indicates whether `track` is the exact object found in queue. It's `false` only for the `replaced` end reason — in that case use `queue.track` for the currently playing track instead.
