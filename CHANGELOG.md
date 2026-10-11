@@ -1,5 +1,30 @@
 # Changelog
 
+## [6.0.0](https://github.com/execaman/discolink/compare/v5.6.0...v6.0.0) (2026-10-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **Player:** remove 'inQueue' flag from track events ([#130](https://github.com/execaman/discolink/issues/130))
+* **VoiceState:** remove destroy() method
+* **VoiceManager:** remove destroy() method
+* **Player:** remove voiceDestroy event ([#129](https://github.com/execaman/discolink/issues/129))
+
+### Features
+
+* **Player:** best-effort orphan remote player prevention ([8cd7c47](https://github.com/execaman/discolink/commit/8cd7c47bb4a65405d86bf918d436c61ceadf000d))
+* **Queue:** add 'unusable' and 'destroying' props ([8cd7c47](https://github.com/execaman/discolink/commit/8cd7c47bb4a65405d86bf918d436c61ceadf000d))
+* **QueueManager:** make sync() idempotent ([8cd7c47](https://github.com/execaman/discolink/commit/8cd7c47bb4a65405d86bf918d436c61ceadf000d))
+* **VoiceState:** add 'unusable' prop ([8cd7c47](https://github.com/execaman/discolink/commit/8cd7c47bb4a65405d86bf918d436c61ceadf000d))
+
+
+### Bug Fixes
+
+* **Player:** remove 'inQueue' flag from track events ([#130](https://github.com/execaman/discolink/issues/130)) ([6b7239c](https://github.com/execaman/discolink/commit/6b7239c2e9acd11972dbcc63ef6e90a07817541b))
+* **Player:** remove voiceDestroy event ([#129](https://github.com/execaman/discolink/issues/129)) ([8cd7c47](https://github.com/execaman/discolink/commit/8cd7c47bb4a65405d86bf918d436c61ceadf000d))
+* **VoiceManager:** remove destroy() method ([8cd7c47](https://github.com/execaman/discolink/commit/8cd7c47bb4a65405d86bf918d436c61ceadf000d))
+* **VoiceState:** remove destroy() method ([8cd7c47](https://github.com/execaman/discolink/commit/8cd7c47bb4a65405d86bf918d436c61ceadf000d))
+
 ## [5.6.0](https://github.com/execaman/discolink/compare/v5.5.0...v5.6.0) (2026-10-04)
 
 
