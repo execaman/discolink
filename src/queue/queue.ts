@@ -1,7 +1,7 @@
 import { VoiceState } from "@/voice";
-import { LastTrackSymbol } from "@/constants";
 import { FilterManager, Playlist, Track } from "@/queue";
 import { formatDuration, isArray, isNumber } from "@/functions";
+import { LastTrackSymbol, QueueDestroySymbol } from "@/constants";
 
 import type { Player } from "@/main";
 import type {
@@ -139,6 +139,20 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
+   * Whether the queue is (or being) destroyed
+   */
+  get unusable() {
+    return this.destroyed || this.destroying;
+  }
+
+  /**
+   * Whether the queue is being destroyed
+   */
+  get destroying() {
+    return this.player.queues[QueueDestroySymbol](this.guildId) !== undefined;
+  }
+
+  /**
    * Whether this queue instance is destroyed
    */
   get destroyed() {
@@ -239,6 +253,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   async #update(data: PlayerUpdateRequestBody, params?: PlayerUpdateQueryParams) {
+    if (this.unusable) throw new Error("Queue is (or being) destroyed");
     const player = await this.rest.updatePlayer(this.guildId, data, params);
     Object.assign(this.#player, player);
   }
@@ -513,6 +528,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * @param reason Reason for destroying
    */
   async destroy(reason?: string) {
+    if (this.destroyed) return;
     return this.player.queues.destroy(this.guildId, reason);
   }
 }

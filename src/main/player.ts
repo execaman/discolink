@@ -104,9 +104,9 @@ export class Player<
       resolver.resolve();
     } catch (err) {
       resolver.reject(err);
-      throw err;
     } finally {
       this.#initPromise = null;
+      return resolver.promise;
     }
   }
 

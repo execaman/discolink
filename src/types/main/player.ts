@@ -32,7 +32,6 @@ export interface PlayerEventMap {
   voiceConnect: [voice: VoiceState];
   voiceClose: [voice: VoiceState, code: number, reason: string, byRemote: boolean];
   voiceChange: [voice: VoiceState, previousNode: Node, wasPlaying: boolean];
-  voiceDestroy: [voice: VoiceState, reason: string];
   voiceDisconnect: [voice: VoiceState, details: VoiceDisconnectDetails];
 
   queueCreate: [queue: Queue];

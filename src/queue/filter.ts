@@ -115,6 +115,7 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
    * @param filters Object of filters
    */
   async override(filters: Filters<PluginFilters>) {
+    if (this.#voice.unusable) throw new Error("Connection is (or being) destroyed");
     const player = await this.#voice.node.rest.updatePlayer(this.#voice.guildId, { filters });
     Object.assign(this.#player, player);
     return player.filters as Filters<PluginFilters>;

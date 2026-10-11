@@ -1,7 +1,16 @@
 import { VoiceCloseCodes } from "@/types";
 import { isString, noop } from "@/functions";
 import { VoiceRegion, VoiceState } from "@/voice";
-import { OnVoiceCloseSymbol, SnowflakeRegex, UpdateSymbol, VoiceRegionIdRegex } from "@/constants";
+import {
+  NodeChangeSymbol,
+  OnVoiceCloseSymbol,
+  QueueCreateSymbol,
+  QueueDestroySymbol,
+  SnowflakeRegex,
+  UpdateSymbol,
+  VoiceDestroySymbol,
+  VoiceRegionIdRegex,
+} from "@/constants";
 import { clearTimeout, setTimeout } from "node:timers";
 
 import type { Node } from "@/node";
@@ -31,7 +40,6 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   #joins = new Map<string, JoinRequest>();
   #leaves = new Map<string, PromiseWithResolvers<void>>();
 
-  #destroys = new Map<string, Promise<void>>();
   #resolvers = new Map<string, VoiceUpdateResolver>();
 
   readonly regions = new Map<string, VoiceRegion>();
@@ -85,33 +93,6 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   }
 
   /**
-   * Destroy a voice connection
-   * @param guildId Id of the guild
-   * @param reason Reason for destroying
-   */
-  async destroy(guildId: string, reason = "destroyed") {
-    if (this.player.queues.has(guildId)) return this.player.queues.destroy(guildId, reason);
-    if (this.#destroys.has(guildId)) return this.#destroys.get(guildId)!;
-    if (this.#joins.has(guildId)) return;
-
-    const voice = this.#voices.get(guildId);
-    if (!voice) return;
-
-    const resolver = Promise.withResolvers<void>();
-    this.#destroys.set(guildId, resolver.promise);
-
-    await voice.disconnect();
-
-    this.#cache.delete(guildId);
-    this.#voices.delete(guildId);
-
-    this.player.emit("voiceDestroy", voice, reason);
-
-    resolver.resolve();
-    this.#destroys.delete(guildId);
-  }
-
-  /**
    * Connect to a voice channel
    * @param guildId Id of the guild
    * @param voiceId Id of the voice channel
@@ -120,6 +101,9 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   async connect(guildId: string, voiceId: string, options?: ConnectOptions) {
     if (!isString(guildId, SnowflakeRegex)) throw new Error("Guild Id is not a valid Discord Id");
     if (!isString(voiceId, SnowflakeRegex)) throw new Error("Voice Id is not a valid Discord Id");
+
+    await this.player.queues[QueueDestroySymbol](guildId);
+    await this.#leaves.get(guildId)?.promise;
 
     if (this.#joins.has(guildId)) {
       const request = this.#joins.get(guildId)!;
@@ -132,22 +116,20 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
     if (inSameVC && voice?.connected) return voice;
 
-    const request = Promise.withResolvers<VoiceState>() as JoinRequest;
-    request.voiceId = voiceId;
-
+    const request: JoinRequest = { ...Promise.withResolvers<VoiceState>(), voiceId };
     this.#joins.set(guildId, request);
+
     try {
-      const updates = inSameVC ? {} : await this.#awaitVoiceUpdates(guildId, voiceId);
+      const updates = inSameVC ? {} : await this.#awaitVoiceUpdates(guildId, voiceId, options?.timeout);
       if (!voice) voice = await this.#handleNew(updates, options);
       else await this.#handleExisting(voice, updates, false);
       request.resolve(voice);
-      return voice;
     } catch (err) {
-      if (!voice) await this.disconnect(guildId);
+      if (!voice) await this.#awaitChannelLeave(guildId, options?.timeout);
       request.reject(err);
-      throw err;
     } finally {
       this.#joins.delete(guildId);
+      return request.promise;
     }
   }
 
@@ -157,20 +139,12 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
    * @param timeout Timeout for state update in ms
    */
   async disconnect(guildId: string, timeout = this.player.options.voiceTimeout) {
-    if (this.#leaves.has(guildId)) return this.#leaves.get(guildId)!.promise;
-    if (this.#voices.get(guildId)?.joined === false) return;
-
-    const resolver = Promise.withResolvers<void>();
-    this.#leaves.set(guildId, resolver);
-
-    await this.#sendVoiceUpdate(guildId, null);
-    this[UpdateSymbol](guildId, { in_channel: false });
-    const timer = setTimeout(resolver.resolve, timeout);
-
-    await resolver.promise;
-    clearTimeout(timer);
-
-    this.#leaves.delete(guildId);
+    if (!this.player.queues[QueueDestroySymbol](guildId)) {
+      try {
+        await this.#joins.get(guildId)?.promise;
+      } catch {}
+    }
+    return this.#awaitChannelLeave(guildId, timeout);
   }
 
   #getOrCreateRegion(regionId: string) {
@@ -180,7 +154,21 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     return region;
   }
 
-  async #updatePlayer(node: Node, guildId: string, options: PlayerUpdateRequestBody) {
+  #validateVoice(guildId: string, isNew: boolean) {
+    const v = this.#voices.get(guildId);
+    if (!isNew && (v === undefined || v.unusable)) throw new Error("Connection has been destroyed");
+    return v;
+  }
+
+  async #updatePlayer(node: Node, guildId: string, options: PlayerUpdateRequestBody, isNew = false) {
+    await this.player.queues[QueueDestroySymbol](guildId);
+    const voice = this.#validateVoice(guildId, isNew);
+    if (!isNew && voice?.changingNode) {
+      try {
+        await voice[NodeChangeSymbol]();
+      } catch {}
+    }
+    node = this.#validateVoice(guildId, isNew)?.node ?? node;
     const player = await node.rest.updatePlayer(guildId, options);
     this.player.queues[UpdateSymbol](guildId, player, false);
   }
@@ -209,15 +197,20 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     if (options?.filters !== undefined) config.filters = options.filters;
     if (options?.volume !== undefined) config.volume = options.volume;
 
-    await this.#updatePlayer(node, server.guild_id, {
-      ...config,
-      voice: {
-        channelId: state.channel_id,
-        endpoint: server.endpoint,
-        sessionId: state.session_id,
-        token: server.token,
+    await this.#updatePlayer(
+      node,
+      server.guild_id,
+      {
+        ...config,
+        voice: {
+          channelId: state.channel_id,
+          endpoint: server.endpoint,
+          sessionId: state.session_id,
+          token: server.token,
+        },
       },
-    });
+      true
+    );
 
     this.#cache.set(server.guild_id, {
       channel_id: state.channel_id,
@@ -237,12 +230,12 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     const voice = new VoiceState(this.player, node.name, server.guild_id);
     this.#voices.set(server.guild_id, voice);
 
-    this.player.emit("voiceConnect", voice);
-
     const opts: CreateQueueOptions = { guildId: server.guild_id, voiceId: state.channel_id };
     if (options?.context !== undefined) opts.context = options.context;
 
-    await this.player.queues.create(opts);
+    this.player.queues[QueueCreateSymbol](opts);
+    this.player.emit("voiceConnect", voice);
+
     return voice;
   }
 
@@ -309,18 +302,30 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
   async #awaitVoiceUpdates(guildId: string, voiceId: string, timeout = this.player.options.voiceTimeout) {
     const resolver = Promise.withResolvers<VoiceUpdatePayloads>() as VoiceUpdateResolver;
     resolver.updates = {};
+    resolver.timeout = setTimeout(resolver.resolve, timeout, resolver.updates);
     this.#resolvers.set(guildId, resolver);
     try {
       await this.#sendVoiceUpdate(guildId, voiceId);
-      resolver.timeout = setTimeout(resolver.resolve, timeout, resolver.updates);
-      await resolver.promise;
-      return resolver.updates;
-    } catch (err) {
-      resolver.reject(err);
-      throw err;
+      return await resolver.promise;
     } finally {
       clearTimeout(resolver.timeout);
       this.#resolvers.delete(guildId);
+    }
+  }
+
+  async #awaitChannelLeave(guildId: string, timeout = this.player.options.voiceTimeout) {
+    if (this.#leaves.has(guildId)) return this.#leaves.get(guildId)!.promise;
+    if (this.#voices.get(guildId)?.joined === false) return;
+    const resolver = Promise.withResolvers<void>();
+    this.#leaves.set(guildId, resolver);
+    try {
+      await this.#sendVoiceUpdate(guildId, null);
+      this[UpdateSymbol](guildId, { in_channel: false });
+      const timer = setTimeout(resolver.resolve, timeout);
+      await resolver.promise;
+      clearTimeout(timer);
+    } finally {
+      this.#leaves.delete(guildId);
     }
   }
 
@@ -349,19 +354,22 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
   async #onStateUpdate(state: VoiceStateUpdatePayload["d"]) {
     if (!state.guild_id || state.user_id !== this.player.clientId) return;
+    const joined = state.channel_id != null;
     const resolver = this.#resolvers.get(state.guild_id);
-    if (state.channel_id == null) {
-      this.#leaves.get(state.guild_id)?.resolve();
-      if (resolver !== undefined) return;
+    if (resolver !== undefined) {
+      resolver.updates.state = state;
+      if (!resolver.updates.server) resolver.timeout.refresh();
+      else resolver.resolve(resolver.updates);
+      if (!joined) this.#leaves.get(state.guild_id)?.resolve();
+      return;
     }
-    if (!resolver) {
-      const voice = this.#voices.get(state.guild_id);
-      if (!voice) return;
-      return this.#handleExisting(voice, { state }).catch(noop);
+    const voice = this.#voices.get(state.guild_id);
+    if (voice !== undefined) {
+      const leaving = this.#leaves.get(state.guild_id);
+      const promise = this.#handleExisting(voice, { state }).catch(noop);
+      return joined || !leaving ? promise : promise.finally(leaving.resolve);
     }
-    resolver.updates.state = state;
-    if (!resolver.updates.server) resolver.timeout.refresh();
-    else resolver.resolve(resolver.updates);
+    if (!joined) this.#leaves.get(state.guild_id)?.resolve();
   }
 
   async #onServerUpdate(server: VoiceServerUpdatePayload["d"]) {
@@ -388,7 +396,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
         break;
     }
     this.player.emit("voiceClose", voice, payload.code, payload.reason, payload.byRemote);
-    if (!shouldReconnect) return;
+    if (voice.unusable || !shouldReconnect) return;
     try {
       await voice.reconnect();
       if (voice.joined) return;
@@ -396,6 +404,11 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     } catch (err) {
       this.player.emit("voiceDisconnect", voice, { ...payload, error: err });
     }
+  }
+
+  [VoiceDestroySymbol](guildId: string) {
+    this.#cache.delete(guildId);
+    this.#voices.delete(guildId);
   }
 
   [UpdateSymbol](guildId: string, payload: Partial<BotVoiceState>, partial = true) {
