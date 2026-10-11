@@ -2,7 +2,6 @@ import { Queue, Track } from "@/queue";
 import { isRecord, noop } from "@/functions";
 import { EventType, QueueEndReason, TrackEndReason } from "@/types";
 import {
-  LastTrackSymbol,
   OnEventUpdateSymbol,
   OnPingUpdateSymbol,
   OnStateUpdateSymbol,
@@ -258,32 +257,26 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
   }
 
   #getLocalTrack(queue: Queue, track: APITrack, replaced = false) {
-    const trackId = track.info.identifier;
-    const lastTrack = queue[LastTrackSymbol];
-    if (lastTrack !== null) queue[LastTrackSymbol] = null;
-    const _track =
-      !replaced && queue.track?.id === trackId ? queue.track
-      : lastTrack?.id === trackId ? lastTrack
-      : null;
-    return [_track ?? new Track(track), _track !== null] as const;
+    if (!replaced && queue.track?.id === track.info.identifier) return queue.track;
+    return new Track(track);
   }
 
   async #onTrackStart(queue: Queue, payload: TrackStartEventPayload) {
-    this.player.emit("trackStart", queue, ...this.#getLocalTrack(queue, payload.track));
+    this.player.emit("trackStart", queue, this.#getLocalTrack(queue, payload.track));
   }
 
   async #onTrackError(queue: Queue, payload: TrackExceptionEventPayload) {
-    const [track, inQueue] = this.#getLocalTrack(queue, payload.track);
-    this.player.emit("trackError", queue, track, payload.exception, inQueue);
+    const track = this.#getLocalTrack(queue, payload.track);
+    this.player.emit("trackError", queue, track, payload.exception);
   }
 
   async #onTrackStuck(queue: Queue, payload: TrackStuckEventPayload) {
-    const [track, inQueue] = this.#getLocalTrack(queue, payload.track);
-    this.player.emit("trackStuck", queue, track, payload.thresholdMs, inQueue);
+    const track = this.#getLocalTrack(queue, payload.track);
+    this.player.emit("trackStuck", queue, track, payload.thresholdMs);
   }
 
   async #onTrackEnd(queue: Queue, payload: TrackEndEventPayload) {
-    const [track, inQueue] = this.#getLocalTrack(queue, payload.track, payload.reason === TrackEndReason.Replaced);
+    const track = this.#getLocalTrack(queue, payload.track, payload.reason === TrackEndReason.Replaced);
     switch (payload.reason) {
       case TrackEndReason.Cleanup:
         if (track.id !== queue.track?.id) break;
@@ -294,10 +287,10 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
         if (queue.repeatMode !== "track") queue.previousTracks.push(queue.tracks.shift()!);
         break;
       default:
-        this.player.emit("trackFinish", queue, track, payload.reason, inQueue);
+        this.player.emit("trackFinish", queue, track, payload.reason);
         return;
     }
-    this.player.emit("trackFinish", queue, track, payload.reason, inQueue);
+    this.player.emit("trackFinish", queue, track, payload.reason);
     try {
       if (queue.finished) {
         if (queue.hasPrevious && queue.repeatMode === "queue") queue.tracks.push(queue.previousTracks.shift()!);

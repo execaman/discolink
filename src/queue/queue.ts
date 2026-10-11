@@ -1,7 +1,7 @@
 import { VoiceState } from "@/voice";
+import { QueueDestroySymbol } from "@/constants";
 import { FilterManager, Playlist, Track } from "@/queue";
 import { formatDuration, isArray, isNumber } from "@/functions";
-import { LastTrackSymbol, QueueDestroySymbol } from "@/constants";
 
 import type { Player } from "@/main";
 import type {
@@ -37,8 +37,6 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   readonly filters: FilterManager;
   readonly player: Player;
 
-  [LastTrackSymbol]: Track | null = null;
-
   constructor(player: Player, guildId: string, context?: Context) {
     if (player.queues.has(guildId)) throw new Error("An identical queue already exists");
 
@@ -64,7 +62,6 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
       voice: immutable,
       filters: immutable,
       player: { ...immutable, enumerable: false },
-      [LastTrackSymbol]: { configurable: false, enumerable: false },
     } satisfies { [k in keyof Queue]?: PropertyDescriptor });
   }
 
@@ -397,7 +394,6 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
     if (!isNumber(index, "integer")) throw new Error("Index must be a integer");
     const track = index < 0 ? this.#previousTracks[this.#previousTracks.length + index] : this.#tracks[index];
     if (!track) throw new Error("Specified index is out of range");
-    this[LastTrackSymbol] = this.track;
     if (index < 0) this.#tracks.unshift(...this.#previousTracks.splice(index));
     else this.#previousTracks.push(...this.#tracks.splice(0, index));
     await this.#update({
@@ -455,7 +451,6 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
       if (related.length > 0) return this.jump(this.length - related.length);
     }
     if (!this.finished) {
-      this[LastTrackSymbol] = this.track;
       this.#previousTracks.push(this.#tracks.shift()!);
       await this.stop();
     }
@@ -519,7 +514,6 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
    * Stop the current track in lavalink player
    */
   async stop() {
-    this[LastTrackSymbol] ??= this.track;
     return this.#update({ track: { encoded: null } });
   }
 
