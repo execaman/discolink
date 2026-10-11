@@ -1,5 +1,4 @@
 export const UpdateSymbol = Symbol("update");
-export const LastTrackSymbol = Symbol("lastTrack");
 
 export const NodeChangeSymbol = Symbol("nodeChange");
 export const VoiceDestroySymbol = Symbol("voiceDestroy");
