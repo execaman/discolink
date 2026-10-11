@@ -1,4 +1,5 @@
 import { noop } from "@/functions";
+import { NodeChangeSymbol, QueueDestroySymbol } from "@/constants";
 
 import type { Node } from "@/node";
 import type { Player } from "@/main";
@@ -126,6 +127,13 @@ export class VoiceState {
   }
 
   /**
+   * Whether the voice state is (or being) destroyed
+   */
+  get unusable() {
+    return this.destroyed || this.player.queues[QueueDestroySymbol](this.guildId) !== undefined;
+  }
+
+  /**
    * Whether this voice state instance is destroyed
    */
   get destroyed() {
@@ -161,14 +169,6 @@ export class VoiceState {
   }
 
   /**
-   * Destroy this voice connection
-   * @param reason Reason for destroying
-   */
-  async destroy(reason?: string) {
-    return this.player.voices.destroy(this.guildId, reason);
-  }
-
-  /**
    * Connect to a voice channel by Id (default if not specified)
    * @param channelId Id of the voice channel
    */
@@ -186,15 +186,14 @@ export class VoiceState {
     this.#state.reconnecting = true;
     try {
       await this.disconnect();
-      await this.connect();
-      resolver.resolve(this);
-      return this;
+      const voice = await this.connect();
+      resolver.resolve(voice);
     } catch (err) {
       resolver.reject(err);
-      throw err;
     } finally {
-      this.#reconnectPromise = null;
       this.#state.reconnecting = false;
+      this.#reconnectPromise = null;
+      return resolver.promise;
     }
   }
 
@@ -247,15 +246,20 @@ export class VoiceState {
     this.#node = node;
 
     try {
+      if (this.unusable) throw new Error("Connection is (or being) destroyed");
       const player = await node.rest.updatePlayer(this.guildId, request);
       Object.assign(this.#player, player);
       this.player.emit("voiceChange", this, previousNode, wasPlaying);
       resolver.resolve();
     } catch (err) {
       resolver.reject(err);
-      throw err;
     } finally {
       this.#changePromise = null;
+      return resolver.promise;
     }
+  }
+
+  [NodeChangeSymbol]() {
+    return this.#changePromise;
   }
 }

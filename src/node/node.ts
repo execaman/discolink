@@ -256,10 +256,9 @@ export class Node extends EventEmitter<NodeEventMap> {
       this.#cleanup();
     } finally {
       controller.abort();
-      const connected = this.connected;
-      resolver.resolve(connected);
       this.#connectPromise = null;
-      return connected;
+      resolver.resolve(this.connected);
+      return resolver.promise;
     }
   }
 

@@ -7,7 +7,10 @@ import {
   OnPingUpdateSymbol,
   OnStateUpdateSymbol,
   OnVoiceCloseSymbol,
+  QueueCreateSymbol,
+  QueueDestroySymbol,
   UpdateSymbol,
+  VoiceDestroySymbol,
 } from "@/constants";
 import { setImmediate } from "node:timers/promises";
 
@@ -34,8 +37,11 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
   #cache = new Map<string, APIPlayer>();
   #queues = new Map<string, Queue<Context>>();
 
+  #creates = new Map<string, Promise<Queue<Context>>>();
   #destroys = new Map<string, Promise<void>>();
-  #relocations = new Map<string, Promise<void>>();
+
+  #syncs = new Map<string, Promise<void>>();
+  #relocates = new Map<string, Promise<void>>();
 
   readonly player: Player;
 
@@ -88,20 +94,24 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
    */
   async create(options: CreateQueueOptions<Context>) {
     if (!isRecord(options)) throw new Error("Queue create options must be an object");
+    if (this.#creates.has(options.guildId)) return this.#creates.get(options.guildId)!;
 
-    const guildId = options.guildId;
-    if (this.#queues.has(guildId)) return this.#queues.get(guildId)!;
+    const resolver = Promise.withResolvers<Queue<Context>>();
+    this.#creates.set(options.guildId, resolver.promise);
 
-    if (!this.player.voices.has(guildId)) {
-      await this.player.voices.connect(guildId, options.voiceId, options);
-      return this.#queues.get(guildId)!;
+    await this.#destroys.get(options.guildId);
+    try {
+      if (!this.player.voices.has(options.guildId)) {
+        await this.player.voices.connect(options.guildId, options.voiceId, options);
+      }
+      const queue = this[QueueCreateSymbol](options);
+      resolver.resolve(queue);
+    } catch (err) {
+      resolver.reject(err);
+    } finally {
+      this.#creates.delete(options.guildId);
+      return resolver.promise;
     }
-
-    const queue = new Queue<Context>(this.player, guildId, options.context);
-    this.#queues.set(guildId, queue);
-
-    this.player.emit("queueCreate", queue);
-    return queue;
   }
 
   /**
@@ -110,6 +120,10 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
    * @param reason Reason for destroying
    */
   async destroy(guildId: string, reason = "destroyed") {
+    try {
+      await this.#creates.get(guildId);
+    } catch {}
+
     if (this.#destroys.has(guildId)) return this.#destroys.get(guildId)!;
 
     const queue = this.#queues.get(guildId);
@@ -117,18 +131,18 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
 
     const resolver = Promise.withResolvers<void>();
     this.#destroys.set(guildId, resolver.promise);
-
-    await queue.rest.destroyPlayer(guildId).catch(noop);
-
-    this.#cache.delete(guildId);
-    this.#queues.delete(guildId);
-
-    this.player.emit("queueDestroy", queue, reason);
-
-    await this.player.voices.destroy(guildId, reason);
-
-    resolver.resolve();
-    this.#destroys.delete(guildId);
+    try {
+      await queue.rest.destroyPlayer(guildId).catch(noop);
+      await this.player.voices.disconnect(guildId);
+      this.player.voices[VoiceDestroySymbol](guildId);
+      this.#cache.delete(guildId);
+      this.#queues.delete(guildId);
+      this.player.emit("queueDestroy", queue, reason);
+    } finally {
+      this.#destroys.delete(guildId);
+      resolver.resolve();
+      return resolver.promise;
+    }
   }
 
   /**
@@ -142,17 +156,33 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     if (!_node) throw new Error(`Node '${node}' not found`);
     if (!_node.ready) throw new Error(`Node '${node}' not ready`);
 
-    if (target === "local") {
-      const players = await _node.rest.fetchPlayers();
-      for (const player of players) this[UpdateSymbol](player.guildId, player);
-      return;
+    const key = `${node}:${target}`;
+    if (this.#syncs.has(key)) return this.#syncs.get(key)!;
+
+    const resolver = Promise.withResolvers<void>();
+    this.#syncs.set(key, resolver.promise);
+    try {
+      switch (target) {
+        case "local": {
+          const players = await _node.rest.fetchPlayers();
+          for (const player of players) this[UpdateSymbol](player.guildId, player);
+          break;
+        }
+        case "remote": {
+          const queues = this.#queues.values().filter((q) => q.node.name === node);
+          for (const queue of queues) await queue.sync("remote").then(setImmediate, noop);
+          break;
+        }
+        default:
+          throw new Error("Target must be 'local' or 'remote'");
+      }
+      resolver.resolve();
+    } catch (err) {
+      resolver.reject(err);
+    } finally {
+      this.#syncs.delete(key);
+      return resolver.promise;
     }
-    if (target === "remote") {
-      const queues = this.#queues.values().filter((q) => q.node.name === node);
-      for (const queue of queues) await queue.sync("remote").then(setImmediate, noop);
-      return;
-    }
-    throw new Error("Target must be 'local' or 'remote'");
   }
 
   /**
@@ -160,7 +190,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
    * @param node Name of the node
    */
   async relocate(node: string) {
-    if (this.#relocations.has(node)) return this.#relocations.get(node)!;
+    if (this.#relocates.has(node)) return this.#relocates.get(node)!;
 
     const nodes = [] as {
       name: string;
@@ -182,7 +212,8 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
 
     let totalLoad = 0;
 
-    const isEligible = (q: Queue) => q.node.name === node && !q.destroyed && !q.voice.reconnecting;
+    const isEligible = (q: Queue) =>
+      q.node.name === node && !q.unusable && !q.voice.reconnecting && !q.voice.changingNode;
 
     const queues = this.#queues.values().reduce<{ load: number; value: Queue }[]>((t, q) => {
       if (!isEligible(q)) return t;
@@ -195,7 +226,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     if (queues.length === 0) return;
 
     const resolver = Promise.withResolvers<void>();
-    this.#relocations.set(node, resolver.promise);
+    this.#relocates.set(node, resolver.promise);
 
     queues.sort((a, b) => a.load - b.load);
 
@@ -220,8 +251,10 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
       await setImmediate();
     } while (queues.length !== 0);
 
+    this.#relocates.delete(node);
+
     resolver.resolve();
-    this.#relocations.delete(node);
+    return resolver.promise;
   }
 
   #getLocalTrack(queue: Queue, track: APITrack, replaced = false) {
@@ -316,6 +349,18 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
         cache.state.connected = false;
         return this.player.voices[OnVoiceCloseSymbol](queue.voice, payload);
     }
+  }
+
+  [QueueCreateSymbol](options: CreateQueueOptions<Context>) {
+    if (this.#queues.has(options.guildId)) return this.#queues.get(options.guildId)!;
+    const queue = new Queue<Context>(this.player, options.guildId, options.context);
+    this.#queues.set(options.guildId, queue);
+    this.player.emit("queueCreate", queue);
+    return queue;
+  }
+
+  [QueueDestroySymbol](guildId: string) {
+    return this.#destroys.get(guildId);
   }
 
   [UpdateSymbol](guildId: string, payload: Partial<APIPlayer>, partial = true) {
