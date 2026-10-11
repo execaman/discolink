@@ -120,7 +120,9 @@ queue.finished; // true when tracks[] is empty (no current or next)
 queue.empty; // true when both tracks[] and previousTracks[] are empty
 queue.hasNext; // true when tracks.length > 1
 queue.hasPrevious; // true when previousTracks.length > 0
+queue.destroying; // true while destroy() is in progress
 queue.destroyed; // true when this instance is no longer in QueueManager
+queue.unusable; // true if destroyed or destroying
 
 queue.volume; // current volume (0–1000)
 queue.repeatMode; // 'none' | 'track' | 'queue'
@@ -227,6 +229,6 @@ await queue.destroy("Channel deleted");
 await player.queues.destroy(guildId, "No human listeners"); // via manager
 ```
 
-`destroy()` calls Lavalink's REST API to remove the player, emits `queueDestroy`, then delegates to `voices.destroy()` to tear down the voice connection.
+`destroy()` calls Lavalink's REST API to remove the player, disconnects the voice channel, tears down the `VoiceState`, and emits `queueDestroy`. It is the single entry point for full guild teardown — `voice.destroy()` no longer exists, so always go through the queue.
 
 Full API: [Queue](/discolink/api/classes/Queue.Queue.html)
