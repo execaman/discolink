@@ -15,7 +15,7 @@
   "devDependencies": {
     "@astrojs/starlight": "^0.41.11",
     "@expressive-code/plugin-line-numbers": "^0.44.2",
-    "astro": "^7.3.8",
+    "astro": "^7.4.0",
     "npm-check-updates": "^22.2.9",
     "sharp": "^0.35.4",
     "typedoc": "^0.28.20",
