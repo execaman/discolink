@@ -26,10 +26,10 @@ jobs:
       changed: ${{ steps.lookup.outputs.cache-hit != 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v7.1.0
         with:
           cache: npm
           node-version: lts/*
@@ -42,18 +42,18 @@ jobs:
 
       - name: Lookup build hash
         id: lookup
-        uses: actions/cache@v6
+        uses: actions/cache@v6.1.0
         with:
           path: ./docs/.cache
           key: documentation-${{ hashFiles('docs/dist/**/*') }}
 
       - name: Setup Pages
         if: steps.lookup.outputs.cache-hit != 'true'
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@v6.0.0
 
       - name: Upload artifact
         if: steps.lookup.outputs.cache-hit != 'true'
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: ./docs/dist
 
@@ -73,4 +73,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v5.0.1
