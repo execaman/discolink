@@ -1,3 +1,5 @@
 CHANGELOG.md
 package-lock.json
+
+/.github/workflows/actions.lock
 /docs/src/content/docs/setup/installation.mdx
