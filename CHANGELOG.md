@@ -1,5 +1,18 @@
 # Changelog
 
+## [6.1.0](https://github.com/execaman/discolink/compare/v6.0.0...v6.1.0) (2026-10-26)
+
+
+### Features
+
+* **VoiceRegion:** add 'exclude' param to getRelevantNode() ([c846ad5](https://github.com/execaman/discolink/commit/c846ad5b864c69b5c7ebd760b467c402288731f2))
+* **VoiceState:** make 'name' param optional for changeNode() ([#140](https://github.com/execaman/discolink/issues/140)) ([c846ad5](https://github.com/execaman/discolink/commit/c846ad5b864c69b5c7ebd760b467c402288731f2))
+
+
+### Bug Fixes
+
+* **VoiceManager:** cleanup properly on errs from forwardVoiceUpdate() ([#139](https://github.com/execaman/discolink/issues/139)) ([5856743](https://github.com/execaman/discolink/commit/5856743a5e277a583a35f4384e832c418ec3cf82))
+
 ## [6.0.0](https://github.com/execaman/discolink/compare/v5.6.0...v6.0.0) (2026-10-11)
 
 
