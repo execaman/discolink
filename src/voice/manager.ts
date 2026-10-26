@@ -307,6 +307,9 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     try {
       await this.#sendVoiceUpdate(guildId, voiceId);
       return await resolver.promise;
+    } catch (err) {
+      resolver.resolve({});
+      throw err;
     } finally {
       clearTimeout(resolver.timeout);
       this.#resolvers.delete(guildId);
@@ -318,14 +321,16 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
     if (this.#voices.get(guildId)?.joined === false) return;
     const resolver = Promise.withResolvers<void>();
     this.#leaves.set(guildId, resolver);
+    const timer = setTimeout(resolver.resolve, timeout);
     try {
       await this.#sendVoiceUpdate(guildId, null);
       this[UpdateSymbol](guildId, { in_channel: false });
-      const timer = setTimeout(resolver.resolve, timeout);
       await resolver.promise;
-      clearTimeout(timer);
+    } catch {
     } finally {
+      clearTimeout(timer);
       this.#leaves.delete(guildId);
+      resolver.resolve();
     }
   }
 
