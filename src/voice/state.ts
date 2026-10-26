@@ -206,9 +206,12 @@ export class VoiceState {
 
   /**
    * Change the node of this voice connection
-   * @param name Name of the node
+   * @param name Name of the node. Auto-picks if not specified and throws if none are available.
    */
-  async changeNode(name: string) {
+  async changeNode(name?: string) {
+    name ??= this.player.voices.regions.get(this.regionId)?.getRelevantNode(this.#node.name)?.name;
+    if (name === undefined) throw new Error("No nodes available");
+
     const node = this.player.nodes.get(name);
 
     if (!node) throw new Error(`Node '${name}' not found`);
