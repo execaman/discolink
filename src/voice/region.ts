@@ -66,14 +66,14 @@ export class VoiceRegion {
   }
 
   /**
-   * Get a node relevant for this region.
+   * Get a node with the lowest average ping in this region.
    *
-   * When in sync, this will return the node with the lowest average ping.
-   *
-   * When not in sync, this will continue to yield nodes it doesn't have an entry for.
+   * If there are stale or no stats, this will return a node based on its metrics.
+   * @param exclude Nodes to exclude
    */
-  getRelevantNode() {
-    return this.player.nodes.relevant().sort((a, b) => {
+  getRelevantNode(...exclude: string[]) {
+    const nodes = this.player.nodes.relevant().filter((n) => !exclude.includes(n.name));
+    return nodes.sort((a, b) => {
       return (this.getAveragePing(a.name) ?? 0) - (this.getAveragePing(b.name) ?? 0);
     })[0];
   }
