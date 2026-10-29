@@ -88,11 +88,34 @@ export const enum CloseCodes {
 }
 
 export interface NodeEventMap {
+  /**
+   * Fired when connection to Lavalink succeeds.
+   */
   connect: [reconnects: number, name: string];
+
+  /**
+   * Fired when Lavalink signals ready.
+   */
   ready: [resumed: boolean, sessionId: string, name: string];
+
+  /**
+   * Fired when Lavalink dispatches a payload.
+   */
   dispatch: [payload: MessagePayload, name: string];
+
+  /**
+   * Fired when connection to Lavalink errors.
+   */
   error: [error: Error, name: string];
+
+  /**
+   * Fired when connection to Lavalink closes.
+   */
   close: [code: number, reason: string, name: string];
+
+  /**
+   * Fired when connection to Lavalink is closed and no longer reconnecting.
+   */
   disconnect: [code: number, reason: string, byLocal: boolean, name: string];
 }
 

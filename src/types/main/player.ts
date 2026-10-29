@@ -20,28 +20,105 @@ import type {
 } from "@/types";
 
 export interface PlayerEventMap {
+  /**
+   * Fired when the player is initialized.
+   */
   init: [];
 
+  /**
+   * Fired when connection to a node succeeds.
+   */
   nodeConnect: [node: Node, ...TuplePop<NodeEventMap["connect"]>];
+
+  /**
+   * Fired when a connected node signals ready.
+   */
   nodeReady: [node: Node, ...TuplePop<NodeEventMap["ready"]>];
+
+  /**
+   * Fired when a node receives a payload.
+   */
   nodeDispatch: [node: Node, ...TuplePop<NodeEventMap["dispatch"]>];
+
+  /**
+   * Fired when connection to a node errors.
+   */
   nodeError: [node: Node, ...TuplePop<NodeEventMap["error"]>];
+
+  /**
+   * Fired when connection to a node closes and enters reconnecting.
+   *
+   * This event is skipped for `nodeDisconnect` in case of explicit disconnects or nodes with reconnections disabled.
+   */
   nodeClose: [node: Node, ...TuplePop<NodeEventMap["close"]>];
+
+  /**
+   * Fired when a node is disconnected and no longer reconnecting.
+   */
   nodeDisconnect: [node: Node, ...TuplePop<NodeEventMap["disconnect"]>];
 
+  /**
+   * Fired when a new (or disconnected) {@linkcode VoiceState}'s node connects to a voice server.
+   */
   voiceConnect: [voice: VoiceState];
+
+  /**
+   * Fired when the connection between a {@linkcode VoiceState}'s node and voice server closes.
+   *
+   * Depending on the close code and {@linkcode PlayerOptions.voiceReconnect}, the {@linkcode VoiceState} will attempt a reconnect.
+   */
   voiceClose: [voice: VoiceState, code: number, reason: string, byRemote: boolean];
+
+  /**
+   * Fired when a {@linkcode VoiceState}'s node is changed.
+   */
   voiceChange: [voice: VoiceState, previousNode: Node, wasPlaying: boolean];
+
+  /**
+   * Fired when a {@linkcode VoiceState} has failed to reconnect and disconnected.
+   *
+   * As such, this event will never fire if {@linkcode PlayerOptions.voiceReconnect} is disabled.
+   */
   voiceDisconnect: [voice: VoiceState, details: VoiceDisconnectDetails];
 
+  /**
+   * Fired when a queue is created.
+   */
   queueCreate: [queue: Queue];
+
+  /**
+   * Fired when a queue's lavalink player state updates.
+   */
   queueUpdate: [queue: Queue, state: PlayerState];
+
+  /**
+   * Fired when a queue finishes.
+   */
   queueFinish: [queue: Queue, reason: QueueEndReason, error?: Error];
+
+  /**
+   * Fired when a queue is destroyed.
+   */
   queueDestroy: [queue: Queue, reason: string];
 
+  /**
+   * Fired when a track starts playing.
+   */
   trackStart: [queue: Queue, track: Track];
+
+  /**
+   * Fired when a track is stuck.
+   */
   trackStuck: [queue: Queue, track: Track, thresholdMs: number];
+
+  /**
+   * Fired when a track errors.
+   */
   trackError: [queue: Queue, track: Track, exception: Exception];
+
+  /**
+   * Fired when a track finishes.
+   */
   trackFinish: [queue: Queue, track: Track, reason: TrackEndReason];
 }
 
