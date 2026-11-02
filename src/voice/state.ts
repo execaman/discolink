@@ -6,7 +6,7 @@ import type { Player } from "@/main";
 import type { APIPlayer, BotVoiceState, PlayerUpdateRequestBody } from "@/types";
 
 /**
- * Class representing the state of a voice connection
+ * Class representing voice state of the bot as a guild member
  */
 export class VoiceState {
   #changePromise: Promise<void> | null = null;
@@ -57,7 +57,7 @@ export class VoiceState {
   }
 
   /**
-   * Node of this voice connection
+   * Node of the voice connection
    */
   get node() {
     return this.#node;
@@ -113,28 +113,28 @@ export class VoiceState {
   }
 
   /**
-   * Whether the bot is in voice channel
+   * Whether the bot is in a voice channel at all
    */
   get joined() {
     return this.#state.in_channel;
   }
 
   /**
-   * Whether the bot is suppressed
+   * Whether the bot is suppressed (in stage audience, i.e. not a speaker)
    */
   get suppressed() {
     return this.#state.suppress;
   }
 
   /**
-   * Whether the voice state is (or being) destroyed
+   * Whether the queue associated with this voice state is (or being) destroyed
    */
   get unusable() {
     return this.destroyed || this.player.queues[QueueDestroySymbol](this.guildId) !== undefined;
   }
 
   /**
-   * Whether this voice state instance is destroyed
+   * Whether the queue associated with this voice state is destroyed
    */
   get destroyed() {
     return this.player.voices.get(this.guildId) !== this;
@@ -162,14 +162,14 @@ export class VoiceState {
   }
 
   /**
-   * Whether the node for this connection is being changed
+   * Whether the node of the voice connection is being changed
    */
   get changingNode() {
     return this.#changePromise !== null;
   }
 
   /**
-   * Connect to a voice channel by Id (default if not specified)
+   * Connect to a voice channel in guild by Id (current if not specified)
    * @param channelId Id of the voice channel
    */
   async connect(channelId = this.#state.channel_id) {
@@ -177,7 +177,7 @@ export class VoiceState {
   }
 
   /**
-   * Rejoin the voice channel
+   * Rejoin current voice channel
    */
   async reconnect() {
     if (this.#reconnectPromise !== null) return this.#reconnectPromise;
@@ -198,14 +198,14 @@ export class VoiceState {
   }
 
   /**
-   * Disconnect from the voice channel
+   * Disconnect from the current voice channel
    */
   async disconnect() {
     return this.player.voices.disconnect(this.guildId);
   }
 
   /**
-   * Change the node of this voice connection
+   * Change the node of the voice connection
    * @param name Name of the node. Auto-picks if not specified and throws if none are available.
    */
   async changeNode(name?: string) {

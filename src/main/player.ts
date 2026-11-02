@@ -111,11 +111,15 @@ export class Player<
   }
 
   /**
-   * Returns the queue of a guild
+   * Get the queue of a guild
    * @param guildId Id of the guild
-   * @param error Whether to throw an error if queue is not found
    */
   getQueue(guildId: string): Queue<Context> | undefined;
+  /**
+   * Get the queue of a guild
+   * @param guildId Id of the guild
+   * @param error Whether to throw an error if no queue is found
+   */
   getQueue(guildId: string, error: true): Queue<Context>;
   getQueue(guildId: string, error?: true) {
     const queue = this.queues.get(guildId);
@@ -124,15 +128,15 @@ export class Player<
   }
 
   /**
-   * Creates a queue from options
-   * @param options Options to create from
+   * Create (or get) the queue of a guild
+   * @param options Options for customization
    */
   async createQueue(options: CreateQueueOptions<Context>) {
     return this.queues.create(options);
   }
 
   /**
-   * Destroys the queue of a guild
+   * Destroy the queue of a guild
    * @param guildId Id of the guild
    * @param reason Reason for destroying
    */
@@ -141,8 +145,8 @@ export class Player<
   }
 
   /**
-   * Searches for results based on query and options
-   * @param query Query (or URL as well)
+   * Search tracks by query
+   * @param query Query or URL
    * @param options Options for customization
    */
   async search(query: string, options?: SearchOptions): Promise<SearchResult> {
@@ -171,7 +175,7 @@ export class Player<
   }
 
   /**
-   * Adds or searches if source is query and resumes the queue if stopped
+   * Add (or search) and play the first resolvable track from source
    * @param source Source to play from
    * @param options Options for customization
    */
@@ -193,16 +197,16 @@ export class Player<
   }
 
   /**
-   * Jumps to the specified index in queue of a guild
+   * Jump to a specific track in queue
    * @param guildId Id of the guild
-   * @param index Index to jump to
+   * @param index Index of the track
    */
   async jump(guildId: string, index: number) {
     return this.getQueue(guildId, true).jump(index);
   }
 
   /**
-   * Pauses the queue of a guild
+   * Pause the queue of a guild
    * @param guildId Id of the guild
    */
   async pause(guildId: string) {
@@ -210,7 +214,7 @@ export class Player<
   }
 
   /**
-   * Plays the previous track in queue of a guild
+   * Play the previous track in queue
    * @param guildId Id of the guild
    */
   async previous(guildId: string) {
@@ -218,7 +222,7 @@ export class Player<
   }
 
   /**
-   * Resumes the queue of a guild
+   * Resume the queue of a guild
    * @param guildId Id of the guild
    */
   async resume(guildId: string) {
@@ -226,7 +230,7 @@ export class Player<
   }
 
   /**
-   * Seeks to a position in the current track of a guild
+   * Seek to a specific position in the current track
    * @param guildId Id of the guild
    * @param ms Position in milliseconds
    */
@@ -235,43 +239,43 @@ export class Player<
   }
 
   /**
-   * Enables or disables autoplay for the queue of a guild
+   * Set autoplay of a queue
    * @param guildId Id of the guild
-   * @param autoplay Whether to enable autoplay
+   * @param autoplay Whether to enable autoplay (`false` by default)
    */
   setAutoplay(guildId: string, autoplay?: boolean) {
     return this.getQueue(guildId, true).setAutoplay(autoplay);
   }
 
   /**
-   * Sets the repeat mode for the queue of a guild
+   * Set repeat mode of a queue
    * @param guildId Id of the guild
-   * @param repeatMode The repeat mode
+   * @param repeatMode `track`, `queue`, `none` (`none` by default)
    */
   setRepeatMode(guildId: string, repeatMode: RepeatMode) {
     return this.getQueue(guildId, true).setRepeatMode(repeatMode);
   }
 
   /**
-   * Sets the volume of the queue of a guild
+   * Set volume of a queue
    * @param guildId Id of the guild
-   * @param volume The volume to set
+   * @param volume Numeric value between 0 and 1000
    */
   async setVolume(guildId: string, volume: number) {
     return this.getQueue(guildId, true).setVolume(volume);
   }
 
   /**
-   * Shuffles tracks for the queue of a guild
+   * Shuffle tracks of a queue
    * @param guildId Id of the guild
-   * @param includePrevious Whether to pull previous tracks to current
+   * @param includePrevious Whether to move previous tracks to current
    */
   shuffle(guildId: string, includePrevious?: boolean) {
     return this.getQueue(guildId, true).shuffle(includePrevious);
   }
 
   /**
-   * Plays the next track in queue of a guild
+   * Play the next track in queue
    * @param guildId Id of the guild
    */
   async next(guildId: string) {
@@ -279,7 +283,7 @@ export class Player<
   }
 
   /**
-   * Stops the queue of a guild
+   * Stop the queue of a guild
    * @param guildId Id of the guild
    */
   async stop(guildId: string) {

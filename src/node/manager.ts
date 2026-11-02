@@ -71,9 +71,9 @@ export class NodeManager implements Partial<Map<string, Node>> {
    */
   state(name: string): NodeState;
   /**
-   * Check if a node is in a certain state
+   * Check if a node is in a specific state
    * @param name Name of the node
-   * @param equals Expected state of the node
+   * @param equals State of the node
    */
   state(name: string, equals: NodeState): boolean;
   state(name: string, equals?: NodeState) {
@@ -98,8 +98,8 @@ export class NodeManager implements Partial<Map<string, Node>> {
 
   /**
    * Delete a node
-   * @remarks Only a disconnected node with no queues can be deleted, an error is thrown otherwise
    * @param name Name of the node
+   * @remarks Only a disconnected node with no queues can be deleted, an error is thrown otherwise
    */
   delete(name: string) {
     const node = this.#nodes.get(name);
@@ -201,7 +201,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
   }
 
   /**
-   * Fetch info for a specific node (cache-first)
+   * Fetch lavalink info of a node (cache-first)
    * @param name Name of the node
    */
   async fetchInfo(name: string) {
