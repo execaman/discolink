@@ -61,7 +61,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
 
   /**
    * Raw lavalink player objects.
-   * For reference or advanced usage only, do not `set` or `delete`
+   * For reference or advanced usage only
    */
   get cache() {
     return this.#cache as ReadonlyMap<string, APIPlayer>;
@@ -145,11 +145,11 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
   }
 
   /**
-   * Sync multiple lavalink player data
+   * Sync queues and their lavalink players by node
    * @param node Name of the node
-   * @param target Target to update (`local` for queues, `remote` for node)
+   * @param target `local` for queue, `remote` for node (`local` by default)
    */
-  async sync(node: string, target: "local" | "remote" = "local") {
+  async sync(node: string, target: Parameters<Queue["sync"]>[0] = "local") {
     const _node = this.player.nodes.get(node);
 
     if (!_node) throw new Error(`Node '${node}' not found`);
@@ -185,7 +185,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
   }
 
   /**
-   * Relocate all queues of a specific node
+   * Relocate queues by node
    * @param node Name of the node
    */
   async relocate(node: string) {

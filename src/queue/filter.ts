@@ -23,8 +23,8 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
   }
 
   /**
-   * Raw player filters object.
-   * For reference or advanced usage only, deep/shallow copy before mutating
+   * Raw lavalink player filters object.
+   * For reference or advanced usage only
    */
   get current() {
     return this.#player.filters as Filters<PluginFilters>;
@@ -72,8 +72,8 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
   }
 
   /**
-   * Remove filter(s)
-   * @param names Name(s) of filter(s) to remove
+   * Remove filters by name
+   * @param names Names of filters to remove
    */
   async remove<Name extends FilterNames<PluginFilters>>(...names: Name[]) {
     if (names.length === 0) return this.#player.filters as Filters<PluginFilters>;
@@ -88,8 +88,8 @@ export class FilterManager<PluginFilters extends JsonObject = CommonPluginFilter
   }
 
   /**
-   * Clear filters by type (all if none specified)
-   * @param type Type of filters to clear (`native` for built-in, `plugin` for plugins)
+   * Remove filters by type (all if none specified)
+   * @param type `native` for built-in, `plugin` for plugins
    */
   async clear(type?: "native" | "plugin") {
     switch (type) {

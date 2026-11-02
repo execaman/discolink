@@ -66,7 +66,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
 
   /**
    * Raw voice state objects.
-   * For reference or advanced usage only, do not `set` or `delete`
+   * For reference or advanced usage only
    */
   get cache() {
     return this.#cache as ReadonlyMap<string, BotVoiceState>;
@@ -96,7 +96,7 @@ export class VoiceManager implements Partial<Map<string, VoiceState>> {
    * Connect to a voice channel
    * @param guildId Id of the guild
    * @param voiceId Id of the voice channel
-   * @param options Options for the queue
+   * @param options Options for the queue to be created
    */
   async connect(guildId: string, voiceId: string, options?: ConnectOptions) {
     if (!isString(guildId, SnowflakeRegex)) throw new Error("Guild Id is not a valid Discord Id");

@@ -39,7 +39,7 @@ await player.voices.connect(guildId, voiceChannelId, {
 
 If a connection to the same guild and channel is already in progress, `connect()` returns the existing promise rather than starting a new one. If the bot is already connected to that channel and the connection is live, it returns the existing `VoiceState` immediately.
 
-`connect()` times out after 30 seconds if the gateway events don't arrive.
+`connect()` times out after `voiceTimeout` milliseconds (default 10_000 / 10s) if the gateway events don't arrive.
 
 #### Why a connection might fail
 
