@@ -18,6 +18,8 @@ A `Queue` is the playback state for a single guild. It maintains two arrays:
 
 `next()` advances the cursor — the current track moves to `previousTracks` and the next one becomes current. `previous()` moves it back. `jump(n)` teleports to any index in either direction, including negative indices into `previousTracks`.
 
+`next()` returns the next `Track`, or `null` if there is no track ahead. When there's nothing ahead it does **not** stop playback or move the current track to `previousTracks` — it simply returns `null`.
+
 Each `Queue` holds references to its `VoiceState` and `Node`:
 
 ```ts
