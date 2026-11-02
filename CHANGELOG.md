@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.1](https://github.com/execaman/discolink/compare/v6.1.0...v6.1.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **Queue:** do not stop or move the only current track on next() ([#144](https://github.com/execaman/discolink/issues/144)) ([2bb82b2](https://github.com/execaman/discolink/commit/2bb82b22531d3a0fbbf6ea4a076cf70cba9aeb63))
+
 ## [6.1.0](https://github.com/execaman/discolink/compare/v6.0.0...v6.1.0) (2026-10-26)
 
 
