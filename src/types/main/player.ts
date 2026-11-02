@@ -204,7 +204,7 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
    * Return empty or populated array of related tracks
    * @param queue The queue requesting track(s)
    * @param track The track suggested for reference
-   * @remarks DO NOT throw an error
+   * @remarks Do NOT throw an error through this function
    */
   fetchRelatedTracks?: (queue: Queue, track: Track) => Promise<Track[]>;
 }

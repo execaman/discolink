@@ -4,13 +4,13 @@ import type { Player } from "@/main";
 import type { PlayerState, VoiceNodePingStats } from "@/types";
 
 /**
- * Class representing a voice region and evaluating performing nodes
+ * Class representing a voice region, tracking latency of ready nodes
  */
 export class VoiceRegion {
   #stats = new Map<string, VoiceNodePingStats>();
 
   /**
-   * Id of the region
+   * Id of this region
    */
   readonly id: string;
   readonly player: Player;
