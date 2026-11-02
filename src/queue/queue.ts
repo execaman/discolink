@@ -15,9 +15,9 @@ import type {
 } from "@/types";
 
 /**
- * Class representing a guild's queue while wrapping it's lavalink player.
+ * Class representing a guild's queue, wrapping over its lavalink player.
  *
- * @remarks Simple interpretation: join of two arrays, negative for previous, zero for current, positive for next
+ * @remarks User interpretation: join of two arrays; negative for previous, zero for current, positive for next
  */
 export class Queue<Context extends Record<string, unknown> = QueueContext> {
   #player: APIPlayer;
@@ -29,7 +29,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   #previousTracks: Track[] = [];
 
   /**
-   * Context of the queue
+   * Context of this queue
    */
   context = {} as Context;
 
@@ -108,17 +108,17 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Whether the queue is truly empty (no previous, current, or next tracks)
+   * Whether the queue has no previous, current, or next tracks
    */
   get empty() {
     return this.finished && !this.hasPrevious;
   }
 
   /**
-   * Whether a track is present and also playing in the lavalink player
+   * Whether the queue has a track and the lavalink player is playing
    */
   get playing() {
-    return !this.paused && this.track !== null && this.#player.track != null;
+    return this.track !== null && !this.paused && this.#player.track != null;
   }
 
   /**
@@ -136,14 +136,14 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Whether the queue is (or being) destroyed
+   * Whether this queue is (or being) destroyed
    */
   get unusable() {
     return this.destroyed || this.destroying;
   }
 
   /**
-   * Whether the queue is being destroyed
+   * Whether this queue is being destroyed
    */
   get destroying() {
     return this.player.queues[QueueDestroySymbol](this.guildId) !== undefined;
@@ -192,7 +192,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Current and next tracks
+   * Current tracks
    */
   get tracks() {
     return this.#tracks;
@@ -206,28 +206,28 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Number of current and next tracks
+   * Number of current tracks
    */
   get length() {
     return this.#tracks.length;
   }
 
   /**
-   * Number of previous, current, and next tracks
+   * Number of current and previous tracks
    */
   get totalLength() {
     return this.length + this.#previousTracks.length;
   }
 
   /**
-   * Duration of current and next tracks (excluding live tracks)
+   * Duration in milliseconds of current tracks (excluding live tracks)
    */
   get duration() {
     return this.#tracks.reduce((time, track) => time + (track.isLive ? 0 : track.duration), 0);
   }
 
   /**
-   * Formatted duration of current and next tracks (excluding live tracks)
+   * Formatted duration of current tracks (excluding live tracks)
    */
   get formattedDuration() {
     return formatDuration(this.duration);
@@ -243,7 +243,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Formatted position in milliseconds of the current track
+   * Formatted position of the current track
    */
   get formattedCurrentTime() {
     return formatDuration(this.currentTime);
@@ -256,8 +256,8 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Sync lavalink player data
-   * @param target Target to update (`local` for queue, `remote` for node)
+   * Sync lavalink player
+   * @param target `local` for queue, `remote` for node (`local` by default)
    */
   async sync(target: "local" | "remote" = "local") {
     if (target === "local") {
@@ -288,8 +288,8 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Search for tracks with the queue's node
-   * @param query Search terms or url
+   * Search for tracks with this queue's node
+   * @param query Query or URL
    * @param prefix Query prefix
    */
   async search(query: string, prefix = this.player.options.queryPrefix) {
@@ -299,7 +299,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   /**
    * Add a track, list of tracks, or playlist to the queue
    * @param source track, list of tracks, or playlist
-   * @param userData Object to shallow merge in all track's user data
+   * @param userData Object to shallow merge with track user data
    */
   add<UserData extends JsonObject = CommonUserData>(source: Track | Track[] | Playlist, userData?: UserData) {
     if (source instanceof Track) {
@@ -321,8 +321,8 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
 
   /**
    * Add related tracks to the queue
-   * @param refTrack Track to use as reference, leave as `null` or `undefined` for default
-   * @param userData Object to shallow merge in all track's user data
+   * @param refTrack Track to refer (`null` or `undefined` for default)
+   * @param userData Object to shallow merge with track user data
    */
   async addRelated<UserData extends JsonObject = CommonUserData>(refTrack?: Track | null, userData?: UserData) {
     refTrack ??= this.track ?? this.previousTrack!;
@@ -333,13 +333,13 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Remove one track from the queue
+   * Remove a specific track from the queue
    * @param index zero-based position of the track
    */
   remove(index: number): Track | undefined;
   /**
    * Remove multiple tracks from the queue
-   * @param indices zero-based positions of tracks to remove
+   * @param indices zero-based positions of the tracks to remove
    */
   remove(indices: number[]): Track[];
   remove(input: number | number[]) {
@@ -366,12 +366,12 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Remove tracks by type (all if none specified)
-   * @param type Type of tracks (`current` for current and next, `previous` for previous)
-   * @remarks current track is only removed if its stopped
+   * Remove tracks by group (all if none specified)
+   * @param group `current` for current tracks, `previous` for previous tracks
+   * @remarks Current track is only removed if its stopped
    */
-  clear(type?: "current" | "previous") {
-    switch (type) {
+  clear(group?: "current" | "previous") {
+    switch (group) {
       case "current":
         if (!this.finished) this.#tracks.length = this.stopped ? 0 : 1;
         break;
@@ -386,8 +386,8 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
 
   /**
    * Jump to a specific track in queue
-   * @param index zero-based position of the track
-   * @remarks this will absolutely play and trigger corresponding track events
+   * @param index zero-based position of the track in queue
+   * @remarks This will absolutely play and trigger corresponding track events
    */
   async jump(index: number) {
     if (this.empty) throw new Error("The queue is empty at the moment");
@@ -412,7 +412,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Unpause the lavalink player and play the current track if its present but stopped
+   * Resume any stopped track, unpause lavalink player otherwise
    */
   async resume() {
     if (this.stopped) await this.jump(0);
@@ -439,6 +439,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
 
   /**
    * Play the next track in queue
+   * @returns The next track, `null` otherwise
    */
   async next() {
     if (this.hasNext) return this.jump(1);
@@ -450,15 +451,12 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
       const related = await this.addRelated();
       if (related.length > 0) return this.jump(this.length - related.length);
     }
-    if (!this.finished) {
-      this.#previousTracks.push(this.#tracks.shift()!);
-      await this.stop();
-    }
     return null;
   }
 
   /**
    * Play the previous track in queue
+   * @returns The previous track, `null` otherwise
    */
   async previous() {
     if (this.hasPrevious) return this.jump(-1);
@@ -466,8 +464,8 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Shuffle the next tracks in queue
-   * @param includePrevious Whether to include previous tracks
+   * Shuffle tracks in queue
+   * @param includePrevious Whether to move previous tracks to current
    */
   shuffle(includePrevious = false) {
     if (includePrevious === true) this.#tracks.push(...this.#previousTracks.splice(0));
@@ -492,7 +490,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
 
   /**
    * Set autoplay mode
-   * @param autoplay Whether autoplay should be enabled
+   * @param autoplay Whether to enable autoplay (`false` by default)
    */
   setAutoplay(autoplay = false) {
     if (typeof autoplay === "boolean") this.#autoplay = autoplay;
@@ -502,7 +500,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
 
   /**
    * Set repeat mode
-   * @param repeatMode Repeat mode (`none` for default, `track` for track, `queue` for queue)
+   * @param repeatMode `track`, `queue`, `none` (`none` by default)
    */
   setRepeatMode(repeatMode: RepeatMode = "none") {
     if (repeatMode === "track" || repeatMode === "queue" || repeatMode === "none") this.#repeatMode = repeatMode;
@@ -511,7 +509,7 @@ export class Queue<Context extends Record<string, unknown> = QueueContext> {
   }
 
   /**
-   * Stop the current track in lavalink player
+   * Stop the lavalink player
    */
   async stop() {
     return this.#update({ track: { encoded: null } });

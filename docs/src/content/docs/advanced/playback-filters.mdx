@@ -85,6 +85,8 @@ await queue.jump(-2); // jump two tracks back
 
 **`next()` with autoplay** — when the current list is exhausted and autoplay is on, `next()` calls `addRelated()` and jumps to the first related track if any are returned.
 
+If there's no next track, no repeat, and no autoplay, `next()` returns `null` and playback is left untouched — it does **not** stop the current track or move it to `previousTracks`.
+
 ### Manipulation
 
 ```ts
