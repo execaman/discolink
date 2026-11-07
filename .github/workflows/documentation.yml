@@ -22,8 +22,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      changed: ${{ steps.lookup.outputs.cache-hit != 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
@@ -34,38 +32,29 @@ jobs:
           cache: npm
           node-version: lts/*
 
+      - name: Check cache
+        uses: actions/cache@v6.1.0
+        with:
+          path: ./docs/.astro
+          key: astro-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: astro-${{ runner.os }}-
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build documentation
         run: npm run docs:build
 
-      - name: Lookup build hash
-        id: lookup
-        uses: actions/cache@v6.1.0
-        with:
-          path: ./docs/.cache
-          key: documentation-${{ hashFiles('docs/dist/**/*') }}
-
       - name: Setup Pages
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/configure-pages@v6.0.0
 
       - name: Upload artifact
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: ./docs/dist
 
-      - name: Create cache directory
-        if: steps.lookup.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ./docs/.cache
-          touch ./docs/.cache/.keep
-
   deploy:
     needs: build
-    if: needs.build.outputs.changed == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
