@@ -73,6 +73,9 @@ The second argument is the search prefix. It defaults to `player.options.queryPr
 Direct URLs are detected automatically and bypass the prefix entirely.
 
 ```ts
+// Each result includes the `node` it came from — useful for routing or logging
+console.log(result.node);
+
 switch (result.type) {
   case "track":
     queue.add(result.data);

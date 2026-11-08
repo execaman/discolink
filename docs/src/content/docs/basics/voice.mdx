@@ -57,6 +57,19 @@ When a new connection is established, Discolink picks the best node for the voic
 2. Sorts that list by average voice WebSocket ping for the region (lower = better)
 3. Returns the first result
 
+You can exclude specific nodes from consideration:
+
+```ts
+const node = voice.region.getRelevantNode("us-east"); // skip us-east
+```
+
+Node ping entries can also be cleared:
+
+```ts
+voice.region.forgetNode("us-east"); // remove one node's ping stats
+voice.region.forgetAllNodes(); // clear all node ping stats for this region
+```
+
 Ping data is collected from `queueUpdate` ticks — each tick carries the voice WebSocket latency from Lavalink. The average is computed over the current `statsInterval` window (default 60s). Nodes with no ping data for the region yet are treated as having 0ms ping, so they're tried first until data accumulates.
 
 ## Connection state
@@ -72,6 +85,7 @@ voice.destroyed; // true if this instance is no longer in VoiceManager
 voice.unusable; // true if destroyed or its queue is being destroyed
 
 voice.channelId; // current voice channel ID
+voice.joined; // true when the bot is in a voice channel
 voice.regionId; // voice region extracted from the endpoint (e.g. 'us-east')
 voice.ping; // voice WebSocket latency in ms, sourced from Lavalink player state
 voice.node; // the Node this connection is on
@@ -117,6 +131,7 @@ You can also call these directly on a `VoiceState` or `Queue` instance:
 const voice = player.voices.get(guildId)!;
 await voice.connect(); // connect to the same channel
 await voice.connect(otherChannelId); // move to a different channel
+await voice.reconnect(); // leave and rejoin the same channel
 await voice.disconnect(); // disconnect from the channel
 
 const queue = player.queues.get(guildId)!;
@@ -127,6 +142,9 @@ await queue.destroy("reason"); // tear down queue and voice connection
 
 ```ts
 await player.voices.get(guildId)!.changeNode("eu-west");
+
+// name is optional, auto-picks the best ready node for the region
+await player.voices.get(guildId)!.changeNode();
 ```
 
 `changeNode()` migrates the player to the new node:

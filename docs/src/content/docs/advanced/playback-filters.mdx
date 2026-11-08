@@ -195,6 +195,7 @@ await queue.filters.set("tremolo", { frequency: 4, depth: 0.3 });
 ```ts
 queue.filters.get("timescale"); // TimescaleFilter | null
 queue.filters.has("rotation"); // boolean
+queue.filters.current; // the raw active filters object
 ```
 
 ### Removing and composing

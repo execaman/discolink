@@ -91,6 +91,19 @@ player.nodes.info; // Map<string, LavalinkInfo>  — cached node info per node n
 player.nodes.metrics; // Map<string, NodeMetrics>   — live scoring metrics per node name
 ```
 
+`QueueManager` exposes the raw Lavalink player cache:
+
+```ts
+player.queues.cache; // Map<string, APIPlayer> — raw lavalink player objects per guild
+```
+
+## Getting a queue
+
+```ts
+player.getQueue(guildId); // Queue | undefined
+player.getQueue(guildId, true); // Queue — throws if no queue exists for the guild
+```
+
 These are populated automatically — `info` on `nodeReady`, `metrics` on every stats dispatch.
 
 ## All player events
@@ -155,6 +168,8 @@ player.on("voiceDisconnect", (voice, details) => {
 **Queue events**
 
 ```ts
+import { isRestError } from "discolink";
+
 player.on("queueCreate", (queue) => {
   /* queue created */
 });
@@ -166,10 +181,17 @@ player.on("queueUpdate", (queue, state) => {
 });
 
 player.on("queueFinish", (queue, reason, error) => {
-  // Queue is empty and autoplay returned nothing.
   // reason: 'finished' | 'noRelated' | 'requestFailed'
   // error: present when reason is 'requestFailed'
   player.queues.destroy(queue.guildId, "Queue finished");
+
+  // error may be a plain Error (e.g. from fetchRelatedTracks)
+  // verify with the isRestError function before accessing fields
+  if (reason === "requestFailed" && isRestError(error)) {
+    console.error(error.status, error.node, error.path);
+  } else if (error) {
+    console.error(error.message);
+  }
 });
 
 player.on("queueDestroy", (queue, reason) => {

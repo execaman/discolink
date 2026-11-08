@@ -69,6 +69,8 @@ player.nodes.state("us-east"); // → NodeState string
 player.nodes.state("us-east", "ready"); // → boolean
 ```
 
+Throws if the node doesn't exist, so only call it for nodes you know exist (or wrap in `try/catch`).
+
 ## Reconnection behaviour
 
 When a node closes unexpectedly, Discolink schedules a reconnect after `reconnectDelay` ms (default 10 000). It retries up to `reconnectLimit` times. Once the limit is reached, the node moves to `disconnected` and `nodeDisconnect` fires.
@@ -105,7 +107,7 @@ const [best] = player.nodes.relevant();
 const [best] = player.nodes.relevant({ memory: 0.2, workload: 0.6, streaming: 0.2 });
 ```
 
-Nodes with `streaming: -1` (no active players yet) sort after nodes with real data. Nodes with no metrics at all (never received a stats payload) sort last.
+Nodes with `streaming: -1` (no active players yet) sort **before** nodes with real data — they're treated as idle or having spare capacity. Nodes with no metrics at all (never received a stats payload) sort last.
 
 ## Feature detection
 
