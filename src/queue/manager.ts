@@ -261,16 +261,16 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     return new Track(track);
   }
 
-  async #onTrackStart(queue: Queue, payload: TrackStartEventPayload) {
+  #onTrackStart(queue: Queue, payload: TrackStartEventPayload) {
     this.player.emit("trackStart", queue, this.#getLocalTrack(queue, payload.track));
   }
 
-  async #onTrackError(queue: Queue, payload: TrackExceptionEventPayload) {
+  #onTrackError(queue: Queue, payload: TrackExceptionEventPayload) {
     const track = this.#getLocalTrack(queue, payload.track);
     this.player.emit("trackError", queue, track, payload.exception);
   }
 
-  async #onTrackStuck(queue: Queue, payload: TrackStuckEventPayload) {
+  #onTrackStuck(queue: Queue, payload: TrackStuckEventPayload) {
     const track = this.#getLocalTrack(queue, payload.track);
     this.player.emit("trackStuck", queue, track, payload.thresholdMs);
   }
@@ -307,7 +307,7 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     }
   }
 
-  async [OnStateUpdateSymbol](payload: PlayerUpdatePayload) {
+  [OnStateUpdateSymbol](payload: PlayerUpdatePayload) {
     const queue = this.#queues.get(payload.guildId);
     if (!queue) return;
     this[UpdateSymbol](payload.guildId, { state: payload.state });
@@ -324,7 +324,8 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
     switch (payload.type) {
       case EventType.TrackStart:
         cache.track = payload.track;
-        return this.#onTrackStart(queue, payload);
+        this.#onTrackStart(queue, payload);
+        break;
 
       case EventType.TrackEnd:
         cache.track = null;
@@ -332,11 +333,13 @@ export class QueueManager<Context extends Record<string, unknown> = QueueContext
 
       case EventType.TrackException:
         cache.track = null;
-        return this.#onTrackError(queue, payload);
+        this.#onTrackError(queue, payload);
+        break;
 
       case EventType.TrackStuck:
         cache.track = payload.track;
-        return this.#onTrackStuck(queue, payload);
+        this.#onTrackStuck(queue, payload);
+        break;
 
       case EventType.WebSocketClosed:
         cache.state.connected = false;

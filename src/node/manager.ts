@@ -116,6 +116,21 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return true;
   }
 
+  #hasSupportFor(feat: FeatureTypes, name: string, node: string) {
+    const info = this.info.get(node);
+    if (!info) return false;
+    switch (feat) {
+      case "filter":
+        return info.filters.includes(name);
+      case "source":
+        return info.sourceManagers.includes(name);
+      case "plugin":
+        return info.plugins.some((p) => p.name === name);
+      default:
+        return false;
+    }
+  }
+
   /**
    * List nodes that support a certain feature
    * @param feat Type of feature
@@ -137,36 +152,29 @@ export class NodeManager implements Partial<Map<string, Node>> {
     }, []);
   }
 
+  #nodePos(name: string, weights: NodeMetrics) {
+    const metrics = this.metrics.get(name);
+    if (!metrics) return Number.NEGATIVE_INFINITY;
+    const score = metrics.memory * weights.memory + metrics.workload * weights.workload;
+    if (metrics.streaming === -1) return score;
+    return score + metrics.streaming * weights.streaming;
+  }
+
   /**
    * List nodes that are ready, sorted by metrics
    * @param weights Numeric weights for each metric
    */
   relevant(weights: Partial<NodeMetrics> = { memory: 0.3, workload: 0.2, streaming: 0.5 }) {
-    weights.memory = Math.min(1, Math.max(0, weights.memory ?? 0));
-    weights.workload = Math.min(1, Math.max(0, weights.workload ?? 0));
-    weights.streaming = Math.min(1, Math.max(0, weights.streaming ?? 0));
-
+    const _weights: NodeMetrics = {
+      memory: Math.min(1, Math.max(0, weights.memory ?? 0)),
+      workload: Math.min(1, Math.max(0, weights.workload ?? 0)),
+      streaming: Math.min(1, Math.max(0, weights.streaming ?? 0)),
+    };
     const nodes = this.#nodes.values().reduce<Node[]>((list, node) => {
       if (node.ready) list.push(node);
       return list;
     }, []);
-
-    return nodes.sort((a, b) => {
-      const metricA = this.metrics.get(a.name);
-      const metricB = this.metrics.get(b.name);
-
-      if (!metricA) return !metricB ? 0 : 1;
-      if (!metricB) return -1;
-
-      if (metricA.streaming === -1 && metricB.streaming !== -1) return -1;
-      if (metricB.streaming === -1 && metricA.streaming !== -1) return 1;
-
-      return (
-        (metricB.memory - metricA.memory) * weights.memory!
-        + (metricB.workload - metricA.workload) * weights.workload!
-        + (metricB.streaming - metricA.streaming) * weights.streaming!
-      );
-    });
+    return nodes.sort((a, b) => this.#nodePos(b.name, _weights) - this.#nodePos(a.name, _weights));
   }
 
   /**
@@ -213,23 +221,8 @@ export class NodeManager implements Partial<Map<string, Node>> {
     return info;
   }
 
-  #hasSupportFor(feat: FeatureTypes, name: string, node: string) {
-    const info = this.info.get(node);
-    if (!info) return false;
-    switch (feat) {
-      case "filter":
-        return info.filters.includes(name);
-      case "source":
-        return info.sourceManagers.includes(name);
-      case "plugin":
-        return info.plugins.some((p) => p.name === name);
-      default:
-        return false;
-    }
-  }
-
   #memory(mem: StatsPayload["memory"]) {
-    const available = mem.free / mem.reservable;
+    const available = mem.free / mem.allocated;
     const allocable = (mem.reservable - mem.allocated) / mem.reservable;
     return Math.min(1, available * 0.7 + allocable * 0.3);
   }
@@ -242,10 +235,10 @@ export class NodeManager implements Partial<Map<string, Node>> {
   #streaming(frames: StatsPayload["frameStats"]) {
     if (frames == null) return -1;
     const expected = frames.sent + frames.nulled + frames.deficit;
-    const passRate = frames.sent / expected;
-    const lossRate = frames.nulled / expected;
-    const failRate = Math.max(0, frames.deficit) / expected;
-    return Math.min(1, Math.max(0, passRate - (failRate * 0.7 + lossRate * 0.3)));
+    const lossRate = Math.min(1, frames.nulled / expected);
+    const failRate = Math.min(1, Math.max(0, frames.deficit) / expected);
+    const nPenalty = Math.min(1, Math.max(0, this.player.options.nodePenalty));
+    return 1 - lossRate * nPenalty - failRate * (1 - nPenalty);
   }
 
   #updateMetrics(name: string, stats: StatsPayload) {
@@ -260,6 +253,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
     }
     metrics.memory = this.#memory(stats.memory);
     metrics.workload = this.#workload(stats.cpu);
+    if (stats.frameStats == null) return;
     metrics.streaming = this.#streaming(stats.frameStats);
   }
 
@@ -273,8 +267,8 @@ export class NodeManager implements Partial<Map<string, Node>> {
     const node = this.#nodes.get(name);
     if (!node) return;
     if (!resumed && this.player.options.autoSync) this.player.queues.sync(name, "remote");
-    this.player.emit("nodeReady", node, resumed, sessionId);
     if (!this.info.has(name)) this.fetchInfo(name).catch(noop);
+    this.player.emit("nodeReady", node, resumed, sessionId);
   };
 
   #onDispatch: (...args: NodeEventMap["dispatch"]) => void = (payload, name) => {
@@ -312,6 +306,7 @@ export class NodeManager implements Partial<Map<string, Node>> {
     const node = this.#nodes.get(name);
     if (!node) return;
     this.metrics.delete(name);
+    this.player.voices.regions.forEach((r) => r.forgetNode(name));
     if (this.player.options.relocateQueues) this.player.queues.relocate(name);
     this.player.emit("nodeDisconnect", node, code, reason, byLocal);
   };

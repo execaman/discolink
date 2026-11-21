@@ -1,10 +1,10 @@
-import { DefaultNodeOptions, OnPingUpdateSymbol } from "@/constants";
+import { OnPingUpdateSymbol } from "@/constants";
 
 import type { Player } from "@/main";
 import type { PlayerState, VoiceNodePingStats } from "@/types";
 
 /**
- * Class representing a voice region, tracking latency of ready nodes
+ * Class representing a voice region, monitoring node ping
  */
 export class VoiceRegion {
   #stats = new Map<string, VoiceNodePingStats>();
@@ -33,14 +33,29 @@ export class VoiceRegion {
   }
 
   /**
-   * Whether this region has an entry for all nodes that are ready
+   * Size (in ms) of the time window used by this region
+   */
+  get windowSize() {
+    return this.player.options.regionWindow;
+  }
+
+  /**
+   * Whether this region has data for all nodes that are ready
    */
   inSync() {
     return !this.player.nodes.values().some((n) => n.ready && !this.#stats.has(n.name));
   }
 
   /**
-   * Delete a node's entry
+   * Whether this region has data for a node
+   * @param name Name of the node
+   */
+  hasNode(name: string) {
+    return this.#stats.has(name);
+  }
+
+  /**
+   * Delete data for a node
    * @param name Name of the node
    */
   forgetNode(name: string) {
@@ -48,55 +63,78 @@ export class VoiceRegion {
   }
 
   /**
-   * Delete all node entries
+   * Delete data for all nodes
    */
   forgetAllNodes() {
     this.#stats.clear();
   }
 
   /**
-   * Get the average ping of a node
+   * Get the median ping of a node.
+   * Returns `-1` when data is insufficient.
+   * @param node Name of the node
+   */
+  getMedianPing(node: string) {
+    const stats = this.#stats.get(node);
+    if (!stats || stats.samples.length === 0) return -1;
+    const sorted = stats.samples.sort((a, b) => a - b);
+    const index = Math.floor(sorted.length / 2);
+    if (sorted.length % 2 !== 0) return sorted[index]!;
+    return Math.round((sorted[index - 1]! + sorted[index]!) / 2);
+  }
+
+  /**
+   * Get the average ping of a node.
+   * Returns `-1` when data is insufficient.
    * @param node Name of the node
    */
   getAveragePing(node: string) {
     const stats = this.#stats.get(node);
-    if (!stats) return null;
-    if (Date.now() - stats.startTime > DefaultNodeOptions.statsInterval) return null;
-    return Math.round(stats.pingTotal / stats.pingCount);
+    if (!stats || stats.samples.length === 0) return -1;
+    return Math.round(stats.samples.reduce((t, c) => t + c, 0) / stats.samples.length);
+  }
+
+  #nodePos(name: string, penalty: number, now: number) {
+    const stats = this.#stats.get(name);
+    if (!stats) return Number.NEGATIVE_INFINITY;
+
+    if (now - stats.lastProbe > this.#stats.size * this.windowSize) return -1;
+    if (stats.samples.length === 0) return Number.POSITIVE_INFINITY;
+
+    const median = this.getMedianPing(name);
+    if (stats.samples.length < 4) return median;
+
+    const index = Math.floor(0.95 * stats.samples.length);
+    return median + (stats.samples[index]! - median) * penalty;
   }
 
   /**
-   * Get a node with the lowest average ping in this region.
+   * Get a node with the lowest ping in this region.
    *
-   * If there are stale or no stats, this will return a node based on its metrics.
+   * If data is insufficient, this will return a node based on its metrics.
    * @param exclude Nodes to exclude
    */
   getRelevantNode(...exclude: string[]) {
+    const now = Date.now();
     const nodes = this.player.nodes.relevant().filter((n) => !exclude.includes(n.name));
-    return nodes.sort((a, b) => {
-      return (this.getAveragePing(a.name) ?? 0) - (this.getAveragePing(b.name) ?? 0);
-    })[0];
+    const penalty = Math.min(1, Math.max(0, this.player.options.voicePenalty));
+    return nodes.sort((a, b) => this.#nodePos(a.name, penalty, now) - this.#nodePos(b.name, penalty, now))[0];
   }
 
   [OnPingUpdateSymbol](node: string, state: PlayerState) {
-    if (!state.connected) return;
-    if (state.ping < 0 || state.time <= 0) return;
     const stats = this.#stats.get(node);
     if (!stats) {
-      this.#stats.set(node, {
-        pingCount: 1,
-        pingTotal: state.ping,
-        startTime: state.time,
-      });
+      this.#stats.set(node, { samples: [], startTime: state.time, lastProbe: state.time });
       return;
     }
-    if (state.time - stats.startTime < DefaultNodeOptions.statsInterval) {
-      stats.pingTotal += state.ping;
-      stats.pingCount++;
+    if (!state.connected || state.ping < 0) return;
+    if (state.time - stats.startTime < this.windowSize) {
+      stats.samples.push(state.ping);
+      stats.lastProbe = state.time;
       return;
     }
-    stats.pingCount = 1;
-    stats.pingTotal = state.ping;
+    stats.samples = [state.ping];
     stats.startTime = state.time;
+    stats.lastProbe = state.time;
   }
 }
