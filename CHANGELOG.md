@@ -1,5 +1,20 @@
 # Changelog
 
+## [6.2.0](https://github.com/execaman/discolink/compare/v6.1.1...v6.2.0) (2026-11-21)
+
+
+### Features
+
+* **Player:** add node and voice penalty options ([#151](https://github.com/execaman/discolink/issues/151)) ([7c19ef1](https://github.com/execaman/discolink/commit/7c19ef18c9ea2ed0f4e48196aaef7ad1f81b477d))
+* **VoiceRegion:** add 'windowSize' getter and hasNode(), getMedianPing() ([7c19ef1](https://github.com/execaman/discolink/commit/7c19ef18c9ea2ed0f4e48196aaef7ad1f81b477d))
+
+
+### Bug Fixes
+
+* **NodeManager:** always sort nodes without data last in relevant() ([7c19ef1](https://github.com/execaman/discolink/commit/7c19ef18c9ea2ed0f4e48196aaef7ad1f81b477d))
+* **Node:** use performance instead of Date for ping ([#152](https://github.com/execaman/discolink/issues/152)) ([172a846](https://github.com/execaman/discolink/commit/172a846a8f3f42b4951274c32290d84c118b3707))
+* **VoiceRegion:** return -1 for insufficient ping data ([7c19ef1](https://github.com/execaman/discolink/commit/7c19ef18c9ea2ed0f4e48196aaef7ad1f81b477d))
+
 ## [6.1.1](https://github.com/execaman/discolink/compare/v6.1.0...v6.1.1) (2026-11-02)
 
 
