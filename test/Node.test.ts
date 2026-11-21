@@ -85,7 +85,7 @@ describe("Node", () => {
   describe("property", () => {
     it("has essential fields defined", () => {
       const n = new Node(options);
-      expect(n.ping).toBeNull();
+      expect(n.ping).toBe(-1);
       expect(n.reconnectAttempts).toBe(0);
       expect(n.reconnectLimit).toBeGreaterThan(0);
       expect(n.sessionId).toBeNull();
@@ -328,9 +328,9 @@ describe("Node", () => {
       await prom;
       await expect(n.connect()).resolves.toBe(true);
 
-      expect(n.ping).toBeNull();
+      expect(n.ping).toBe(-1);
       ws.ping();
-      expect(n.ping).toBeNull();
+      expect(n.ping).toBe(-1);
 
       const promise = n.disconnect();
       await expect(n.disconnect()).resolves.toBeUndefined();

@@ -29,8 +29,8 @@ export class Node extends EventEmitter<NodeEventMap> {
   #pingTimer: NodeJS.Timeout | null = null;
   #reconnectTimer: NodeJS.Timeout | null = null;
 
-  #ping: number | null = null;
-  #lastPingTime: number | null = null;
+  #ping: number = -1;
+  #lastPingTime: number = -1;
 
   #reconnectCycle = true;
   #reconnectAttempts = 0;
@@ -183,7 +183,7 @@ export class Node extends EventEmitter<NodeEventMap> {
     this.#socket?.removeAllListeners();
     if (this.#pingTimer !== null) clearTimeout(this.#pingTimer);
     this.#socket = this.#pingTimer = this.#stats = null;
-    this.#lastPingTime = this.#ping = null;
+    this.#lastPingTime = this.#ping = -1;
   }
 
   #reconnect() {
@@ -209,7 +209,7 @@ export class Node extends EventEmitter<NodeEventMap> {
       this.#cleanup();
       this.#reconnect();
     }, this.#pingTimeout).unref();
-    this.#lastPingTime = Date.now();
+    this.#lastPingTime = performance.now();
     this.#socket?.ping();
   }
 
@@ -241,8 +241,8 @@ export class Node extends EventEmitter<NodeEventMap> {
       this.#onClose(code, reason.toString("utf8"));
     });
     this.#socket.on("pong", () => {
-      if (this.#lastPingTime === null) return;
-      this.#ping = Math.max(0, Date.now() - this.#lastPingTime);
+      if (this.#lastPingTime === -1) return;
+      this.#ping = Math.round(performance.now() - this.#lastPingTime);
     });
     const resolver = Promise.withResolvers<boolean>();
     this.#connectPromise = resolver.promise;
