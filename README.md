@@ -16,7 +16,7 @@ The goal of this library is to abstract away obvious steps involved in the proce
 
 ## 🛠️ Requirements
 
-Built for [Node.js](https://nodejs.org) v22+ — [Bun](https://bun.com) v1+ and [Deno](https://deno.com) v2+ may also work. Pairs with any [Discord gateway client](https://docs.discord.com/developers/events/gateway) capable of sending and receiving raw payloads — no lock-in to a specific library.
+Built for [Node.js](https://nodejs.org) v22+ — [Bun](https://bun.com) v1+ may also work. Pairs with any [Discord gateway client](https://docs.discord.com/developers/events/gateway) capable of sending and receiving raw payloads — no lock-in to a specific library.
 
 ## ⚖️ Standards & License
 
