@@ -171,6 +171,25 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
   queryPrefix?: string;
 
   /**
+   * Weight [0, 1] for penalizing nulled over deficit frames in streaming score.
+   * @default 0.7
+   */
+  nodePenalty?: number;
+
+  /**
+   * Weight [0, 1] for penalizing spiky over median latency in voice node selection.
+   * @default 0
+   */
+  voicePenalty?: number;
+
+  /**
+   * Size (in ms) of the time window used by voice regions for monitoring node ping.
+   * @remarks Small windows rotate nodes more often, large windows keep one dominant before rotating.
+   * @default 300_000
+   */
+  regionWindow?: number;
+
+  /**
    * Timeout for voice updates from Discord in ms.
    * @default 10_000
    */
@@ -181,8 +200,6 @@ export interface PlayerOptions<Plugins extends PlayerPlugin[] = PlayerPlugin[]> 
    * - `4004` - incorrect token
    * - `4011` - server not found
    * - `4006` - session invalid
-   *
-   * You might want to turn this off for handling edge cases like being dragged into a private voice channel, etc.
    * @default true
    */
   voiceReconnect?: boolean;

@@ -3,7 +3,7 @@
  * @internal
  */
 export interface VoiceNodePingStats {
-  pingCount: number;
-  pingTotal: number;
+  samples: number[];
   startTime: number;
+  lastProbe: number;
 }
