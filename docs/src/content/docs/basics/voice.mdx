@@ -51,33 +51,47 @@ If a connection to the same guild and channel is already in progress, `connect()
 
 ## Node selection for voice
 
-When a new connection is established, Discolink picks the best node for the voice region. It uses `VoiceRegion.getRelevantNode()`, which:
+When a new connection is established or a node change is requested without specifying a node, Discolink picks the best node for the voice region. It uses `VoiceRegion.getRelevantNode()`, which:
 
-1. Runs `NodeManager.relevant()` to get ready nodes sorted by load metrics
-2. Sorts that list by average voice WebSocket ping for the region (lower = better)
+1. Runs `NodeManager.relevant()` to get ready nodes sorted by their metrics
+2. Sorts them by their voice ping in that region — the median ping plus spike penalty
 3. Returns the first result
 
-You can exclude specific nodes from consideration:
+The spike penalty is controlled by the `voicePenalty` player option (default `0`, clamped to `[0, 1]`). With the default, selection uses the median alone; higher values push nodes with erratic latency down the list.
+
+Access the region through `player.voices.regions` using the voice state's `regionId`:
 
 ```ts
-const node = voice.region.getRelevantNode("us-east"); // skip us-east
+const region = player.voices.regions.get(voice.regionId)!;
+
+const node = region.getRelevantNode("us-east"); // skip us-east
 ```
 
 Node ping entries can also be cleared:
 
 ```ts
-voice.region.forgetNode("us-east"); // remove one node's ping stats
-voice.region.forgetAllNodes(); // clear all node ping stats for this region
+region.forgetNode("us-east"); // remove a node's ping stats
+region.forgetAllNodes(); // clear all node ping stats for this region
 ```
 
-Ping data is collected from `queueUpdate` ticks — each tick carries the voice WebSocket latency from Lavalink. The average is computed over the current `statsInterval` window (default 60s). Nodes with no ping data for the region yet are treated as having 0ms ping, so they're tried first until data accumulates.
+Ping data is collected from `queueUpdate` ticks — each tick carries the voice WebSocket latency from Lavalink. Samples are kept for the region's `windowSize` (the `regionWindow` player option, 300_000 ms / 5 min by default). Nodes with no entry for the region sort first so they get tried; nodes with stale data score `-1`, and nodes with fewer than four samples are ranked by their median.
+
+The region also exposes its ping data directly:
+
+```ts
+region.windowSize; // sample window in ms (regionWindow option)
+region.hasNode("us-east"); // whether this region has data for a node
+region.inSync(); // whether all ready nodes have data
+region.getMedianPing("us-east"); // median ping in ms, -1 if insufficient
+region.getAveragePing("us-east"); // average ping in ms, -1 if insufficient
+```
 
 ## Connection state
 
 ```ts
 const voice = player.voices.get(guildId)!;
 
-voice.connected; // true when states of both bot and Lavalink player report connected
+voice.connected; // true when Lavalink reports the player connected
 voice.reconnecting; // true during a voice reconnect
 voice.disconnected; // true when not connected and not reconnecting
 voice.changingNode; // true while changeNode() is in progress
@@ -104,7 +118,7 @@ voice.suppressed; // whether the bot is suppressed (stage channels)
 
 ## Automatic voice reconnection
 
-When a voice connection is severed, Discolink emits `voiceClose` after having received the corresponding event from the connection's node and checks the close code. For recoverable codes, it calls `voice.connect()` to reconnect. If reconnection fails, the voice connection and its queue are destroyed.
+When a voice connection is severed, Discolink emits `voiceClose` after having received the corresponding event from the connection's node and checks the close code. For recoverable codes (`4004`, `4006`, `4011`) with `voiceReconnect` enabled, it calls `voice.reconnect()`. `voiceDisconnect` fires only when that reconnect attempt fails — a non-recoverable code, or `voiceReconnect: false` does not emit it.
 
 ## Disconnecting and destroying
 

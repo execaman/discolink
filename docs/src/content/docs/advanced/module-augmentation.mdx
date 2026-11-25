@@ -16,7 +16,7 @@ Four interfaces can be augmented. Declare them once in a `.d.ts` file and the ty
 | `CommonPluginInfo`    | Plugin-provided track/playlist metadata | `track.pluginInfo`, `playlist.pluginInfo`            |
 | `CommonPluginFilters` | Plugin-provided audio filters           | `queue.filters`, all `FilterManager` methods         |
 
-All augmented interfaces extend `JsonObject` — values must be JSON-serializable. Augmentations are compile-time only with no runtime cost.
+`CommonUserData`, `CommonPluginInfo`, and `CommonPluginFilters` constrain values to `JsonLike` (JSON-serializable); `QueueContext` accepts any values (`Record<string, unknown>`). Augmentations are compile-time only with no runtime cost.
 
 ```ts
 // augment.d.ts — include this file in your tsconfig

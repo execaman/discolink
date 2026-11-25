@@ -23,6 +23,9 @@ Player
 | `autoInit`           | `true`       | Call `init()` automatically on Discord `READY`                                         |
 | `autoSync`           | `true`       | Push local queue state to Lavalink when a node reconnects without resuming             |
 | `queryPrefix`        | `"ytsearch"` | Default search prefix for non-URL queries                                              |
+| `nodePenalty`        | `0.7`        | Weight [0, 1] for nulled vs. deficit frames in the node streaming score                |
+| `voicePenalty`       | `0`          | Weight [0, 1] for spiky vs. median latency in voice node selection                     |
+| `regionWindow`       | `300_000`    | Size in ms of the voice region ping monitoring window                                  |
 | `voiceTimeout`       | `10_000`     | Milliseconds to wait for Discord voice gateway events before timing out                |
 | `voiceReconnect`     | `true`       | Auto-reconnect on recoverable voice close codes (4004, 4006, 4011)                     |
 | `relocateQueues`     | `true`       | Migrate queues to another node when their node closes or disconnects                   |
@@ -160,7 +163,7 @@ player.on("voiceChange", (voice, previousNode, wasPlaying) => {
 });
 
 player.on("voiceDisconnect", (voice, details) => {
-  // Fires when auto-reconnect fails after a voice close.
+  // Fires when auto-reconnect (voiceReconnect: true) fails on close.
   // details: { code, reason, byRemote, error? }
 });
 ```

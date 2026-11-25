@@ -55,7 +55,7 @@ node.disconnected; // boolean
 node.name; // 'us-east'
 node.clientId; // bot's user ID (set during init)
 node.sessionId; // Lavalink session ID, null until ready
-node.ping; // WebSocket round-trip in ms, null until first pong
+node.ping; // WebSocket round-trip in ms, -1 until the first pong
 node.stats; // latest StatsPayload, null until first stats dispatch
 
 node.reconnectLimit; // max reconnect attempts (default 3, -1 = unlimited, 0 = none)
@@ -77,7 +77,7 @@ When a node closes unexpectedly, Discolink schedules a reconnect after `reconnec
 
 Set `reconnectLimit: -1` for unlimited retries, `0` to disable reconnection entirely.
 
-The ping keep-alive timer fires every `statsInterval + highestLatency` ms (defaults: 60 000 + 2 000 = 62 000 ms). If no pong arrives within that window, the socket is terminated and reconnection begins.
+The keep-alive timer is refreshed on every stats dispatch and fires after `statsInterval + highestLatency` ms (defaults: 60 000 + 2 000 = 62 000 ms). This guards against zombie connections — a socket that stays open but stops delivering stats is terminated and reconnection begins. Pongs only update `node.ping`, they don't reset the timer.
 
 When a node reconnects **without** resuming its session and `autoSync: true` (the default), Discolink pushes local queue state to Lavalink so playback can continue:
 
@@ -90,24 +90,24 @@ player.on("nodeReady", (node, resumed, sessionId) => {
 
 ## Automatic node selection
 
-`NodeManager.relevant()` returns ready nodes sorted by a composite score. Three metrics are computed from each stats dispatch:
+`NodeManager.relevant()` returns ready nodes sorted by a composite score. Three metrics are tracked from stats dispatches:
 
-| Metric      | Range         | How it's computed                                                                         |
-| ----------- | ------------- | ----------------------------------------------------------------------------------------- |
-| `memory`    | `0–1`         | Weighted blend of free/reservable (70%) and allocable/reservable (30%)                    |
-| `workload`  | `0–1`         | `1 - min(1, systemLoad×0.7 + lavalinkLoad×0.3)` — higher = less loaded                    |
-| `streaming` | `0–1` or `-1` | Frame pass rate minus weighted loss/deficit. `-1` when no active players (no frame stats) |
+| Metric      | Range         | How it's computed                                                                                          |
+| ----------- | ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `memory`    | `0–1`         | Weighted blend of free/allocated (70%) and allocable/reservable (30%)                                      |
+| `workload`  | `0–1`         | `1 - min(1, systemLoad×0.7 + lavalinkLoad×0.3)` (or `0` if either load is 0) — higher = less loaded        |
+| `streaming` | `0–1` or `-1` | `1 - (nulled rate × nodePenalty) - (deficit rate × (1 - nodePenalty))`; `-1` while no frame stats reported |
 
-The weight inputs you pass to `relevant()` are clamped to `[0, 1]`. Defaults: `{ memory: 0.3, workload: 0.2, streaming: 0.5 }`.
+The weight inputs you pass to `relevant()` are clamped to `[0, 1]`. Defaults: `{ memory: 0.3, workload: 0.2, streaming: 0.5 }`. The `nodePenalty` player option (default `0.7`) sets how much nulled frames count against the streaming score versus deficit frames.
 
 ```ts
 const [best] = player.nodes.relevant();
 
 // Tune for your workload — e.g. prioritise CPU headroom
-const [best] = player.nodes.relevant({ memory: 0.2, workload: 0.6, streaming: 0.2 });
+const [tuned] = player.nodes.relevant({ memory: 0.2, workload: 0.6, streaming: 0.2 });
 ```
 
-Nodes with `streaming: -1` (no active players yet) sort **before** nodes with real data — they're treated as idle or having spare capacity. Nodes with no metrics at all (never received a stats payload) sort last.
+Nodes with `streaming: -1` (no frame stats yet) are scored on memory and workload alone. Nodes with no metrics at all (never received a stats payload) always sort **last**.
 
 ## Feature detection
 
